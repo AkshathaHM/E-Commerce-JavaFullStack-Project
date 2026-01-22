@@ -1,0 +1,14 @@
+.Toastify__toast--success {
+  background-color: #10b981 !important; /* Green success */
+  color: white !important;
+}
+
+.Toastify__toast--error {
+  background-color: #ef4444 !important; /* Red error */
+  color: white !important;
+}
+
+.Toastify__toast {
+  border-radius: 0.5rem !important; /* Rounded corners */
+  font-size: 1rem !important;
+}
