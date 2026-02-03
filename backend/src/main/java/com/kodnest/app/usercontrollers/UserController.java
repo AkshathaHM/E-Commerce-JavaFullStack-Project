@@ -11,7 +11,7 @@ import com.kodnest.app.entities.User;
 import com.kodnest.app.userservices.UserServiceContract;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true") // Add this – matches Vite port
+@CrossOrigin(origins = "http://localhost:5174", allowCredentials = "true") // Add this – matches Vite port
 @RequestMapping("/api/users")
 public class UserController {
     private UserServiceContract userService;
