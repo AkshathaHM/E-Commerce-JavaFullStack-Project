@@ -5,10 +5,11 @@ import './assets/styles.css';
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true }}>
       <AppRoutes />
     </Router>
   );
 }
 
 export default App;
+

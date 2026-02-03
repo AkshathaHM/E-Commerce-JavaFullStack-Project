@@ -1,13 +1,14 @@
 // AdminDashboard.jsx
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Footer } from "./Footer";
 import Logo from "./Logo";
 import "./assets/styles.css";
 import CustomModal from "./CustomModal";
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
+  const location = useLocation();
+  const [adminUsername, setAdminUsername] = useState("");
   const [modalType, setModalType] = useState(null); // State to manage modal visibility and type
   const [modalData, setModalData] = useState(null); // State to store data passed to modal (if needed)
   const [response, setResponse] = useState(null); // State to store API responses
@@ -64,22 +65,29 @@ const AdminDashboard = () => {
     },
   ];
 
-  const handleLogout = async () => {
-    try {
-      const response = await fetch("http://localhost:9090/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-      if (response.ok) {
-        console.log("User successfully logged out");
-        navigate("/admin");
-      } else {
-        console.error("Failed to log out");
-      }
-    } catch (error) {
-      console.error("Error during logout:", error);
+  useEffect(() => {
+    const usernameFromState = location.state?.username;
+    if (usernameFromState) {
+      setAdminUsername(usernameFromState);
+      return;
     }
-  };
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch("http://localhost:9090/api/auth/me", {
+          credentials: "include",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setAdminUsername(data.username || data.user?.name || data.name || "Admin");
+        } else {
+          setAdminUsername("Admin");
+        }
+      } catch {
+        setAdminUsername("Admin");
+      }
+    };
+    fetchCurrentUser();
+  }, [location.state?.username]);
 
   // Handlers for each modal action
   const handleAddProductSubmit = async (productData) => {
@@ -332,12 +340,7 @@ const AdminDashboard = () => {
       <header className="dashboard-header">
         <Logo />
         <div className="user-info">
-          <span className="username">Admin</span>
-          <div className="dropdown">
-            <button className="dropdown-button" onClick={handleLogout}>
-              Logout
-            </button>
-          </div>
+          <span className="username">{adminUsername || "Admin"}</span>
         </div>
       </header>
 

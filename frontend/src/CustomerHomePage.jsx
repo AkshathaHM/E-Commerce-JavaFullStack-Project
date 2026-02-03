@@ -11,6 +11,7 @@ export default function CustomerHomePage() {
   const [username, setUsername] = useState('');
   const [cartError, setCartError] = useState(false); // State for cart fetch error
   const [isCartLoading, setIsCartLoading] = useState(true); // State for cart loading
+  const [showCartNotification, setShowCartNotification] = useState(false);
 
 
   useEffect(() => {
@@ -78,6 +79,8 @@ export default function CustomerHomePage() {
 
       if (response.ok) {
         fetchCartCount(); // Update cart count
+        setShowCartNotification(true);
+        setTimeout(() => setShowCartNotification(false), 3000);
       } else {
         console.error('Failed to add product to cart');
       }
@@ -88,6 +91,11 @@ export default function CustomerHomePage() {
 
   return (
     <div className="customer-homepage">
+      {showCartNotification && (
+        <div className="cart-notification">
+          Cart Added Successfully
+        </div>
+      )}
       <Header
         cartCount={isCartLoading ? '...' : cartError ? 'Error' : cartCount}
         username={username}

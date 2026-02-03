@@ -27,7 +27,12 @@ export function ProfileDropdown({ username }) {
     }
   };
   const handleOrdersClick = () => {
-    navigate('/orders'); // Navigate to the orders route
+    navigate('/orders');
+    setIsOpen(false);
+  };
+  const handleCartClick = () => {
+    navigate('/UserCartPage');
+    setIsOpen(false);
   };
   return (
     <div className="profile-dropdown">
@@ -42,8 +47,8 @@ export function ProfileDropdown({ username }) {
       </button>
       {isOpen && (
         <div className="dropdown-menu">
-          <a href="#">Profile</a>
-          <a onClick={handleOrdersClick}>Orders</a> {/* Handle Orders Click */}
+          <a href="#" onClick={(e) => { e.preventDefault(); handleCartClick(); }}>Add to Cart</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); handleOrdersClick(); }}>Orders</a>
           <button className="profile-button" onClick={handleLogout}>
             Logout
           </button>

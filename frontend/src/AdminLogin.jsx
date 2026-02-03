@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "./assets/styles.css";
+import { Toast } from "./Toast";
 
-export default function LoginPage() {
+export default function AdminLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
+  const [showToast, setShowToast] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSignIn = async (e) => {
@@ -33,7 +36,8 @@ export default function LoginPage() {
         if (data.role === "CUSTOMER") {
           navigate("/customerhome");
         } else if (data.role === "ADMIN") {
-          navigate("/admindashboard");
+          setShowToast(true);
+          setTimeout(() => navigate("/admindashboard", { state: { username: data.username || data.user?.name || data.name || username } }), 1500);
         } else {
           navigate("/admin"); // Redirect to a default page if role is unknown
         }
@@ -49,6 +53,7 @@ export default function LoginPage() {
 
   return (
     <div className="page-layout">
+      <Toast message="Login Successful!" show={showToast} />
       <div className="page-container1">
         <div className="form-container">
           <h1 className="form-title">Admin Login</h1>
@@ -72,24 +77,35 @@ export default function LoginPage() {
               <label htmlFor="password" className="form-label">
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                placeholder="Enter Admin password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="form-input"
-              />
+              <div className="password-input-wrap">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter Admin password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="form-input"
+                />
+                <span
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </span>
+              </div>
             </div>
             <button type="submit" className="form-button">
               Enter As Admin
             </button>
           </form>
           <div className="form-footer">
-            <a href="/" className="form-link">
-              Not Admin? Login As USer ! 
-            </a>
+            <Link to="/forgot-password" state={{ returnTo: "/admin" }} className="form-link">
+              Forgot Password?
+            </Link>
+            <Link to="/" className="form-link">
+              Not Admin? Login as User
+            </Link>
           </div>
         </div>
       </div>

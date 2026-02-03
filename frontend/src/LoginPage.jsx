@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "./assets/styles.css";
+import { Toast } from "./Toast";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
+  const [showToast, setShowToast] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSignIn = async (e) => {
@@ -30,13 +33,9 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        if (data.role === "CUSTOMER") {
-          navigate("/customerhome");
-        } else if (data.role === "ADMIN") {
-          navigate("/adminhome");
-        } else {
-          navigate("/"); // Redirect to a default page if role is unknown
-        }
+        setShowToast(true);
+        const path = data.role === "CUSTOMER" ? "/customerhome" : data.role === "ADMIN" ? "/admindashboard" : "/";
+        setTimeout(() => navigate(path), 1500);
       } else {
         const errorMessage =
           data.error || "Something went wrong. Please try again.";
@@ -49,6 +48,7 @@ export default function LoginPage() {
 
   return (
     <div className="page-layout">
+      <Toast message="Login Successful!" show={showToast} />
       <div className="page-container">
         <div className="form-container">
           <h1 className="form-title">Login</h1>
@@ -72,24 +72,35 @@ export default function LoginPage() {
               <label htmlFor="password" className="form-label">
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="form-input"
-              />
+              <div className="password-input-wrap">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="form-input"
+                />
+                <span
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </span>
+              </div>
             </div>
             <button type="submit" className="form-button">
               Sign In
             </button>
           </form>
           <div className="form-footer">
-            <a href="/register" className="form-link">
+            <Link to="/forgot-password" state={{ returnTo: "/" }} className="form-link">
+              Forgot Password?
+            </Link>
+            <Link to="/register" className="form-link">
               New User? Sign up here
-            </a>
+            </Link>
           </div>
         </div>
       </div>

@@ -18,7 +18,7 @@ export function Footer() {
         </div>
       </div>
       <div className="footer-bottom">
-        <p>© 2023 SalesSavvy. All rights reserved.</p>
+        <p>© 2026 SalesSavvy. All rights reserved.</p>
       </div>
     </footer>
   );

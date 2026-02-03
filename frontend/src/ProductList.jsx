@@ -12,15 +12,17 @@ export function ProductList({ products, onAddToCart }) {
       <div className="product-grid">
         {products.map((product) => (
           <div key={product.product_id} className="product-card">
-            <img
-              src={product.images[0]}
-              alt={product.name}
-              className="product-image"
-              loading="lazy"
-              onError={(e) => {
-                e.target.src = 'https://via.placeholder.com/150'; // Fallback image
-              }}
-            />
+            <div className="product-image-wrap">
+              <img
+                src={product.images?.[0] && (product.images[0].startsWith("http") || product.images[0].startsWith("data:image/")) ? product.images[0] : "https://via.placeholder.com/150"}
+                alt={product.name}
+                className="product-image"
+                loading="lazy"
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/150";
+                }}
+              />
+            </div>
             <div className="product-info">
               <h3 className="product-name">{product.name}</h3>
               <p className="product-description">{product.description}</p>

@@ -2,224 +2,316 @@ import React, { useEffect, useState } from "react";
 import "./CartPage.css";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
+import { Toast } from "./Toast";
 import { useNavigate } from "react-router-dom";
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
-  const [overallPrice, setOverallPrice] = useState(0);
+  const [subtotal, setSubtotal] = useState("0.00");
   const [username, setUsername] = useState("");
-  const [subtotal, setSubtotal] = useState(0);
-  const navigate = useNavigate(); // To redirect users after successful payment
+  const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [showPaymentToast, setShowPaymentToast] = useState(false);
+  const navigate = useNavigate();
 
-  // Fetch cart items on component load
+  // Fetch cart items
   useEffect(() => {
     const fetchCartItems = async () => {
+      setLoading(true);
       try {
-        const response = await fetch("http://localhost:9090/api/cart/items", {
-          credentials: "include", // Include session cookie
+        const res = await fetch("http://localhost:9090/api/cart/items", {
+          credentials: "include",
         });
-        if (!response.ok) throw new Error("Failed to fetch cart items");
-        const data = await response.json();
 
-        setCartItems(
-          data?.cart?.products.map((item) => ({
-            ...item,
-            total_price: parseFloat(item.total_price).toFixed(2),
-            price_per_unit: parseFloat(item.price_per_unit).toFixed(2),
-          })) || []
-        );
-        setOverallPrice(parseFloat(data?.cart?.overall_total_price || 0).toFixed(2));
-        setUsername(data?.username || ""); // Save the username from the response
-      } catch (error) {
-        console.error("Error fetching cart items:", error);
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(`Cart fetch failed: ${err}`);
+        }
+
+        const data = await res.json();
+        const products = data?.cart?.products || [];
+
+        const formatted = products.map((item) => ({
+          ...item,
+          price_per_unit: Number(item.price_per_unit || 0).toFixed(2),
+          total_price: Number(item.total_price || 0).toFixed(2),
+        }));
+
+        setCartItems(formatted);
+        setUsername(data?.username || "Guest");
+
+        const calc = formatted
+          .reduce((sum, item) => sum + Number(item.total_price), 0)
+          .toFixed(2);
+
+        setSubtotal(calc);
+      } catch (err) {
+        console.error("Cart load error:", err);
+        alert("Failed to load cart. Please try again.");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchCartItems();
   }, []);
 
-  // Calculate subtotal whenever cart items change
-  useEffect(() => {
-    const total = cartItems
-      .reduce((total, item) => total + parseFloat(item.total_price), 0)
-      .toFixed(2);
-    setSubtotal(total);
-  }, [cartItems]);
-
-  // Remove item from the cart
+  // Remove item
   const handleRemoveItem = async (productId) => {
     try {
-      const response = await fetch("http://localhost:9090/api/cart/delete", {
+      const res = await fetch("http://localhost:9090/api/cart/delete", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
         credentials: "include",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, productId }),
       });
-      if (response.status === 204) {
-        setCartItems((prevItems) => prevItems.filter((item) => item.product_id !== productId));
-      } else throw new Error("Failed to remove item");
-    } catch (error) {
-      console.error("Error removing item:", error);
-    }
-  };
 
-  // Update quantity of an item
-  const handleQuantityChange = async (productId, newQuantity) => {
-    try {
-      if (newQuantity <= 0) {
-        handleRemoveItem(productId);
-        return;
+      if (res.ok || res.status === 204) {
+        setCartItems((prev) => prev.filter((i) => i.product_id !== productId));
+
+        const removed = cartItems.find((i) => i.product_id === productId);
+        if (removed) {
+          const newSub = (Number(subtotal) - Number(removed.total_price)).toFixed(2);
+          setSubtotal(newSub > 0 ? newSub : "0.00");
+        }
+      } else {
+        throw new Error(await res.text() || "Remove failed");
       }
-      const response = await fetch("http://localhost:9090/api/cart/update", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ username, productId, quantity: newQuantity }),
-      });
-      if (response.ok) {
-        setCartItems((prevItems) =>
-          prevItems.map((item) =>
-            item.product_id === productId
-              ? {
-                  ...item,
-                  quantity: newQuantity,
-                  total_price: (item.price_per_unit * newQuantity).toFixed(2),
-                }
-              : item
-          )
-        );
-      } else throw new Error("Failed to update quantity");
-    } catch (error) {
-      console.error("Error updating quantity:", error);
+    } catch (err) {
+      console.error("Remove failed:", err);
+      alert("Could not remove item. Please try again.");
     }
   };
 
-  // Razorpay integration for payment
-  const handleCheckout = async () => {
+  // Update quantity
+  const handleQuantityChange = async (productId, delta) => {
+    const item = cartItems.find((i) => i.product_id === productId);
+    if (!item) return;
+
+    const newQty = item.quantity + delta;
+    if (newQty < 0) return;
+    if (newQty === 0) return handleRemoveItem(productId);
+
     try {
-      const requestBody = {
-        totalAmount: subtotal,
+      const res = await fetch("http://localhost:9090/api/cart/update", {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, productId, quantity: newQty }),
+      });
+
+      if (!res.ok) throw new Error(await res.text() || "Update failed");
+
+      setCartItems((prev) =>
+        prev.map((i) =>
+          i.product_id === productId
+            ? { ...i, quantity: newQty, total_price: (Number(i.price_per_unit) * newQty).toFixed(2) }
+            : i
+        )
+      );
+
+      setSubtotal((prev) => {
+        const diff = Number(item.price_per_unit) * delta;
+        const next = (Number(prev) + diff).toFixed(2);
+        return next > 0 ? next : "0.00";
+      });
+    } catch (err) {
+      console.error("Qty update failed:", err);
+      alert("Could not update quantity. Please try again.");
+    }
+  };
+
+  // Checkout – now matches backend amount perfectly
+  const handleCheckout = async () => {
+    if (checkoutLoading) return;
+    if (Number(subtotal) <= 0) {
+      alert("Your cart is empty or total is zero.");
+      return;
+    }
+
+    setCheckoutLoading(true);
+
+    try {
+      // Prepare payload – send exact subtotal and cart details
+      const payload = {
+        totalAmount: Number(subtotal),  // frontend subtotal
         cartItems: cartItems.map((item) => ({
           productId: item.product_id,
           quantity: item.quantity,
-          price: item.price_per_unit,
-        })),
+          price: Number(item.price_per_unit)
+        }))
       };
 
-      // Create Razorpay order via backend
-      const response = await fetch("http://localhost:9090/api/payment/create", {
+      console.log("Sending payload to backend:", payload);
+
+      const res = await fetch("http://localhost:9090/api/payment/create", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(requestBody),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
       });
 
-      if (!response.ok) throw new Error(await response.text());
-      const razorpayOrderId = await response.text();
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Order creation failed:", res.status, errText);
+        alert(`Order creation failed: ${errText || "Server error " + res.status}`);
+        return;
+      }
 
-      // Open Razorpay checkout interface
+      // Now backend returns JSON with orderId and amountPaise
+      const data = await res.json();
+      const orderId = data.orderId;
+      const amountPaise = data.amountPaise;
+
+      console.log("Using backend values →", { orderId, amountPaise });
+
+      if (!orderId?.startsWith("order_") || !amountPaise || amountPaise < 100) {
+        throw new Error("Invalid order data received from server");
+      }
+
       const options = {
-        key: "rzp_test_LqWBBDbgwot5lh", // Replace with your Razorpay Key ID
-        amount: subtotal * 100, // Razorpay expects amount in paise
+        key: "rzp_test_SBc5Cn59thD4QV",  // ← MUST match backend key_id from properties
+        amount: amountPaise,             // ← exact amount from backend (prevents 400)
         currency: "INR",
         name: "SalesSavvy",
-        description: "Test Transaction",
-        order_id: razorpayOrderId,
-        handler: async function (response) {
+        description: "Cart Payment",
+        order_id: orderId.trim(),
+        handler: async (rzpRes) => {
           try {
-            // Payment success, verify on backend
-            const verifyResponse = await fetch("http://localhost:9090/api/payment/verify", {
+            const verifyRes = await fetch("http://localhost:9090/api/payment/verify", {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
               credentials: "include",
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                razorpayOrderId: response.razorpay_order_id, // Ensure key matches backend
-                razorpayPaymentId: response.razorpay_payment_id, // Ensure key matches backend
-                razorpaySignature: response.razorpay_signature, // Ensure key matches backend
+                razorpay_order_id: rzpRes.razorpay_order_id,
+                razorpay_payment_id: rzpRes.razorpay_payment_id,
+                razorpay_signature: rzpRes.razorpay_signature,
               }),
             });
-            const result = await verifyResponse.text();
-            if (verifyResponse.ok) {
-              alert("Payment verified successfully!");
-              navigate("/customerhome"); // Redirect to Customer Home Page
+
+            const text = await verifyRes.text();
+
+            if (verifyRes.ok) {
+              setShowPaymentToast(true);
+              setTimeout(() => navigate("/customerhome"), 1500);
             } else {
-              alert("Payment verification failed: " + result);
+              alert("Payment verification failed:\n" + text);
             }
-          } catch (error) {
-            console.error("Error verifying payment:", error);
-            alert("Payment verification failed. Please try again.");
+          } catch (e) {
+            console.error("Verification error:", e);
+            alert("Payment processed but verification failed. Contact support.");
           }
         },
         prefill: {
-          name: username,
-          email: "test@example.com",
+          name: username || "Customer",
+          email: "customer@example.com",
           contact: "9999999999",
         },
         theme: {
-          color: "#3399cc",
+          color: "#00ABE4",
         },
       };
 
+      console.log("Opening Razorpay with options:", JSON.stringify(options, null, 2));
+
       const rzp = new window.Razorpay(options);
+
+      rzp.on("payment.failed", (resp) => {
+        console.error("Razorpay payment failed:", resp.error);
+        alert(`Payment failed: ${resp.error?.description || "Unknown error"}`);
+      });
+
       rzp.open();
-    } catch (error) {
-      alert("Payment failed. Please try again.");
-      console.error("Error during checkout:", error);
+    } catch (err) {
+      console.error("Checkout process failed:", err);
+      alert(err.message || "Something went wrong during checkout. Please try again.");
+    } finally {
+      setCheckoutLoading(false);
     }
   };
 
-  const totalProducts = () => cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const totalItems = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  const shipping = "370.00";
 
-  const shipping = (5.0 * 74).toFixed(2); // Hardcoded shipping value
+  if (loading) {
+    return (
+      <div className="cart-page">
+        <Header cartCount="..." username={username} />
+        <div style={{ textAlign: "center", padding: "120px 20px" }}>
+          <h2>Loading your cart...</h2>
+        </div>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
       <div className="cart-page empty">
+        <Header cartCount="0" username={username} />
         <h2>Your Cart is Empty</h2>
-        <p>Add some items to get started!</p>
+        <p>Start adding some awesome products!</p>
+        <button onClick={() => navigate("/customerhome")}>
+          Continue Shopping
+        </button>
       </div>
     );
   }
 
   return (
-    <div style={{ width: "100vw" }}>
-      <Header cartCount={totalProducts()} username={username} />
+    <div style={{ width: "100vw", minHeight: "100vh" }}>
+      <Toast message="Payment Successful!" show={showPaymentToast} />
+      <Header cartCount={totalItems} username={username} />
+
       <div className="cart-container">
         <div className="cart-page">
-          <a href="#" className="back-button">
-            ← Shopping Continue
-          </a>
+          <button className="back-button" onClick={() => navigate("/customerhome")}>
+            ← Continue Shopping
+          </button>
 
           <div className="cart-header">
             <h2>Shopping Cart</h2>
-            <p>You have {cartItems.length} items in your cart</p>
+            <p>{cartItems.length} item{cartItems.length !== 1 ? "s" : ""}</p>
           </div>
 
           <div className="cart-items">
             {cartItems.map((item) => (
               <div key={item.product_id} className="cart-item">
                 <img
-                  src={item.image_url || "https://via.placeholder.com/80?text=No+Image"}
-                  alt={item.name}
+                  src={
+                    item.image_url?.startsWith("http")
+                      ? item.image_url
+                      : "https://via.placeholder.com/80?text=No+Image"
+                  }
+                  alt={item.name || "Product"}
+                  onError={(e) => (e.target.src = "https://via.placeholder.com/80?text=?")}
                 />
                 <div className="item-details">
                   <div className="item-info">
                     <h3>{item.name}</h3>
-                    <p>{item.description}</p>
+                    <p>{item.description || "No description available"}</p>
                   </div>
+
                   <div className="item-actions">
                     <div className="quantity-controls">
-                      <button onClick={() => handleQuantityChange(item.product_id, item.quantity - 1)}>
-                        -
+                      <button
+                        onClick={() => handleQuantityChange(item.product_id, -1)}
+                        disabled={item.quantity <= 1}
+                      >
+                        −
                       </button>
                       <span className="quantity-display">{item.quantity}</span>
-                      <button onClick={() => handleQuantityChange(item.product_id, item.quantity + 1)}>
+                      <button onClick={() => handleQuantityChange(item.product_id, +1)}>
                         +
                       </button>
                     </div>
+
                     <span className="price">₹{item.total_price}</span>
-                    <button className="remove-btn" onClick={() => handleRemoveItem(item.product_id)}>
-                      🗑️
+
+                    <button
+                      className="remove-btn"
+                      onClick={() => handleRemoveItem(item.product_id)}
+                    >
+                      🗑
                     </button>
                   </div>
                 </div>
@@ -240,19 +332,25 @@ const CartPage = () => {
               <span>₹{shipping}</span>
             </div>
             <div className="summary-row">
-              <span>Total Products</span>
-              <span>{totalProducts()}</span>
+              <span>Total Items</span>
+              <span>{totalItems}</span>
             </div>
             <div className="summary-row total">
               <span>Total</span>
-              <span>₹{(parseFloat(subtotal) + parseFloat(shipping)).toFixed(2)}</span>
+              <span>₹{(Number(subtotal) + Number(shipping)).toFixed(2)}</span>
             </div>
-            <button className="checkout-button" onClick={handleCheckout}>
-              Proceed to Checkout
+
+            <button
+              className="checkout-button"
+              onClick={handleCheckout}
+              disabled={checkoutLoading || Number(subtotal) <= 0}
+            >
+              {checkoutLoading ? "Processing..." : "Proceed to Checkout"}
             </button>
           </div>
         </div>
       </div>
+
       <Footer />
     </div>
   );
