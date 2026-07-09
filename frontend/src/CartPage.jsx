@@ -170,7 +170,7 @@ const CartPage = () => {
       }
 
       const options = {
-        key: "rzp_test_SBc5Cn59thD4QV",  // ← MUST match backend key_id from properties
+        key: "rzp_test_TAsqtBKY9SkyQb",  // ← MUST match backend key_id from properties
         amount: amountPaise,             // ← exact amount from backend (prevents 400)
         currency: "INR",
         name: "SalesSavvy",
