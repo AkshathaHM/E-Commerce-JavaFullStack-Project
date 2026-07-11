@@ -21,11 +21,9 @@ export default function AdminLogin() {
     }
 
     try {
-      const response = await fetch("http://localhost:9090/api/auth/login", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ username, password }),
       });
@@ -33,21 +31,19 @@ export default function AdminLogin() {
       const data = await response.json();
 
       if (response.ok) {
-        if (data.role === "CUSTOMER") {
-          navigate("/customerhome");
-        } else if (data.role === "ADMIN") {
-          setShowToast(true);
-          setTimeout(() => navigate("/admindashboard", { state: { username: data.username || data.user?.name || data.name || username } }), 1500);
-        } else {
-          navigate("/admin"); // Redirect to a default page if role is unknown
-        }
+        setShowToast(true);
+        setTimeout(() => {
+          if (data.role === "ADMIN") {
+            navigate("/admindashboard", { state: { username: data.username || username } });
+          } else {
+            navigate("/customerhome");
+          }
+        }, 1500);
       } else {
-        const errorMessage =
-          data.error || "Something went wrong. Please try again.";
-        throw new Error(errorMessage);
+        throw new Error(data.error || "Login failed");
       }
     } catch (err) {
-      setError(err.message || "Unexpected error occurred");
+      setError(err.message || "Unexpected error");
     }
   };
 
@@ -60,52 +56,29 @@ export default function AdminLogin() {
           {error && <p className="error-message">{error}</p>}
           <form onSubmit={handleSignIn} className="form-content">
             <div className="form-group">
-              <label htmlFor="username" className="form-label">
-                Username
-              </label>
-              <input
-                id="username"
-                type="text"
-                placeholder="Enter Admin username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                className="form-input"
-              />
+              <label htmlFor="username">Username</label>
+              <input id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} required />
             </div>
             <div className="form-group">
-              <label htmlFor="password" className="form-label">
-                Password
-              </label>
+              <label htmlFor="password">Password</label>
               <div className="password-input-wrap">
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter Admin password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="form-input"
                 />
-                <span
-                  className="password-toggle"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
+                <span onClick={() => setShowPassword(!showPassword)}>
                   {showPassword ? "Hide" : "Show"}
                 </span>
               </div>
             </div>
-            <button type="submit" className="form-button">
-              Enter As Admin
-            </button>
+            <button type="submit">Enter As Admin</button>
           </form>
           <div className="form-footer">
-            <Link to="/forgot-password" state={{ returnTo: "/admin" }} className="form-link">
-              Forgot Password?
-            </Link>
-            <Link to="/" className="form-link">
-              Not Admin? Login as User
-            </Link>
+            <Link to="/forgot-password" state={{ returnTo: "/admin" }}>Forgot Password?</Link>
+            <Link to="/">Not Admin? Login as User</Link>
           </div>
         </div>
       </div>

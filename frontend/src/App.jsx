@@ -5,11 +5,15 @@ import './assets/styles.css';
 
 function App() {
   return (
-    <Router future={{ v7_startTransition: true }}>
+    <Router 
+      future={{ 
+        v7_startTransition: true,
+        v7_relativeSplatPath: true   // ← Add this line
+      }}
+    >
       <AppRoutes />
     </Router>
   );
 }
 
 export default App;
-

@@ -16,50 +16,50 @@ const CartPage = () => {
 
   // Fetch cart items
   useEffect(() => {
-    const fetchCartItems = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch("http://localhost:9090/api/cart/items", {
-          credentials: "include",
-        });
-
-        if (!res.ok) {
-          const err = await res.text();
-          throw new Error(`Cart fetch failed: ${err}`);
-        }
-
-        const data = await res.json();
-        const products = data?.cart?.products || [];
-
-        const formatted = products.map((item) => ({
-          ...item,
-          price_per_unit: Number(item.price_per_unit || 0).toFixed(2),
-          total_price: Number(item.total_price || 0).toFixed(2),
-        }));
-
-        setCartItems(formatted);
-        setUsername(data?.username || "Guest");
-
-        const calc = formatted
-          .reduce((sum, item) => sum + Number(item.total_price), 0)
-          .toFixed(2);
-
-        setSubtotal(calc);
-      } catch (err) {
-        console.error("Cart load error:", err);
-        alert("Failed to load cart. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCartItems();
   }, []);
+
+  const fetchCartItems = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/items`, {
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`Cart fetch failed: ${err}`);
+      }
+
+      const data = await res.json();
+      const products = data?.cart?.products || [];
+
+      const formatted = products.map((item) => ({
+        ...item,
+        price_per_unit: Number(item.price_per_unit || 0).toFixed(2),
+        total_price: Number(item.total_price || 0).toFixed(2),
+      }));
+
+      setCartItems(formatted);
+      setUsername(data?.username || "Guest");
+
+      const calc = formatted
+        .reduce((sum, item) => sum + Number(item.total_price), 0)
+        .toFixed(2);
+
+      setSubtotal(calc);
+    } catch (err) {
+      console.error("Cart load error:", err);
+      alert("Failed to load cart. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Remove item
   const handleRemoveItem = async (productId) => {
     try {
-      const res = await fetch("http://localhost:9090/api/cart/delete", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/delete`, {
         method: "DELETE",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -93,7 +93,7 @@ const CartPage = () => {
     if (newQty === 0) return handleRemoveItem(productId);
 
     try {
-      const res = await fetch("http://localhost:9090/api/cart/update", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/update`, {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -121,7 +121,7 @@ const CartPage = () => {
     }
   };
 
-  // Checkout – now matches backend amount perfectly
+  // Checkout
   const handleCheckout = async () => {
     if (checkoutLoading) return;
     if (Number(subtotal) <= 0) {
@@ -132,9 +132,8 @@ const CartPage = () => {
     setCheckoutLoading(true);
 
     try {
-      // Prepare payload – send exact subtotal and cart details
       const payload = {
-        totalAmount: Number(subtotal),  // frontend subtotal
+        totalAmount: Number(subtotal),
         cartItems: cartItems.map((item) => ({
           productId: item.product_id,
           quantity: item.quantity,
@@ -142,9 +141,7 @@ const CartPage = () => {
         }))
       };
 
-      console.log("Sending payload to backend:", payload);
-
-      const res = await fetch("http://localhost:9090/api/payment/create", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/create`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -153,32 +150,28 @@ const CartPage = () => {
 
       if (!res.ok) {
         const errText = await res.text();
-        console.error("Order creation failed:", res.status, errText);
-        alert(`Order creation failed: ${errText || "Server error " + res.status}`);
+        alert(`Order creation failed: ${errText || "Server error"}`);
         return;
       }
 
-      // Now backend returns JSON with orderId and amountPaise
       const data = await res.json();
       const orderId = data.orderId;
       const amountPaise = data.amountPaise;
-
-      console.log("Using backend values →", { orderId, amountPaise });
 
       if (!orderId?.startsWith("order_") || !amountPaise || amountPaise < 100) {
         throw new Error("Invalid order data received from server");
       }
 
       const options = {
-        key: "rzp_test_TAsqtBKY9SkyQb",  // ← MUST match backend key_id from properties
-        amount: amountPaise,             // ← exact amount from backend (prevents 400)
+        key: "rzp_test_TAsqtBKY9SkyQb",
+        amount: amountPaise,
         currency: "INR",
         name: "SalesSavvy",
         description: "Cart Payment",
         order_id: orderId.trim(),
         handler: async (rzpRes) => {
           try {
-            const verifyRes = await fetch("http://localhost:9090/api/payment/verify", {
+            const verifyRes = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/verify`, {
               method: "POST",
               credentials: "include",
               headers: { "Content-Type": "application/json" },
@@ -189,17 +182,14 @@ const CartPage = () => {
               }),
             });
 
-            const text = await verifyRes.text();
-
             if (verifyRes.ok) {
               setShowPaymentToast(true);
               setTimeout(() => navigate("/customerhome"), 1500);
             } else {
-              alert("Payment verification failed:\n" + text);
+              alert("Payment verification failed");
             }
           } catch (e) {
-            console.error("Verification error:", e);
-            alert("Payment processed but verification failed. Contact support.");
+            alert("Payment processed but verification failed.");
           }
         },
         prefill: {
@@ -207,24 +197,14 @@ const CartPage = () => {
           email: "customer@example.com",
           contact: "9999999999",
         },
-        theme: {
-          color: "#00ABE4",
-        },
+        theme: { color: "#00ABE4" },
       };
 
-      console.log("Opening Razorpay with options:", JSON.stringify(options, null, 2));
-
       const rzp = new window.Razorpay(options);
-
-      rzp.on("payment.failed", (resp) => {
-        console.error("Razorpay payment failed:", resp.error);
-        alert(`Payment failed: ${resp.error?.description || "Unknown error"}`);
-      });
-
       rzp.open();
     } catch (err) {
       console.error("Checkout process failed:", err);
-      alert(err.message || "Something went wrong during checkout. Please try again.");
+      alert(err.message || "Something went wrong during checkout.");
     } finally {
       setCheckoutLoading(false);
     }
@@ -277,11 +257,7 @@ const CartPage = () => {
             {cartItems.map((item) => (
               <div key={item.product_id} className="cart-item">
                 <img
-                  src={
-                    item.image_url?.startsWith("http")
-                      ? item.image_url
-                      : "https://via.placeholder.com/80?text=No+Image"
-                  }
+                  src={item.image_url?.startsWith("http") ? item.image_url : "https://via.placeholder.com/80?text=No+Image"}
                   alt={item.name || "Product"}
                   onError={(e) => (e.target.src = "https://via.placeholder.com/80?text=?")}
                 />
@@ -293,24 +269,14 @@ const CartPage = () => {
 
                   <div className="item-actions">
                     <div className="quantity-controls">
-                      <button
-                        onClick={() => handleQuantityChange(item.product_id, -1)}
-                        disabled={item.quantity <= 1}
-                      >
-                        −
-                      </button>
+                      <button onClick={() => handleQuantityChange(item.product_id, -1)} disabled={item.quantity <= 1}>−</button>
                       <span className="quantity-display">{item.quantity}</span>
-                      <button onClick={() => handleQuantityChange(item.product_id, +1)}>
-                        +
-                      </button>
+                      <button onClick={() => handleQuantityChange(item.product_id, +1)}>+</button>
                     </div>
 
                     <span className="price">₹{item.total_price}</span>
 
-                    <button
-                      className="remove-btn"
-                      onClick={() => handleRemoveItem(item.product_id)}
-                    >
+                    <button className="remove-btn" onClick={() => handleRemoveItem(item.product_id)}>
                       🗑
                     </button>
                   </div>

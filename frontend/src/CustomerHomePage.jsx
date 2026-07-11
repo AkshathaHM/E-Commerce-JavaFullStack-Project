@@ -9,33 +9,37 @@ export default function CustomerHomePage() {
   const [products, setProducts] = useState([]);
   const [cartCount, setCartCount] = useState(0);
   const [username, setUsername] = useState('');
-  const [cartError, setCartError] = useState(false); // State for cart fetch error
-  const [isCartLoading, setIsCartLoading] = useState(true); // State for cart loading
+  const [cartError, setCartError] = useState(false);
+  const [isCartLoading, setIsCartLoading] = useState(true);
   const [showCartNotification, setShowCartNotification] = useState(false);
-
 
   useEffect(() => {
     fetchProducts();
+
     if (username) {
-      fetchCartCount(); // Fetch cart count only if username is available
+      fetchCartCount();
     }
-  }, [username]); // Re-run cart count fetch if username changes
+  }, [username]);
 
   const fetchProducts = async (category = '') => {
     try {
       const response = await fetch(
-        `http://localhost:9090/api/products${category ? `?category=${category}` : '?category=Shirts'}`, 
-        { credentials: 'include' } // Include authToken as a cookie
+        `${import.meta.env.VITE_API_URL}/api/products${
+          category ? `?category=${category}` : '?category=Shirts'
+        }`,
+        {
+          credentials: 'include',
+        }
       );
-      const data = await response.json();
-      if(data)
-     { 
-      setUsername(data.user?.name || 'Guest'); // Extract username
-      setProducts(data.products || []);
-    }else{
-      setProducts([]);
 
-    }
+      const data = await response.json();
+
+      if (data) {
+        setUsername(data.user?.name || 'Guest');
+        setProducts(data.products || []);
+      } else {
+        setProducts([]);
+      }
     } catch (error) {
       console.error('Error fetching products:', error);
       setProducts([]);
@@ -43,19 +47,25 @@ export default function CustomerHomePage() {
   };
 
   const fetchCartCount = async () => {
-    setIsCartLoading(true); // Set loading state
+    setIsCartLoading(true);
+
     try {
-      const response = await fetch(`http://localhost:9090/api/cart/items/count?username=${username}`, {
-        credentials: 'include', // Include authToken as a cookie
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/cart/items/count?username=${username}`,
+        {
+          credentials: 'include',
+        }
+      );
+
       const count = await response.json();
+
       setCartCount(count);
-      setCartError(false); // Reset error state if successful
+      setCartError(false);
     } catch (error) {
       console.error('Error fetching cart count:', error);
-      setCartError(true); // Set error state
+      setCartError(true);
     } finally {
-      setIsCartLoading(false); // Remove loading state
+      setIsCartLoading(false);
     }
   };
 
@@ -65,20 +75,28 @@ export default function CustomerHomePage() {
 
   const handleAddToCart = async (productId) => {
     if (!username) {
-      console.error('Username is required to add items to the cart');
+      console.error('Username is required');
       return;
     }
+
     try {
-      const response = await fetch('http://localhost:9090/api/cart/add', {
-        credentials: 'include',
-        method: 'POST',
-        body: JSON.stringify({ username, productId }), // Include username and productId in the request
-        headers: { 'Content-Type': 'application/json' },
-        // Include authToken as a cookie
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/cart/add`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username,
+            productId,
+          }),
+        }
+      );
 
       if (response.ok) {
-        fetchCartCount(); // Update cart count
+        fetchCartCount();
         setShowCartNotification(true);
         setTimeout(() => setShowCartNotification(false), 3000);
       } else {
@@ -96,16 +114,23 @@ export default function CustomerHomePage() {
           Cart Added Successfully
         </div>
       )}
+
       <Header
         cartCount={isCartLoading ? '...' : cartError ? 'Error' : cartCount}
         username={username}
       />
+
       <nav className="navigation">
         <CategoryNavigation onCategoryClick={handleCategoryClick} />
       </nav>
+
       <main className="main-content">
-        <ProductList products={products} onAddToCart={handleAddToCart} />
+        <ProductList
+          products={products}
+          onAddToCart={handleAddToCart}
+        />
       </main>
+
       <Footer />
     </div>
   );
