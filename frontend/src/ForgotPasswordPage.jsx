@@ -37,16 +37,12 @@ export default function ForgotPasswordPage() {
     }
 
     try {
-      const response = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username,
-          newPassword,
-        }),
-      });
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ username, newPassword }),
+});
+      
 
       if (response.ok) {
         setShowToast(true);
