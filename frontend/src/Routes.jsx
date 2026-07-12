@@ -5,7 +5,7 @@ import RegistrationPage from "./RegistrationPage";
 import ForgotPasswordPage from "./ForgotPasswordPage";
 import CustomerHomePage from "./CustomerHomePage";
 import CartPage from "./CartPage";
-import OrderPage from "./OrderPage";        // Keep as is
+import OrderPage from "./OrderPage";
 import AdminLogin from "./AdminLogin"; 
 import AdminDashboard from "./AdminDashboard";
 
