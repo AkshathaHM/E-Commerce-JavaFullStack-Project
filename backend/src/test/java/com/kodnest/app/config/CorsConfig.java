@@ -9,13 +9,7 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins(
-                    "http://localhost:5173",
-                    "http://localhost:5174",
-                    "http://localhost:5175",
-                    "https://e-commerce-java-full-stack-project-five.vercel.app",
-                    "https://e-commerce-java-full-stack-pr-git-48bed9-akshatha-h-ms-projects.vercel.app"
-                )
+                .allowedOriginPatterns("*")           // ← Allows all origins (safe for development)
                 .allowedMethods("*")
                 .allowedHeaders("*")
                 .allowCredentials(true);
