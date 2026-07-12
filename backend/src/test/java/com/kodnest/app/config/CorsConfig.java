@@ -13,8 +13,8 @@ public class CorsConfig implements WebMvcConfigurer {
                     "http://localhost:5173",
                     "http://localhost:5174",
                     "http://localhost:5175",
-                    "https://e-commerce-java-full-stack-project-five.vercel.app",   // ← Add this
-                    "https://e-commerce-java-full-stack-pr-git-48bed9-akshatha-h-ms-projects.vercel.app" // ← Add this too
+                    "https://e-commerce-java-full-stack-project-five.vercel.app",
+                    "https://e-commerce-java-full-stack-pr-git-48bed9-akshatha-h-ms-projects.vercel.app"
                 )
                 .allowedMethods("*")
                 .allowedHeaders("*")
