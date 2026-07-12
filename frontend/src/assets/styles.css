@@ -26,7 +26,7 @@ body {
   margin: 0;
   height:100vh;
   width:100vw;
-  background-image: url('./background.png');
+  background-image: url('/background.png');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -42,7 +42,7 @@ body {
   margin: 0;
   height:100vh;
   width:100vw;
-  background-image: url('./background1.png');
+  background-image: url('/background1.png');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
@@ -659,7 +659,7 @@ span.username {
 }
 
 .maindiv{
-  background-image: url('shipped.jpg');
+  background-image: url('/shipped.jpg');
 background-size: cover;
 background-attachment: fixed;  
 }
