@@ -46,23 +46,20 @@ public class AuthenticationFilter implements Filter {
 
         String requestURI = request.getRequestURI();
 
-        // Skip unauthenticated paths
         if (Arrays.asList(UNAUTHENTICATED_PATHS).contains(requestURI)) {
             chain.doFilter(request, response);
             return;
         }
 
-        // Handle CORS preflight - Let global CorsConfig handle it
-        // In doFilter method - replace OPTIONS block with this:
-if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-    response.setHeader("Access-Control-Allow-Origin", "*");
-    response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    response.setHeader("Access-Control-Allow-Headers", "*");
-    response.setHeader("Access-Control-Allow-Credentials", "true");
-    response.setHeader("Access-Control-Expose-Headers", "*");
-    response.setStatus(HttpServletResponse.SC_OK);
-    return;
-}
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setHeader("Access-Control-Allow-Origin", "*");
+            response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            response.setHeader("Access-Control-Allow-Headers", "*");
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+            response.setHeader("Access-Control-Expose-Headers", "*");
+            response.setStatus(HttpServletResponse.SC_OK);
+            return;
+        }
 
         String token = getAuthTokenFromCookies(request);
 
@@ -82,7 +79,6 @@ if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
         User user = userOpt.get();
         Role role = user.getRole();
 
-        // Role-based access control
         if (requestURI.startsWith("/admin/") && role != Role.ADMIN) {
             sendError(response, HttpServletResponse.SC_FORBIDDEN, "Admin access required");
             return;
