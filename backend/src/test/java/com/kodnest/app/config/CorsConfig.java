@@ -10,10 +10,14 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOriginPatterns("*")
+                .allowedOriginPatterns(
+                    "https://*.vercel.app", 
+                    "https://*.onrender.com", 
+                    "http://localhost:*"
+                )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
-                .allowCredentials(true)
-                .exposedHeaders("*");
+                .allowCredentials(true) // Required for frontend fetch with credentials: "include"
+                .exposedHeaders("Authorization", "Content-Type");
     }
 }
