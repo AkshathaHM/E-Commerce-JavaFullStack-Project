@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 
-// @Component
+@Component
 @WebFilter(urlPatterns = {"/api/*", "/admin/*"})
 public class AuthenticationFilter implements Filter {
 
@@ -26,6 +26,8 @@ public class AuthenticationFilter implements Filter {
 
     private final AuthServiceContract authService;
     private final UserRepository userRepository;
+
+    private static final String ALLOWED_ORIGIN = "http://localhost:5174";
 
     private static final String[] UNAUTHENTICATED_PATHS = {
             "/api/users/register",
@@ -46,17 +48,18 @@ public class AuthenticationFilter implements Filter {
 
         String requestURI = request.getRequestURI();
 
+        // Skip unauthenticated paths
         if (Arrays.asList(UNAUTHENTICATED_PATHS).contains(requestURI)) {
             chain.doFilter(request, response);
             return;
         }
 
+        // Handle CORS preflight
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            response.setHeader("Access-Control-Allow-Origin", "*");
+            response.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
             response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-            response.setHeader("Access-Control-Allow-Headers", "*");
+            response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
             response.setHeader("Access-Control-Allow-Credentials", "true");
-            response.setHeader("Access-Control-Expose-Headers", "*");
             response.setStatus(HttpServletResponse.SC_OK);
             return;
         }
@@ -79,8 +82,13 @@ public class AuthenticationFilter implements Filter {
         User user = userOpt.get();
         Role role = user.getRole();
 
+        // Role-based access control
         if (requestURI.startsWith("/admin/") && role != Role.ADMIN) {
             sendError(response, HttpServletResponse.SC_FORBIDDEN, "Admin access required");
+            return;
+        }
+        if (requestURI.startsWith("/api/") && role != Role.CUSTOMER) {
+            sendError(response, HttpServletResponse.SC_FORBIDDEN, "Customer access required");
             return;
         }
 

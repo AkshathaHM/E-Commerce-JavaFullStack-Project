@@ -20,7 +20,7 @@ import com.kodnest.app.userservices.CartServiceContract;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-// @CrossOrigin(origins = "http://localhost:5174", allowCredentials="true")
+@CrossOrigin(origins = "http://localhost:5174", allowCredentials="true")
 @RequestMapping("api/cart")
 public class CartController {
        
