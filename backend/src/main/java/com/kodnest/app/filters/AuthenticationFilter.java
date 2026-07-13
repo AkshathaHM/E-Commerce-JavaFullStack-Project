@@ -45,13 +45,13 @@ public class AuthenticationFilter implements Filter {
 
         String requestURI = request.getRequestURI();
 
-        // 1. Let preflight OPTIONS requests pass through immediately
+        // 1. Let CorsFilter handle OPTIONS preflight requests
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             chain.doFilter(request, response);
             return;
         }
 
-        // 2. Skip authentication for public routes (Registration & Login)
+        // 2. Skip auth check for public routes (Registration & Login)
         if (isUnauthenticatedPath(requestURI)) {
             chain.doFilter(request, response);
             return;
@@ -76,7 +76,7 @@ public class AuthenticationFilter implements Filter {
         User user = userOpt.get();
         Role role = user.getRole();
 
-        // 4. Role Authorization
+        // 4. Role check
         if (requestURI.startsWith("/admin/") && role != Role.ADMIN) {
             sendError(response, HttpServletResponse.SC_FORBIDDEN, "Admin access required");
             return;
