@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE) // Guarantees this runs FIRST, before Spring Security or any other Filter
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class GlobalCorsFilter implements Filter {
 
     @Override
@@ -22,8 +22,8 @@ public class GlobalCorsFilter implements Filter {
 
         String origin = request.getHeader("Origin");
 
-        // Dynamically reflect origin if it matches Vercel or Localhost
-        if (origin != null && (origin.endsWith(".vercel.app") || origin.contains("localhost"))) {
+        // Dynamically allow the incoming origin (Vercel, Localhost, etc.)
+        if (origin != null) {
             response.setHeader("Access-Control-Allow-Origin", origin);
             response.setHeader("Access-Control-Allow-Credentials", "true");
         } else {
@@ -34,10 +34,10 @@ public class GlobalCorsFilter implements Filter {
         response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With, Accept, Origin, Cookie");
         response.setHeader("Access-Control-Max-Age", "3600");
 
-        // DIRECTLY ACCEPT PREFLIGHT OPTIONS REQUESTS IMMEDIATELY
+        // Immediately complete preflight OPTIONS requests with HTTP 200 OK
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             response.setStatus(HttpServletResponse.SC_OK);
-            return; // Stops request here so Spring Security won't touch/block it!
+            return;
         }
 
         chain.doFilter(req, res);
