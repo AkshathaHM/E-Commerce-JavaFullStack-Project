@@ -16,6 +16,7 @@ import com.kodnest.app.usersrepositaries.UserRepository;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -27,7 +28,13 @@ public class AuthenticationFilter implements Filter {
     private final AuthServiceContract authService;
     private final UserRepository userRepository;
 
-    private static final String ALLOWED_ORIGIN = "http://localhost:5174";
+    // Allowed domains (include local dev and Vercel domains)
+    private static final List<String> ALLOWED_ORIGINS = Arrays.asList(
+            "http://localhost:5173",
+            "http://localhost:5174",
+            "http://localhost:3000",
+            "https://e-commerce-java-full-stack-project-q6xw-iy1w947k3.vercel.app"
+    );
 
     private static final String[] UNAUTHENTICATED_PATHS = {
             "/api/users/register",
@@ -46,24 +53,30 @@ public class AuthenticationFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
 
+        String origin = request.getHeader("Origin");
         String requestURI = request.getRequestURI();
 
-        // Skip unauthenticated paths
+        // 1. Dynamic Origin Validation & CORS Header Setting
+        if (origin != null && (ALLOWED_ORIGINS.contains(origin) || origin.endsWith(".vercel.app"))) {
+            response.setHeader("Access-Control-Allow-Origin", origin);
+            response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+            response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+        }
+
+        // 2. Short-Circuit Preflight (OPTIONS) Requests FIRST
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            return;
+        }
+
+        // 3. Skip unauthenticated paths
         if (Arrays.asList(UNAUTHENTICATED_PATHS).contains(requestURI)) {
             chain.doFilter(request, response);
             return;
         }
 
-        // Handle CORS preflight
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            response.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
-            response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-            response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-            response.setHeader("Access-Control-Allow-Credentials", "true");
-            response.setStatus(HttpServletResponse.SC_OK);
-            return;
-        }
-
+        // 4. Token Extraction & Validation
         String token = getAuthTokenFromCookies(request);
 
         if (token == null || !authService.validateToken(token)) {
@@ -82,13 +95,9 @@ public class AuthenticationFilter implements Filter {
         User user = userOpt.get();
         Role role = user.getRole();
 
-        // Role-based access control
+        // 5. Role-Based Access Control
         if (requestURI.startsWith("/admin/") && role != Role.ADMIN) {
             sendError(response, HttpServletResponse.SC_FORBIDDEN, "Admin access required");
-            return;
-        }
-        if (requestURI.startsWith("/api/") && role != Role.CUSTOMER) {
-            sendError(response, HttpServletResponse.SC_FORBIDDEN, "Customer access required");
             return;
         }
 
