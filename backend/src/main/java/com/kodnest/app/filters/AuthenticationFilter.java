@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 
-@Component
+// @Component
 @WebFilter(urlPatterns = {"/api/*", "/admin/*"})
 public class AuthenticationFilter implements Filter {
 
