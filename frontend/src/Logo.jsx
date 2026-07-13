@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import logo from './logo.png'; // Import the image
-import './assets/styles.css'; // Import external CSS
+import './assets/styles.css';
 
 export default function Logo() {
   const navigate = useNavigate();
@@ -9,10 +8,10 @@ export default function Logo() {
   return (
     <div className="logo-container" onClick={() => navigate('/customerhome')}>
       <img
-        src={logo} // Use the imported image
+        src="/logo.png"           // Use public folder path
         alt="SalesSavvy Logo"
-        className="logo-image" // Updated class name
-        onError={(e) => { e.target.src = 'fallback-logo.png'; }} // Fallback for image error
+        className="logo-image"
+        onError={(e) => { e.target.src = 'https://via.placeholder.com/60?text=SS'; }}
       />
       <span className="logo-text">SalesSavvy</span>
     </div>
