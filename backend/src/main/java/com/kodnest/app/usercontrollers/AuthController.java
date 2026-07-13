@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMethod;   // ← Add this import
 
 import com.kodnest.app.entities.LoginRequest;
 import com.kodnest.app.entities.User;
@@ -31,7 +32,7 @@ public class AuthController {
     @CrossOrigin(
         origins = "*", 
         allowedHeaders = "*", 
-        methods = {"POST", "OPTIONS"},
+        methods = {RequestMethod.POST, RequestMethod.OPTIONS},  // ← Fixed
         allowCredentials = "true",
         exposedHeaders = "*"
     )
@@ -43,11 +44,9 @@ public class AuthController {
 
             Cookie cookie = new Cookie("authToken", token);
             cookie.setHttpOnly(true);
-            cookie.setSecure(false);        // Change to true when using HTTPS
+            cookie.setSecure(false);
             cookie.setPath("/");
             cookie.setMaxAge(3600);
-            // Remove domain for cross-origin (important!)
-            // cookie.setDomain("localhost");  ← COMMENT THIS LINE
 
             response.addCookie(cookie);
 
