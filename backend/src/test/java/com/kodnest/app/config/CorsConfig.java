@@ -14,15 +14,16 @@ import java.util.List;
 public class CorsConfig {
 
     @Bean
-    @Order(Ordered.HIGHEST_PRECEDENCE) // Runs BEFORE spring filters and security checks
+    @Order(Ordered.HIGHEST_PRECEDENCE) // Forces CORS check before Spring Security and Filter chain
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowCredentials(true);
 
-        // Uses pattern matching to accept ANY vercel deployment domain (*.vercel.app)
+        // Explicitly include production domain, wildcard preview domains, and local dev
         config.setAllowedOriginPatterns(List.of(
+            "https://e-commerce-java-full-stack-project-five.vercel.app",
             "https://*.vercel.app",
             "http://localhost:5173",
             "http://localhost:5174",
