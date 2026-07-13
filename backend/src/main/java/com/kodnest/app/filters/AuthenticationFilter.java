@@ -15,8 +15,6 @@ import com.kodnest.app.userservices.AuthServiceContract;
 import com.kodnest.app.usersrepositaries.UserRepository;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -27,14 +25,6 @@ public class AuthenticationFilter implements Filter {
 
     private final AuthServiceContract authService;
     private final UserRepository userRepository;
-
-    // Allowed domains (include local dev and Vercel domains)
-    private static final List<String> ALLOWED_ORIGINS = Arrays.asList(
-            "http://localhost:5173",
-            "http://localhost:5174",
-            "http://localhost:3000",
-            "https://e-commerce-java-full-stack-project-q6xw-iy1w947k3.vercel.app"
-    );
 
     private static final String[] UNAUTHENTICATED_PATHS = {
             "/api/users/register",
@@ -53,30 +43,21 @@ public class AuthenticationFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
 
-        String origin = request.getHeader("Origin");
         String requestURI = request.getRequestURI();
 
-        // 1. Dynamic Origin Validation & CORS Header Setting
-        if (origin != null && (ALLOWED_ORIGINS.contains(origin) || origin.endsWith(".vercel.app"))) {
-            response.setHeader("Access-Control-Allow-Origin", origin);
-            response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-            response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-            response.setHeader("Access-Control-Allow-Credentials", "true");
-        }
-
-        // 2. Short-Circuit Preflight (OPTIONS) Requests FIRST
+        // 1. Let preflight OPTIONS requests pass through immediately
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            response.setStatus(HttpServletResponse.SC_OK);
-            return;
-        }
-
-        // 3. Skip unauthenticated paths
-        if (Arrays.asList(UNAUTHENTICATED_PATHS).contains(requestURI)) {
             chain.doFilter(request, response);
             return;
         }
 
-        // 4. Token Extraction & Validation
+        // 2. Skip authentication for public routes (Registration & Login)
+        if (isUnauthenticatedPath(requestURI)) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // 3. Authenticate token
         String token = getAuthTokenFromCookies(request);
 
         if (token == null || !authService.validateToken(token)) {
@@ -95,14 +76,28 @@ public class AuthenticationFilter implements Filter {
         User user = userOpt.get();
         Role role = user.getRole();
 
-        // 5. Role-Based Access Control
+        // 4. Role Authorization
         if (requestURI.startsWith("/admin/") && role != Role.ADMIN) {
             sendError(response, HttpServletResponse.SC_FORBIDDEN, "Admin access required");
             return;
         }
 
+        if (requestURI.startsWith("/api/") && role != Role.CUSTOMER) {
+            sendError(response, HttpServletResponse.SC_FORBIDDEN, "Customer access required");
+            return;
+        }
+
         request.setAttribute("authenticatedUser", user);
         chain.doFilter(request, response);
+    }
+
+    private boolean isUnauthenticatedPath(String uri) {
+        for (String path : UNAUTHENTICATED_PATHS) {
+            if (uri.endsWith(path)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getAuthTokenFromCookies(HttpServletRequest request) {
@@ -119,6 +114,7 @@ public class AuthenticationFilter implements Filter {
 
     private void sendError(HttpServletResponse response, int status, String message) throws IOException {
         response.setStatus(status);
-        response.getWriter().write(message);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
     }
 }
