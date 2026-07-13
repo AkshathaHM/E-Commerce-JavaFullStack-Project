@@ -22,7 +22,8 @@ public class SalesSavvyApplication {
                         .allowedOriginPatterns("*")
                         .allowedMethods("*")
                         .allowedHeaders("*")
-                        .allowCredentials(false);
+                        .allowCredentials(false)
+                        .exposedHeaders("*");
             }
         };
     }
