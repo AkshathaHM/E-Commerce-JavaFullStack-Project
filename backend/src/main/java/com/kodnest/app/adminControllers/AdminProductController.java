@@ -8,7 +8,6 @@ import com.kodnest.app.adminServices.AdminProductServiceContract;
 import com.kodnest.app.entities.Product;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5174", allowCredentials = "true")
 @RequestMapping("/admin/products")
 public class AdminProductController {
 

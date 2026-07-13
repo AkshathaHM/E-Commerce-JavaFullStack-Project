@@ -46,15 +46,15 @@ public class AuthenticationFilter implements Filter {
 
         String requestURI = request.getRequestURI();
 
+        // Skip unauthenticated paths
         if (Arrays.asList(UNAUTHENTICATED_PATHS).contains(requestURI)) {
             chain.doFilter(request, response);
             return;
         }
 
-        // CORS Preflight
+        // Handle CORS preflight - Let global CorsConfig handle it
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            setCorsHeaders(response);
-            response.setStatus(HttpServletResponse.SC_OK);
+            chain.doFilter(request, response);
             return;
         }
 
@@ -76,6 +76,7 @@ public class AuthenticationFilter implements Filter {
         User user = userOpt.get();
         Role role = user.getRole();
 
+        // Role-based access control
         if (requestURI.startsWith("/admin/") && role != Role.ADMIN) {
             sendError(response, HttpServletResponse.SC_FORBIDDEN, "Admin access required");
             return;
@@ -83,14 +84,6 @@ public class AuthenticationFilter implements Filter {
 
         request.setAttribute("authenticatedUser", user);
         chain.doFilter(request, response);
-    }
-
-    private void setCorsHeaders(HttpServletResponse response) {
-        response.setHeader("Access-Control-Allow-Origin", "*");
-        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        response.setHeader("Access-Control-Allow-Headers", "*");
-        response.setHeader("Access-Control-Allow-Credentials", "false");
-        response.setHeader("Access-Control-Expose-Headers", "*");
     }
 
     private String getAuthTokenFromCookies(HttpServletRequest request) {

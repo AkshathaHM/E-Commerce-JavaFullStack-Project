@@ -19,7 +19,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5174", allowCredentials = "true")
+// @CrossOrigin(origins = "http://localhost:5174", allowCredentials = "true")
 @RequestMapping("/api/auth")
 public class AuthController {
 

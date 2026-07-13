@@ -11,7 +11,7 @@ import com.kodnest.app.userservices.OrderServiceContract;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5174", allowCredentials = "true")   // ← FIXED: 5174
+// @CrossOrigin(origins = "http://localhost:5174", allowCredentials = "true")   // ← FIXED: 5174
 @RequestMapping("/api/orders")
 public class OrderController {
 
