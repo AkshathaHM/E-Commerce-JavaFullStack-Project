@@ -53,10 +53,16 @@ public class AuthenticationFilter implements Filter {
         }
 
         // Handle CORS preflight - Let global CorsConfig handle it
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            chain.doFilter(request, response);
-            return;
-        }
+        // In doFilter method - replace OPTIONS block with this:
+if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+    response.setHeader("Access-Control-Allow-Origin", "*");
+    response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    response.setHeader("Access-Control-Allow-Headers", "*");
+    response.setHeader("Access-Control-Allow-Credentials", "true");
+    response.setHeader("Access-Control-Expose-Headers", "*");
+    response.setStatus(HttpServletResponse.SC_OK);
+    return;
+}
 
         String token = getAuthTokenFromCookies(request);
 
