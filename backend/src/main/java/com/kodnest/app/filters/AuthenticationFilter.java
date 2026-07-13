@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.kodnest.app.entities.Role;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.util.Optional;
 
 @Component
+@Order(2) // Ensures this filter runs AFTER GlobalCorsFilter (Order 1)
 @WebFilter(urlPatterns = {"/api/*", "/admin/*"})
 public class AuthenticationFilter implements Filter {
 
@@ -45,13 +47,13 @@ public class AuthenticationFilter implements Filter {
 
         String requestURI = request.getRequestURI();
 
-        // 1. Let CorsFilter handle OPTIONS preflight requests
+        // 1. Instantly fulfill OPTIONS preflight requests (CORS)
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-            chain.doFilter(request, response);
+            response.setStatus(HttpServletResponse.SC_OK);
             return;
         }
 
-        // 2. Skip auth check for public routes (Registration & Login)
+        // 2. Skip authentication for public endpoints (Registration & Login)
         if (isUnauthenticatedPath(requestURI)) {
             chain.doFilter(request, response);
             return;
@@ -61,7 +63,7 @@ public class AuthenticationFilter implements Filter {
         String token = getAuthTokenFromCookies(request);
 
         if (token == null || !authService.validateToken(token)) {
-            sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or missing token");
+            sendError(request, response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or missing token");
             return;
         }
 
@@ -69,7 +71,7 @@ public class AuthenticationFilter implements Filter {
         Optional<User> userOpt = userRepository.findByUsername(username);
 
         if (userOpt.isEmpty()) {
-            sendError(response, HttpServletResponse.SC_UNAUTHORIZED, "User not found");
+            sendError(request, response, HttpServletResponse.SC_UNAUTHORIZED, "User not found");
             return;
         }
 
@@ -78,12 +80,12 @@ public class AuthenticationFilter implements Filter {
 
         // 4. Role check
         if (requestURI.startsWith("/admin/") && role != Role.ADMIN) {
-            sendError(response, HttpServletResponse.SC_FORBIDDEN, "Admin access required");
+            sendError(request, response, HttpServletResponse.SC_FORBIDDEN, "Admin access required");
             return;
         }
 
         if (requestURI.startsWith("/api/") && role != Role.CUSTOMER) {
-            sendError(response, HttpServletResponse.SC_FORBIDDEN, "Customer access required");
+            sendError(request, response, HttpServletResponse.SC_FORBIDDEN, "Customer access required");
             return;
         }
 
@@ -93,7 +95,7 @@ public class AuthenticationFilter implements Filter {
 
     private boolean isUnauthenticatedPath(String uri) {
         for (String path : UNAUTHENTICATED_PATHS) {
-            if (uri.endsWith(path)) {
+            if (uri.endsWith(path) || uri.contains(path)) {
                 return true;
             }
         }
@@ -112,7 +114,15 @@ public class AuthenticationFilter implements Filter {
         return null;
     }
 
-    private void sendError(HttpServletResponse response, int status, String message) throws IOException {
+    private void sendError(HttpServletRequest request, HttpServletResponse response, int status, String message) throws IOException {
+        String origin = request.getHeader("Origin");
+        if (origin != null) {
+            response.setHeader("Access-Control-Allow-Origin", origin);
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+        } else {
+            response.setHeader("Access-Control-Allow-Origin", "*");
+        }
+        
         response.setStatus(status);
         response.setContentType("application/json");
         response.getWriter().write("{\"error\": \"" + message + "\"}");
