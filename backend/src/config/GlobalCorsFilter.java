@@ -22,16 +22,18 @@ public class GlobalCorsFilter implements Filter {
 
         String origin = request.getHeader("Origin");
 
-        // Dynamically allow the incoming origin (Vercel, Localhost, etc.)
-        if (origin != null) {
+        if (origin != null && !origin.isBlank()) {
             response.setHeader("Access-Control-Allow-Origin", origin);
+            response.setHeader("Vary", "Origin");
             response.setHeader("Access-Control-Allow-Credentials", "true");
         } else {
             response.setHeader("Access-Control-Allow-Origin", "*");
+            response.setHeader("Access-Control-Allow-Credentials", "false");
         }
 
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
         response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With, Accept, Origin, Cookie");
+        response.setHeader("Access-Control-Expose-Headers", "Authorization, Content-Type");
         response.setHeader("Access-Control-Max-Age", "3600");
 
         // Immediately complete preflight OPTIONS requests with HTTP 200 OK

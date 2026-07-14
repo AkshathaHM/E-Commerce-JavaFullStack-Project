@@ -1,0 +1,18 @@
+# Java / Maven
+/backend/target/
+*.log
+*.class
+
+# Node / Vite
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.env
+
+# IDEs
+/.idea/
+.vscode/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -21,10 +21,10 @@ public class CorsConfig {
 
         config.setAllowCredentials(true);
 
-        // Explicitly include production domain, wildcard preview domains, and local dev
+        // Explicitly allow Vercel-hosted frontend origins, local dev, and preview domains
         config.setAllowedOriginPatterns(List.of(
-            "https://e-commerce-java-full-stack-project-five.vercel.app",
             "https://*.vercel.app",
+            "https://e-commerce-java-full-stack-project-five.vercel.app",
             "http://localhost:5173",
             "http://localhost:5174",
             "http://localhost:3000"
@@ -32,6 +32,7 @@ public class CorsConfig {
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization", "Content-Type"));
         config.setMaxAge(3600L);
 
         source.registerCorsConfiguration("/**", config);
