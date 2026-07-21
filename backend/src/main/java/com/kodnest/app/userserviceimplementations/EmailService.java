@@ -7,7 +7,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
+
+import java.util.Properties;
 
 @Service
 public class EmailService {
@@ -17,12 +20,47 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final String fromAddress;
     private final String backendBaseUrl;
+    private final String mailHost;
+    private final int mailPort;
+    private final String mailUsername;
+    private final String mailPassword;
+    private final int connectionTimeout;
+    private final int timeout;
+    private final int writeTimeout;
+    private final boolean auth;
+    private final boolean starttlsEnabled;
+    private final boolean starttlsRequired;
+    private final String sslTrust;
+    private final String sslProtocols;
 
     public EmailService(JavaMailSender mailSender,
+                        @Value("${spring.mail.host:smtp.gmail.com}") String mailHost,
+                        @Value("${spring.mail.port:587}") int mailPort,
                         @Value("${spring.mail.username:}") String fromAddress,
+                        @Value("${spring.mail.password:}") String mailPassword,
+                        @Value("${spring.mail.properties.mail.smtp.connectiontimeout:5000}") int connectionTimeout,
+                        @Value("${spring.mail.properties.mail.smtp.timeout:5000}") int timeout,
+                        @Value("${spring.mail.properties.mail.smtp.writetimeout:5000}") int writeTimeout,
+                        @Value("${spring.mail.properties.mail.smtp.auth:true}") boolean auth,
+                        @Value("${spring.mail.properties.mail.smtp.starttls.enable:true}") boolean starttlsEnabled,
+                        @Value("${spring.mail.properties.mail.smtp.starttls.required:true}") boolean starttlsRequired,
+                        @Value("${spring.mail.properties.mail.smtp.ssl.trust:smtp.gmail.com}") String sslTrust,
+                        @Value("${spring.mail.properties.mail.smtp.ssl.protocols:TLSv1.2}") String sslProtocols,
                         @Value("${app.backend.base-url:http://localhost:10000}") String backendBaseUrl) {
         this.mailSender = mailSender;
+        this.mailHost = mailHost;
+        this.mailPort = mailPort;
         this.fromAddress = fromAddress;
+        this.mailUsername = fromAddress;
+        this.mailPassword = mailPassword;
+        this.connectionTimeout = connectionTimeout;
+        this.timeout = timeout;
+        this.writeTimeout = writeTimeout;
+        this.auth = auth;
+        this.starttlsEnabled = starttlsEnabled;
+        this.starttlsRequired = starttlsRequired;
+        this.sslTrust = sslTrust;
+        this.sslProtocols = sslProtocols;
         this.backendBaseUrl = backendBaseUrl;
 
         if (fromAddress == null || fromAddress.isBlank()) {
@@ -82,6 +120,31 @@ public class EmailService {
                 userMessage += "Connection timed out to smtp.gmail.com:587. Verify network access and firewall rules.";
             } else {
                 userMessage += ex.getMessage();
+            }
+
+            if (mailSender instanceof JavaMailSenderImpl) {
+                JavaMailSenderImpl javaMailSender = (JavaMailSenderImpl) mailSender;
+                if (mailPort == 587 && !sslTrust.isBlank()) {
+                    try {
+                        logger.info("Attempting fallback SMTP SSL on port 465 for {}", to);
+                        javaMailSender.setPort(465);
+                        Properties props = javaMailSender.getJavaMailProperties();
+                        props.put("mail.smtp.socketFactory.port", "465");
+                        props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+                        props.put("mail.smtp.ssl.enable", "true");
+                        props.put("mail.smtp.starttls.enable", "false");
+                        props.put("mail.smtp.starttls.required", "false");
+                        javaMailSender.setJavaMailProperties(props);
+                        javaMailSender.send(message);
+                        logger.info("OTP email sent via fallback port 465 to {}", to);
+                        return;
+                    } catch (MailException fallbackEx) {
+                        logger.error("Fallback SMTP SSL failed for {}: {}", to, fallbackEx.getMessage(), fallbackEx);
+                        userMessage += " Fallback to SMTP SSL on port 465 also failed.";
+                    } finally {
+                        javaMailSender.setPort(mailPort);
+                    }
+                }
             }
 
             throw new RuntimeException(userMessage, ex);
