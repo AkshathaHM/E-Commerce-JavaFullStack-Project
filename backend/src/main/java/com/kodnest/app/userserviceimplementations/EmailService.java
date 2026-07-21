@@ -75,7 +75,7 @@ public class EmailService {
             mailSender.send(message);
             logger.info("OTP email sent to {}", user.getEmail());
         } catch (MailException e) {
-            logger.error("Failed to send OTP email to {}: {}", user.getEmail(), e.getMessage());
+            logger.error("Failed to send OTP email to {}", user.getEmail(), e);
             logger.info("OTP code for {} is {}", user.getEmail(), otp);
             throw new RuntimeException("Failed to send OTP email. Please check the email settings or try again later.");
         }

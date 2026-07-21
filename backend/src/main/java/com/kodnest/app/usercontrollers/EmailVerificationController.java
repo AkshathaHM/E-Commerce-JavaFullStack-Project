@@ -17,10 +17,12 @@ import java.util.Map;
 
 @RestController
 @CrossOrigin(
-        origins = {
+        allowedOriginPatterns = {
                 "http://localhost:5174",
                 "http://localhost:5173",
                 "http://127.0.0.1:5174",
+                "http://127.0.0.1:5173",
+                "https://*.vercel.app",
                 "https://e-commerce-javafullstack-project-2.onrender.com"
         },
         allowedHeaders = {"Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Cookie"},
