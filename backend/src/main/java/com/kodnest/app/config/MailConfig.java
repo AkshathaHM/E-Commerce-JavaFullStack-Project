@@ -10,6 +10,6 @@ public class MailConfig {
     private static final Logger logger = LoggerFactory.getLogger(MailConfig.class);
 
     public MailConfig() {
-        logger.info("SendGrid is enabled; SMTP JavaMailSender configuration is no longer used.");
+        logger.info("SMTP email delivery is enabled; SendGrid-specific configuration has been removed.");
     }
 }
