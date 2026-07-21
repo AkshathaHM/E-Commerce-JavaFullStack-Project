@@ -74,7 +74,17 @@ public class EmailService {
             logger.info("OTP email sent to {}", to);
         } catch (MailException ex) {
             logger.error("Failed to send email to {}: {}", to, ex.getMessage(), ex);
-            throw new RuntimeException("Failed to send email: " + ex.getMessage(), ex);
+
+            String userMessage = "Failed to send email. ";
+            if (ex.getMessage() != null && ex.getMessage().contains("Couldn't connect to host")) {
+                userMessage += "SMTP connection failed, check your Gmail SMTP settings, network access, and app password.";
+            } else if (ex.getMessage() != null && ex.getMessage().contains("Connection timed out")) {
+                userMessage += "Connection timed out to smtp.gmail.com:587. Verify network access and firewall rules.";
+            } else {
+                userMessage += ex.getMessage();
+            }
+
+            throw new RuntimeException(userMessage, ex);
         }
     }
 }
