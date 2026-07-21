@@ -16,14 +16,24 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
     private final String fromAddress;
+    private final String mailPassword;
     private final String backendBaseUrl;
 
     public EmailService(JavaMailSender mailSender,
                         @Value("${spring.mail.username:}") String fromAddress,
+                        @Value("${spring.mail.password:}") String mailPassword,
                         @Value("${app.backend.base-url:http://localhost:9090}") String backendBaseUrl) {
         this.mailSender = mailSender;
         this.fromAddress = fromAddress;
+        this.mailPassword = mailPassword;
         this.backendBaseUrl = backendBaseUrl;
+
+        if (fromAddress == null || fromAddress.isBlank()) {
+            logger.warn("SMTP sender address is not configured (SPRING_MAIL_USERNAME is blank)");
+        }
+        if (mailPassword == null || mailPassword.isBlank()) {
+            logger.warn("SMTP password is not configured (SPRING_MAIL_PASSWORD is blank)");
+        }
     }
 
     public void sendVerificationEmail(User user, String token) {
@@ -77,7 +87,14 @@ public class EmailService {
         } catch (MailException e) {
             logger.error("Failed to send OTP email to {}", user.getEmail(), e);
             logger.info("OTP code for {} is {}", user.getEmail(), otp);
-            throw new RuntimeException("Failed to send OTP email. Please check the email settings or try again later.");
+
+            if (fromAddress == null || fromAddress.isBlank()) {
+                throw new RuntimeException("Failed to send OTP email: SPRING_MAIL_USERNAME is missing or blank. Set it in Render environment variables.");
+            }
+            if (mailPassword == null || mailPassword.isBlank()) {
+                throw new RuntimeException("Failed to send OTP email: SPRING_MAIL_PASSWORD is missing or blank. Use an app-specific password for Gmail.");
+            }
+            throw new RuntimeException("Failed to send OTP email: SMTP connection failed. Verify Gmail SMTP credentials and Render outbound email permissions.");
         }
     }
 }
