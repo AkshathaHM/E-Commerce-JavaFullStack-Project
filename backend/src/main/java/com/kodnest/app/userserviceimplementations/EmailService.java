@@ -32,6 +32,7 @@ public class EmailService {
     private final boolean starttlsRequired;
     private final String sslTrust;
     private final String sslProtocols;
+    private volatile String lastEmailError;
 
     public EmailService(JavaMailSender mailSender,
                         @Value("${spring.mail.host:smtp.gmail.com}") String mailHost,
@@ -110,6 +111,7 @@ public class EmailService {
         try {
             mailSender.send(message);
             logger.info("OTP email sent to {}", to);
+            lastEmailError = null;
         } catch (MailException ex) {
             logger.error("Failed to send email to {}: {}", to, ex.getMessage(), ex);
 
@@ -123,22 +125,30 @@ public class EmailService {
             }
 
             if (mailSender instanceof JavaMailSenderImpl) {
-                JavaMailSenderImpl fallbackSender = createFallbackSslSender();
+                JavaMailSenderImpl fallbackSender = mailPort == 465 ? createStartTlsSender() : createSslSender();
                 try {
-                    logger.info("Attempting fallback SMTP SSL on port 465 for {}", to);
+                    logger.info("Attempting fallback Gmail SMTP on alternate port for {}", to);
                     fallbackSender.send(message);
-                    logger.info("OTP email sent via fallback port 465 to {}", to);
+                    logger.info("OTP email sent via fallback port {} to {}", fallbackSender.getPort(), to);
+                    lastEmailError = null;
                     return;
                 } catch (MailException fallbackEx) {
-                    logger.error("Fallback SMTP SSL failed for {}: {}", to, fallbackEx.getMessage(), fallbackEx);
+                    logger.error("Fallback Gmail SMTP failed for {}: {}", to, fallbackEx.getMessage(), fallbackEx);
+                    lastEmailError = userMessage + " Fallback attempt also failed: " + fallbackEx.getMessage();
+                    throw new RuntimeException(lastEmailError, fallbackEx);
                 }
             }
 
-            logger.warn("Email delivery failed for {} after fallback. User creation can continue, but mail will not be sent.", to);
+            lastEmailError = userMessage;
+            throw new RuntimeException(userMessage, ex);
         }
     }
 
-    private JavaMailSenderImpl createFallbackSslSender() {
+    public String getLastEmailError() {
+        return lastEmailError;
+    }
+
+    private JavaMailSenderImpl createSslSender() {
         JavaMailSenderImpl fallbackSender = new JavaMailSenderImpl();
         fallbackSender.setHost(mailHost);
         fallbackSender.setPort(465);
@@ -148,9 +158,32 @@ public class EmailService {
         Properties fallbackProps = new Properties();
         fallbackProps.put("mail.transport.protocol", "smtp");
         fallbackProps.put("mail.smtp.auth", String.valueOf(auth));
+        fallbackProps.put("mail.smtp.ssl.enable", "true");
         fallbackProps.put("mail.smtp.starttls.enable", "false");
         fallbackProps.put("mail.smtp.starttls.required", "false");
-        fallbackProps.put("mail.smtp.ssl.enable", "true");
+        fallbackProps.put("mail.smtp.ssl.trust", sslTrust);
+        fallbackProps.put("mail.smtp.ssl.protocols", sslProtocols);
+        fallbackProps.put("mail.smtp.connectiontimeout", String.valueOf(connectionTimeout));
+        fallbackProps.put("mail.smtp.timeout", String.valueOf(timeout));
+        fallbackProps.put("mail.smtp.writetimeout", String.valueOf(writeTimeout));
+        fallbackProps.put("mail.debug", "false");
+
+        fallbackSender.setJavaMailProperties(fallbackProps);
+        return fallbackSender;
+    }
+
+    private JavaMailSenderImpl createStartTlsSender() {
+        JavaMailSenderImpl fallbackSender = new JavaMailSenderImpl();
+        fallbackSender.setHost(mailHost);
+        fallbackSender.setPort(587);
+        fallbackSender.setUsername(mailUsername);
+        fallbackSender.setPassword(mailPassword);
+
+        Properties fallbackProps = new Properties();
+        fallbackProps.put("mail.transport.protocol", "smtp");
+        fallbackProps.put("mail.smtp.auth", String.valueOf(auth));
+        fallbackProps.put("mail.smtp.starttls.enable", "true");
+        fallbackProps.put("mail.smtp.starttls.required", "true");
         fallbackProps.put("mail.smtp.ssl.trust", sslTrust);
         fallbackProps.put("mail.smtp.ssl.protocols", sslProtocols);
         fallbackProps.put("mail.smtp.connectiontimeout", String.valueOf(connectionTimeout));

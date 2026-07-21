@@ -22,7 +22,7 @@ public class MailConfig {
     @Bean
     public JavaMailSender javaMailSender(
             @Value("${spring.mail.host:smtp.gmail.com}") String host,
-            @Value("${spring.mail.port:587}") int port,
+            @Value("${spring.mail.port:465}") int port,
             @Value("${spring.mail.username:}") String username,
             @Value("${spring.mail.password:}") String password,
             @Value("${spring.mail.protocol:smtp}") String protocol,
@@ -44,14 +44,21 @@ public class MailConfig {
         Properties properties = mailSender.getJavaMailProperties();
         properties.put("mail.transport.protocol", protocol);
         properties.put("mail.smtp.auth", auth);
-        properties.put("mail.smtp.starttls.enable", starttlsEnable);
-        properties.put("mail.smtp.starttls.required", starttlsRequired);
         properties.put("mail.smtp.connectiontimeout", connectionTimeout);
         properties.put("mail.smtp.timeout", timeout);
         properties.put("mail.smtp.writetimeout", writeTimeout);
         properties.put("mail.smtp.ssl.trust", sslTrust);
         properties.put("mail.smtp.ssl.protocols", sslProtocols);
         properties.put("mail.debug", "false");
+
+        if (port == 465) {
+            properties.put("mail.smtp.ssl.enable", "true");
+            properties.put("mail.smtp.starttls.enable", "false");
+            properties.put("mail.smtp.starttls.required", "false");
+        } else {
+            properties.put("mail.smtp.starttls.enable", starttlsEnable);
+            properties.put("mail.smtp.starttls.required", starttlsRequired);
+        }
 
         return mailSender;
     }
