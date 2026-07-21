@@ -5,6 +5,7 @@ import com.kodnest.app.entities.Role;
 import com.kodnest.app.entities.User;
 import com.kodnest.app.userservices.UserServiceContract;
 import com.kodnest.app.usersrepositaries.UserRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -47,6 +48,16 @@ public class UserService implements UserServiceContract {
             throw new IllegalArgumentException("Password is required");
         }
 
+        username = username.trim();
+        email = email.trim().toLowerCase();
+
+        if (username.isEmpty()) {
+            throw new IllegalArgumentException("Username is required");
+        }
+        if (email.isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+
         if (userRepository.findByUsername(username).isPresent()) {
             throw new RuntimeException("Username is already taken");
         }
@@ -60,9 +71,9 @@ public class UserService implements UserServiceContract {
         }
 
         User user = new User();
-        user.setUsername(username.trim());
-        user.setName(username.trim());
-        user.setEmail(email.trim());
+        user.setUsername(username);
+        user.setName(username);
+        user.setEmail(email);
         user.setPassword(passwordEncoder.encode(password));
         if (request.getRole() != null && !request.getRole().isBlank()) {
             try {
@@ -77,7 +88,12 @@ public class UserService implements UserServiceContract {
         user.setEnabled(false);
         user.setUpdatedAt(LocalDateTime.now());
 
-        User savedUser = userRepository.save(user);
+        User savedUser;
+        try {
+            savedUser = userRepository.save(user);
+        } catch (DataIntegrityViolationException ex) {
+            throw new RuntimeException("A user with this username or email already exists");
+        }
 
         String otp = emailOtpService.generateOtpForEmail(savedUser);
         emailService.sendOtpEmail(savedUser, otp);
