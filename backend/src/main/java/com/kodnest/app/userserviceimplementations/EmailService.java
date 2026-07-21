@@ -123,31 +123,42 @@ public class EmailService {
             }
 
             if (mailSender instanceof JavaMailSenderImpl) {
-                JavaMailSenderImpl javaMailSender = (JavaMailSenderImpl) mailSender;
-                if (mailPort == 587 && !sslTrust.isBlank()) {
-                    try {
-                        logger.info("Attempting fallback SMTP SSL on port 465 for {}", to);
-                        javaMailSender.setPort(465);
-                        Properties props = javaMailSender.getJavaMailProperties();
-                        props.put("mail.smtp.socketFactory.port", "465");
-                        props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-                        props.put("mail.smtp.ssl.enable", "true");
-                        props.put("mail.smtp.starttls.enable", "false");
-                        props.put("mail.smtp.starttls.required", "false");
-                        javaMailSender.setJavaMailProperties(props);
-                        javaMailSender.send(message);
-                        logger.info("OTP email sent via fallback port 465 to {}", to);
-                        return;
-                    } catch (MailException fallbackEx) {
-                        logger.error("Fallback SMTP SSL failed for {}: {}", to, fallbackEx.getMessage(), fallbackEx);
-                        userMessage += " Fallback to SMTP SSL on port 465 also failed.";
-                    } finally {
-                        javaMailSender.setPort(mailPort);
-                    }
+                JavaMailSenderImpl fallbackSender = createFallbackSslSender();
+                try {
+                    logger.info("Attempting fallback SMTP SSL on port 465 for {}", to);
+                    fallbackSender.send(message);
+                    logger.info("OTP email sent via fallback port 465 to {}", to);
+                    return;
+                } catch (MailException fallbackEx) {
+                    logger.error("Fallback SMTP SSL failed for {}: {}", to, fallbackEx.getMessage(), fallbackEx);
                 }
             }
 
-            throw new RuntimeException(userMessage, ex);
+            logger.warn("Email delivery failed for {} after fallback. User creation can continue, but mail will not be sent.", to);
         }
+    }
+
+    private JavaMailSenderImpl createFallbackSslSender() {
+        JavaMailSenderImpl fallbackSender = new JavaMailSenderImpl();
+        fallbackSender.setHost(mailHost);
+        fallbackSender.setPort(465);
+        fallbackSender.setUsername(mailUsername);
+        fallbackSender.setPassword(mailPassword);
+
+        Properties fallbackProps = new Properties();
+        fallbackProps.put("mail.transport.protocol", "smtp");
+        fallbackProps.put("mail.smtp.auth", String.valueOf(auth));
+        fallbackProps.put("mail.smtp.starttls.enable", "false");
+        fallbackProps.put("mail.smtp.starttls.required", "false");
+        fallbackProps.put("mail.smtp.ssl.enable", "true");
+        fallbackProps.put("mail.smtp.ssl.trust", sslTrust);
+        fallbackProps.put("mail.smtp.ssl.protocols", sslProtocols);
+        fallbackProps.put("mail.smtp.connectiontimeout", String.valueOf(connectionTimeout));
+        fallbackProps.put("mail.smtp.timeout", String.valueOf(timeout));
+        fallbackProps.put("mail.smtp.writetimeout", String.valueOf(writeTimeout));
+        fallbackProps.put("mail.debug", "false");
+
+        fallbackSender.setJavaMailProperties(fallbackProps);
+        return fallbackSender;
     }
 }
