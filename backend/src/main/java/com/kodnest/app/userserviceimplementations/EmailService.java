@@ -85,7 +85,10 @@ public class EmailService {
             mailSender.send(message);
             logger.info("OTP email sent to {}", user.getEmail());
         } catch (MailException e) {
-            logger.error("Failed to send OTP email to {}", user.getEmail(), e);
+            String smtpError = e.getMessage() != null ? e.getMessage() : "SMTP error occurred";
+            String rootCause = e.getCause() != null && e.getCause().getMessage() != null ? e.getCause().getMessage() : smtpError;
+            logger.error("Failed to send OTP email to {}: {}", user.getEmail(), smtpError, e);
+            logger.info("SMTP root cause: {}", rootCause);
             logger.info("OTP code for {} is {}", user.getEmail(), otp);
 
             if (fromAddress == null || fromAddress.isBlank()) {
@@ -94,7 +97,15 @@ public class EmailService {
             if (mailPassword == null || mailPassword.isBlank()) {
                 throw new RuntimeException("Failed to send OTP email: SPRING_MAIL_PASSWORD is missing or blank. Use an app-specific password for Gmail.");
             }
-            throw new RuntimeException("Failed to send OTP email: SMTP connection failed. Verify Gmail SMTP credentials and Render outbound email permissions.");
+
+            String lowerCause = rootCause.toLowerCase();
+            if (lowerCause.contains("authentication") || lowerCause.contains("535") || lowerCause.contains("username and password")) {
+                throw new RuntimeException("Failed to send OTP email: SMTP authentication failed. Check SPRING_MAIL_USERNAME and SPRING_MAIL_PASSWORD.");
+            }
+            if (lowerCause.contains("connect timed out") || lowerCause.contains("could not connect") || lowerCause.contains("unknown smtp host") || lowerCause.contains("connection refused")) {
+                throw new RuntimeException("Failed to send OTP email: cannot connect to smtp.gmail.com. Verify Render outbound SMTP is allowed.");
+            }
+            throw new RuntimeException("Failed to send OTP email: SMTP connection failed. " + rootCause);
         }
     }
 }
