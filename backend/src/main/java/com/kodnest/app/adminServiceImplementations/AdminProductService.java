@@ -9,6 +9,8 @@ import com.kodnest.app.entities.Category;
 import com.kodnest.app.entities.Product;
 import com.kodnest.app.entities.ProductImage;
 import com.kodnest.app.usersrepositaries.CategoryRepository;
+import com.kodnest.app.usersrepositaries.CartRepository;
+import com.kodnest.app.usersrepositaries.OrderItemRepository;
 import com.kodnest.app.usersrepositaries.ProductRepository;
 
 @Service
@@ -16,10 +18,17 @@ public class AdminProductService implements AdminProductServiceContract {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final CartRepository cartRepository;
+    private final OrderItemRepository orderItemRepository;
 
-    public AdminProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
+    public AdminProductService(ProductRepository productRepository, 
+                              CategoryRepository categoryRepository,
+                              CartRepository cartRepository,
+                              OrderItemRepository orderItemRepository) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
+        this.cartRepository = cartRepository;
+        this.orderItemRepository = orderItemRepository;
     }
 
     @Override
@@ -56,6 +65,14 @@ public class AdminProductService implements AdminProductServiceContract {
         if (!productRepository.existsById(productId)) {
             throw new IllegalArgumentException("Product not found");
         }
-        productRepository.deleteById(productId); // orphanRemoval handles images
+        
+        // First delete all cart items for this product (to avoid foreign key constraint violation)
+        cartRepository.deleteAllByProductId(productId);
+        
+        // Then delete all order items for this product (to avoid foreign key constraint violation)
+        orderItemRepository.deleteAllByProductId(productId);
+        
+        // Finally delete the product (orphanRemoval handles images)
+        productRepository.deleteById(productId);
     }
 }

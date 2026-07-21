@@ -33,8 +33,9 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
+        localStorage.setItem('authToken', data.token);
         setShowToast(true);
-        const path = data.role === "CUSTOMER" ? "/customerhome" : data.role === "ADMIN" ? "/admindashboard" : "/";
+        const path = data.role === "CUSTOMER" ? "/customerhome" : "/admindashboard";
         setTimeout(() => navigate(path), 1500);
       } else {
         const errorMessage =
@@ -54,7 +55,7 @@ export default function LoginPage() {
           <h1 className="form-title">Login</h1>
           {error && <p className="error-message">{error}</p>}
           <form onSubmit={handleSignIn} className="form-content">
-            <div className="form-group">
+              <div className="form-group">
               <label htmlFor="username" className="form-label">
                 Username
               </label>

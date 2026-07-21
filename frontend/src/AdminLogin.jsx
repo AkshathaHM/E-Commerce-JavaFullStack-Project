@@ -31,13 +31,14 @@ export default function AdminLogin() {
       const data = await response.json();
 
       if (response.ok) {
+        if (data.role !== "ADMIN") {
+          throw new Error("Only admin can log in from this page.");
+        }
+
+        localStorage.setItem('authToken', data.token);
         setShowToast(true);
         setTimeout(() => {
-          if (data.role === "ADMIN") {
-            navigate("/admindashboard", { state: { username: data.username || username } });
-          } else {
-            navigate("/customerhome");
-          }
+          navigate("/admindashboard", { state: { username: data.username || username } });
         }, 1500);
       } else {
         throw new Error(data.error || "Login failed");
@@ -50,35 +51,58 @@ export default function AdminLogin() {
   return (
     <div className="page-layout">
       <Toast message="Login Successful!" show={showToast} />
-      <div className="page-container1">
+      <div className="page-container">
         <div className="form-container">
           <h1 className="form-title">Admin Login</h1>
           {error && <p className="error-message">{error}</p>}
           <form onSubmit={handleSignIn} className="form-content">
             <div className="form-group">
-              <label htmlFor="username">Username</label>
-              <input id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} required />
+              <label htmlFor="username" className="form-label">
+                Username
+              </label>
+              <input
+                id="username"
+                type="text"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                className="form-input"
+              />
             </div>
             <div className="form-group">
-              <label htmlFor="password">Password</label>
+              <label htmlFor="password" className="form-label">
+                Password
+              </label>
               <div className="password-input-wrap">
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  className="form-input"
                 />
-                <span onClick={() => setShowPassword(!showPassword)}>
+                <span
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
                   {showPassword ? "Hide" : "Show"}
                 </span>
               </div>
             </div>
-            <button type="submit">Enter As Admin</button>
+            <button type="submit" className="form-button">
+              Enter As Admin
+            </button>
           </form>
           <div className="form-footer">
-            <Link to="/forgot-password" state={{ returnTo: "/admin" }}>Forgot Password?</Link>
-            <Link to="/">Not Admin? Login as User</Link>
+            <Link to="/forgot-password" state={{ returnTo: "/admin" }} className="form-link">
+              Forgot Password?
+            </Link>
+            <Link to="/" className="form-link">
+              Not Admin? Login as User
+            </Link>
           </div>
         </div>
       </div>

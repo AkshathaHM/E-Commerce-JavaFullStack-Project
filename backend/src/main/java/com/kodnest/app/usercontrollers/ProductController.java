@@ -30,21 +30,21 @@ public class ProductController {
         try {
             // Retrieve authenticated user from the request attribute set by the filter
             User authenticatedUser = (User) request.getAttribute("authenticatedUser");
-            if (authenticatedUser == null) {
-                return ResponseEntity.status(401).body(Map.of("error", "Unauthorized access"));
-            }
 
             // Fetch products based on the category filter
             List<Product> products = productService.getProductsByCategory(category);
 
             // Build the response
             Map<String, Object> response = new HashMap<>();
-            
-            // Add user info
-            Map<String, String> userInfo = new HashMap<>();
-            userInfo.put("name", authenticatedUser.getUsername());
-            userInfo.put("role", authenticatedUser.getRole().name());
-            response.put("user", userInfo);
+
+            if (authenticatedUser != null) {
+                Map<String, String> userInfo = new HashMap<>();
+                userInfo.put("name", authenticatedUser.getUsername());
+                userInfo.put("role", authenticatedUser.getRole().name());
+                response.put("user", userInfo);
+            } else {
+                response.put("user", Map.of("name", "Guest", "role", "GUEST"));
+            }
 
             // Add product details
             List<Map<String, Object>> productList = new ArrayList<>();

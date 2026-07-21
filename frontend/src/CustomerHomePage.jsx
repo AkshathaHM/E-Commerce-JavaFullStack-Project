@@ -12,12 +12,24 @@ export default function CustomerHomePage() {
   const [cartError, setCartError] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(true);
   const [showCartNotification, setShowCartNotification] = useState(false);
+  const [isGuest, setIsGuest] = useState(true);
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('authToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
   useEffect(() => {
     fetchProducts();
+  }, []);
 
-    if (username) {
+  useEffect(() => {
+    if (username && username !== 'Guest') {
       fetchCartCount();
+    } else {
+      setCartCount(0);
+      setCartError(false);
+      setIsCartLoading(false);
     }
   }, [username]);
 
@@ -29,17 +41,21 @@ export default function CustomerHomePage() {
         }`,
         {
           credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+          },
         }
       );
 
       const data = await response.json();
 
-      if (data) {
-        setUsername(data.user?.name || 'Guest');
-        setProducts(data.products || []);
-      } else {
-        setProducts([]);
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Failed to load products');
       }
+
+      setUsername(data.user?.name || 'Guest');
+      setProducts(data.products || []);
     } catch (error) {
       console.error('Error fetching products:', error);
       setProducts([]);
@@ -47,6 +63,13 @@ export default function CustomerHomePage() {
   };
 
   const fetchCartCount = async () => {
+    if (!username || username === 'Guest') {
+      setCartCount(0);
+      setCartError(false);
+      setIsCartLoading(false);
+      return;
+    }
+
     setIsCartLoading(true);
 
     try {
@@ -54,12 +77,20 @@ export default function CustomerHomePage() {
         `${import.meta.env.VITE_API_URL}/api/cart/items/count?username=${username}`,
         {
           credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders(),
+          },
         }
       );
 
-      const count = await response.json();
+      const data = await response.json();
 
-      setCartCount(count);
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Failed to fetch cart count');
+      }
+
+      setCartCount(typeof data === 'number' ? data : Number(data) || 0);
       setCartError(false);
     } catch (error) {
       console.error('Error fetching cart count:', error);
@@ -74,8 +105,8 @@ export default function CustomerHomePage() {
   };
 
   const handleAddToCart = async (productId) => {
-    if (!username) {
-      console.error('Username is required');
+    if (!username || username === 'Guest') {
+      alert('Please log in to add items to your cart.');
       return;
     }
 
@@ -87,6 +118,7 @@ export default function CustomerHomePage() {
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
+            ...getAuthHeaders(),
           },
           body: JSON.stringify({
             username,

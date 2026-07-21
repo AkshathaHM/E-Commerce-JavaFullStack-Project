@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.kodnest.app.entities.Order;
+import com.kodnest.app.entities.OrderStatus;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, String> {
@@ -30,5 +31,6 @@ public interface OrderRepository extends JpaRepository<Order, String> {
 	@Query("SELECT o FROM Order o WHERE o.status = 'SUCCESS'")
 	List<Order> findAllByStatusForOverallBusiness();
 
+	List<Order> findByStatus(OrderStatus status);
 
 }

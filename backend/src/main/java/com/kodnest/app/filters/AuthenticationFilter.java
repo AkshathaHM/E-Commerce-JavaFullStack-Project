@@ -30,7 +30,12 @@ public class AuthenticationFilter implements Filter {
 
     private static final String[] UNAUTHENTICATED_PATHS = {
             "/api/users/register",
-            "/api/auth/login"
+            "/api/auth/register",
+            "/api/auth/login",
+            "/api/auth/verify",
+            "/api/auth/verify-otp",
+            "/api/auth/resend-otp",
+            "/api/auth/forgot-password"
     };
 
     public AuthenticationFilter(AuthServiceContract authService, UserRepository userRepository) {
@@ -49,6 +54,7 @@ public class AuthenticationFilter implements Filter {
 
         // 1. Instantly fulfill OPTIONS preflight requests (CORS)
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            setCorsHeaders(request, response);
             response.setStatus(HttpServletResponse.SC_OK);
             return;
         }
@@ -59,10 +65,23 @@ public class AuthenticationFilter implements Filter {
             return;
         }
 
-        // 3. Authenticate token
-        String token = getAuthTokenFromCookies(request);
+        // 3. Authenticate token from cookie or bearer header
+        String token = getAuthToken(request);
 
-        if (token == null || !authService.validateToken(token)) {
+        if (token == null) {
+            if (isOptionalAuthPath(requestURI)) {
+                chain.doFilter(request, response);
+                return;
+            }
+            sendError(request, response, HttpServletResponse.SC_UNAUTHORIZED, "Missing token");
+            return;
+        }
+
+        if (!authService.validateToken(token)) {
+            if (isOptionalAuthPath(requestURI)) {
+                chain.doFilter(request, response);
+                return;
+            }
             sendError(request, response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid or missing token");
             return;
         }
@@ -84,13 +103,17 @@ public class AuthenticationFilter implements Filter {
             return;
         }
 
-        if (requestURI.startsWith("/api/") && role != Role.CUSTOMER) {
+        if (requestURI.startsWith("/api/") && role != Role.CUSTOMER && !requestURI.startsWith("/api/auth")) {
             sendError(request, response, HttpServletResponse.SC_FORBIDDEN, "Customer access required");
             return;
         }
 
         request.setAttribute("authenticatedUser", user);
         chain.doFilter(request, response);
+    }
+
+    private boolean isOptionalAuthPath(String uri) {
+        return uri.startsWith("/api/products");
     }
 
     private boolean isUnauthenticatedPath(String uri) {
@@ -102,7 +125,12 @@ public class AuthenticationFilter implements Filter {
         return false;
     }
 
-    private String getAuthTokenFromCookies(HttpServletRequest request) {
+    private String getAuthToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7).trim();
+        }
+
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
@@ -118,13 +146,29 @@ public class AuthenticationFilter implements Filter {
         String origin = request.getHeader("Origin");
         if (origin != null) {
             response.setHeader("Access-Control-Allow-Origin", origin);
+            response.setHeader("Vary", "Origin");
             response.setHeader("Access-Control-Allow-Credentials", "true");
         } else {
             response.setHeader("Access-Control-Allow-Origin", "*");
         }
-        
+
+        setCorsHeaders(request, response);
         response.setStatus(status);
         response.setContentType("application/json");
         response.getWriter().write("{\"error\": \"" + message + "\"}");
+    }
+
+    private void setCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
+        String origin = request.getHeader("Origin");
+        if (origin != null) {
+            response.setHeader("Access-Control-Allow-Origin", origin);
+            response.setHeader("Vary", "Origin");
+        } else {
+            response.setHeader("Access-Control-Allow-Origin", "*");
+        }
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+        response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With, Accept, Origin, Cookie, Access-Control-Request-Method, Access-Control-Request-Headers");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+        response.setHeader("Access-Control-Max-Age", "3600");
     }
 }

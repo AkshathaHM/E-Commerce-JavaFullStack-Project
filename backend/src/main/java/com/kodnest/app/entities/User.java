@@ -15,6 +15,9 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username;
 
+    @Column(nullable = false)
+    private String name;
+
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -24,6 +27,12 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    @Column(nullable = false)
+    private boolean verified = false;
+
+    @Column(nullable = false)
+    private boolean enabled = false;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -48,9 +57,10 @@ public class User {
     }
 
     // Constructor without ID (for registration)
-    public User(String username, String email, String password, Role role,
+    public User(String username, String name, String email, String password, Role role,
                 LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.username = username;
+        this.name = name;
         this.email = email;
         this.password = password;
         this.role = role;
@@ -75,6 +85,14 @@ public class User {
         this.username = username;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -97,6 +115,22 @@ public class User {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public LocalDateTime getCreatedAt() {

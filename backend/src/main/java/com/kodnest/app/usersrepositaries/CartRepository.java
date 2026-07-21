@@ -43,4 +43,9 @@ public interface CartRepository extends JpaRepository<Cart_Items, Integer> {
     @Transactional
     @Query("DELETE FROM Cart_Items c WHERE c.user.userId = :userId")
     void deleteAllByUserUserId(@Param("userId") int userId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Cart_Items c WHERE c.product.productId = :productId")
+    void deleteAllByProductId(@Param("productId") int productId);
 }

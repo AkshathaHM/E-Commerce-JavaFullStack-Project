@@ -12,23 +12,71 @@ const CartPage = () => {
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showPaymentToast, setShowPaymentToast] = useState(false);
+  const [paymentSuccessData, setPaymentSuccessData] = useState(null);
+  const [paymentError, setPaymentError] = useState(null);
+  const [paymentDebug, setPaymentDebug] = useState(null);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("authToken");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve, reject) => {
+      if (window.Razorpay) {
+        return resolve(window.Razorpay);
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      script.onload = () => resolve(window.Razorpay);
+      script.onerror = () => reject(new Error('Failed to load Razorpay checkout script'));
+      document.body.appendChild(script);
+    });
+  };
+
+  const authTokenExists = () => !!localStorage.getItem("authToken");
 
   // Fetch cart items
   useEffect(() => {
+    if (!authTokenExists()) {
+      setError('Please log in to view your cart.');
+      setLoading(false);
+      setCartItems([]);
+      setUsername('Guest');
+      setSubtotal('0.00');
+      return;
+    }
+
     fetchCartItems();
   }, []);
 
   const fetchCartItems = async () => {
     setLoading(true);
+    setError(null);
+
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/items`, {
         credentials: "include",
+        headers: {
+          ...getAuthHeaders(),
+        },
       });
 
       if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`Cart fetch failed: ${err}`);
+        const errText = await res.text();
+        if (res.status === 401) {
+          setError("Please log in to view your cart.");
+          setCartItems([]);
+          setUsername("Guest");
+          setSubtotal("0.00");
+          return;
+        }
+        throw new Error(`Cart fetch failed: ${errText}`);
       }
 
       const data = await res.json();
@@ -50,7 +98,10 @@ const CartPage = () => {
       setSubtotal(calc);
     } catch (err) {
       console.error("Cart load error:", err);
-      alert("Failed to load cart. Please try again.");
+      setError("Failed to load cart. Please try again.");
+      setCartItems([]);
+      setUsername("Guest");
+      setSubtotal("0.00");
     } finally {
       setLoading(false);
     }
@@ -62,7 +113,7 @@ const CartPage = () => {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/delete`, {
         method: "DELETE",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ username, productId }),
       });
 
@@ -96,7 +147,7 @@ const CartPage = () => {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/update`, {
         method: "PUT",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ username, productId, quantity: newQty }),
       });
 
@@ -141,18 +192,24 @@ const CartPage = () => {
         }))
       };
 
+      setPaymentDebug("Calling /api/payment/create...");
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/create`, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify(payload)
       });
 
       if (!res.ok) {
         const errText = await res.text();
-        alert(`Order creation failed: ${errText || "Server error"}`);
+        const message = `Order creation failed: ${errText || "Server error"}`;
+        setPaymentError(message);
+        setPaymentDebug("/api/payment/create failed");
+        alert(message);
         return;
       }
+
+      setPaymentDebug("/api/payment/create succeeded");
 
       const data = await res.json();
       const orderId = data.orderId;
@@ -174,7 +231,7 @@ const CartPage = () => {
             const verifyRes = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/verify`, {
               method: "POST",
               credentials: "include",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", ...getAuthHeaders() },
               body: JSON.stringify({
                 razorpay_order_id: rzpRes.razorpay_order_id,
                 razorpay_payment_id: rzpRes.razorpay_payment_id,
@@ -183,13 +240,31 @@ const CartPage = () => {
             });
 
             if (verifyRes.ok) {
+              const verifyMessage = await verifyRes.text();
               setShowPaymentToast(true);
-              setTimeout(() => navigate("/customerhome"), 1500);
+              setPaymentSuccessData({
+                orderId: rzpRes.razorpay_order_id,
+                paymentId: rzpRes.razorpay_payment_id,
+                amount: Number(subtotal).toFixed(2),
+                message: verifyMessage || "Payment verified successfully",
+              });
+              setPaymentError(null);
+              setPaymentDebug("/api/payment/verify succeeded");
+              setCartItems([]);
+              setSubtotal("0.00");
+              setTimeout(() => navigate("/customerhome"), 4000);
             } else {
-              alert("Payment verification failed");
+              const verifyMessage = await verifyRes.text();
+              const message = `Payment verification failed: ${verifyMessage}`;
+              setPaymentError(message);
+              setPaymentDebug("/api/payment/verify failed");
+              alert(message);
             }
           } catch (e) {
-            alert("Payment processed but verification failed.");
+            console.error("Payment verification error:", e);
+            const message = "Payment processed but verification failed.";
+            setPaymentError(message);
+            alert(message);
           }
         },
         prefill: {
@@ -197,10 +272,17 @@ const CartPage = () => {
           email: "customer@example.com",
           contact: "9999999999",
         },
+        modal: {
+          ondismiss: () => {
+            // Do not show a cancellation message when the Razorpay modal is closed.
+            setPaymentDebug(null);
+          },
+        },
         theme: { color: "#00ABE4" },
       };
 
-      const rzp = new window.Razorpay(options);
+      const Razorpay = await loadRazorpayScript();
+      const rzp = new Razorpay(options);
       rzp.open();
     } catch (err) {
       console.error("Checkout process failed:", err);
@@ -213,10 +295,31 @@ const CartPage = () => {
   const totalItems = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
   const shipping = "370.00";
 
+  if (paymentSuccessData) {
+    return (
+      <div className="cart-page success-page">
+        <Header cartCount={0} username={username || 'Guest'} />
+        <div className="payment-success-screen">
+          <div className="success-card">
+            <h1>Payment Successful</h1>
+            <p>Your payment was completed successfully.</p>
+            <div className="success-details">
+              <p><strong>Order ID:</strong> {paymentSuccessData.orderId}</p>
+              <p><strong>Payment ID:</strong> {paymentSuccessData.paymentId}</p>
+              <p><strong>Amount:</strong> ₹{paymentSuccessData.amount}</p>
+            </div>
+            <p>{paymentSuccessData.message}</p>
+            <p>You will be redirected shortly...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="cart-page">
-        <Header cartCount="..." username={username} />
+        <Header cartCount="..." username={username || 'Guest'} />
         <div style={{ textAlign: "center", padding: "120px 20px" }}>
           <h2>Loading your cart...</h2>
         </div>
@@ -224,15 +327,24 @@ const CartPage = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="cart-page empty">
+        <Header cartCount="0" username={username || 'Guest'} />
+        <h2>{error}</h2>
+        <p>Please log in to access your cart items.</p>
+        <button onClick={() => navigate("/")}>Go to Login</button>
+      </div>
+    );
+  }
+
   if (cartItems.length === 0) {
     return (
       <div className="cart-page empty">
-        <Header cartCount="0" username={username} />
+        <Header cartCount="0" username={username || 'Guest'} />
         <h2>Your Cart is Empty</h2>
         <p>Start adding some awesome products!</p>
-        <button onClick={() => navigate("/customerhome")}>
-          Continue Shopping
-        </button>
+        <button onClick={() => navigate("/customerhome")}>Continue Shopping</button>
       </div>
     );
   }
@@ -241,6 +353,18 @@ const CartPage = () => {
     <div style={{ width: "100vw", minHeight: "100vh" }}>
       <Toast message="Payment Successful!" show={showPaymentToast} />
       <Header cartCount={totalItems} username={username} />
+
+      {paymentDebug && (
+        <div className="payment-debug-banner">
+          <p>{paymentDebug}</p>
+        </div>
+      )}
+
+      {paymentError && (
+        <div className="payment-error-banner">
+          <p>{paymentError}</p>
+        </div>
+      )}
 
       <div className="cart-container">
         <div className="cart-page">

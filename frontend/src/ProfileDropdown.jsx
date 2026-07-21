@@ -17,6 +17,7 @@ export function ProfileDropdown({ username }) {
       });
 
       if (response.ok) {
+        localStorage.removeItem('authToken');
         console.log('User successfully logged out');
         navigate('/'); // Redirect to login page
       } else {

@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import LoginPage from "./LoginPage";
 import RegistrationPage from "./RegistrationPage";
 import ForgotPasswordPage from "./ForgotPasswordPage";
+import VerifyOtpPage from "./VerifyOtpPage";
 import CustomerHomePage from "./CustomerHomePage";
 import CartPage from "./CartPage";
 import OrderPage from "./OrderPage";
@@ -14,6 +15,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<LoginPage />} />
       <Route path="/register" element={<RegistrationPage />} />
+      <Route path="/verify-otp" element={<VerifyOtpPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/customerhome" element={<CustomerHomePage />} />
       <Route path="/UserCartPage" element={<CartPage />} />

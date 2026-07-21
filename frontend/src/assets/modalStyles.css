@@ -18,14 +18,34 @@
     padding: 20px;
     border-radius: 8px;
     width: 90%;
-    max-width: 800px;
+    max-width: 600px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     animation: fadeIn 0.3s ease-in-out;
+    position: relative;
+  }
+
+  /* Close button */
+  .modal-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-direction: column;
-    gap: 15px;
+    margin-top: 0;
+  }
+
+  .modal-close-btn:hover {
+    color: #000;
+    background: none;
   }
   
   /* Form styling */
@@ -34,43 +54,120 @@
     flex-direction: column;
     gap: 15px;
     margin-bottom: 20px;
+    width: 100%;
   }
-  
+
+  .modal-form h2 {
+    margin: 0 0 10px 0;
+    color: #333;
+  }
+
+  .modal-form-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .modal-form-item label {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+  }
+
   .modal-form input,
-  .modal-form textarea {
+  .modal-form textarea,
+  .modal-form select {
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    font-size: 16px;
+    font-size: 14px;
+    font-family: inherit;
   }
-  
+
+  .modal-form input:focus,
+  .modal-form textarea:focus,
+  .modal-form select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+  }
+
   .modal-form textarea {
     resize: vertical;
-    height: 80px;
+    min-height: 80px;
   }
-  
-  /* Buttons */
-  button {
-    padding: 10px 15px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    cursor: pointer;
-    margin-top: 10px;
+
+  /* Form buttons */
+  .modal-form-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 15px;
   }
-  
-  button:hover {
-    background: #0056b3;
+
+  .modal-form-buttons button {
+    padding: 10px 20px;
+    font-size: 14px;
+    margin-top: 0;
   }
-  
-  button:last-child {
+
+  .modal-form-buttons button[type="submit"] {
+    background: #28a745;
+  }
+
+  .modal-form-buttons button[type="submit"]:hover:not(:disabled) {
+    background: #218838;
+  }
+
+  .modal-form-buttons button[type="submit"]:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+
+  .modal-form-buttons button[type="button"] {
     background: #6c757d;
   }
-  
-  button:last-child:hover {
+
+  .modal-form-buttons button[type="button"]:hover {
     background: #5a6268;
+  }
+
+  /* Response message */
+  .response-message {
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    margin: 10px 0;
+  }
+
+  .response-message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+
+  .response-message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+
+  /* User details display */
+  .user-details-display {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 10px 0;
+  }
+
+  .user-details-display p {
+    margin: 8px 0;
+    font-size: 14px;
+  }
+
+  .user-details-display strong {
+    color: #333;
   }
   
   /* Product details */

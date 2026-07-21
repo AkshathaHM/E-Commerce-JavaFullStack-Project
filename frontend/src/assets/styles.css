@@ -177,6 +177,19 @@ body {
   text-decoration: underline;
 }
 
+.admin-note {
+  background-color: #f4f9ff;
+  border: 1px solid #d0e7ff;
+  color: #01579b;
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.admin-link {
+  font-weight: 700;
+}
+
 /* Header */
 header {
   background-color: white;
@@ -878,7 +891,84 @@ font-style: oblique;
   transition: background-color 0.3s;
 }
 
-.launch-button:hover {
-  background-color: #005a9e;
+.view-all-users-list,
+.orders-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
+.user-card,
+.order-card {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 18px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.user-card h3,
+.order-card-header h3 {
+  margin: 0 0 12px;
+  font-size: 1.2rem;
+  color: #1f2937;
+}
+
+.order-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.order-details,
+.order-items {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.order-items h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+.order-item-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  padding: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.order-item-card p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.modal-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-form {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 900px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+  .card {
+    width: auto;
+  }
+}
