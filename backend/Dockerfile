@@ -16,5 +16,6 @@ RUN mvn clean package -Dmaven.test.skip=true
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
-EXPOSE 10000
+# Use the same port as Spring Boot default (9091) so Render can map correctly
+EXPOSE 9091
 ENTRYPOINT ["java", "-jar", "app.jar"]
