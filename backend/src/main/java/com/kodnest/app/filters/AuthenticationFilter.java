@@ -35,7 +35,9 @@ public class AuthenticationFilter implements Filter {
             "/api/auth/verify",
             "/api/auth/verify-otp",
             "/api/auth/resend-otp",
-            "/api/auth/forgot-password"
+            "/api/auth/forgot-password",
+            "/api/auth/email-status",
+            "/api/auth/email-config"
     };
 
     public AuthenticationFilter(AuthServiceContract authService, UserRepository userRepository) {
