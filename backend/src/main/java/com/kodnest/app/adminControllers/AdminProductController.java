@@ -50,7 +50,6 @@ public class AdminProductController {
     }
 
     @DeleteMapping("/delete")
-    @CrossOrigin(origins = {"http://localhost:5174", "http://localhost:5173", "http://127.0.0.1:5174", "http://127.0.0.1:5173", "https://e-commerce-java-full-stack-project-five.vercel.app", "https://e-commerce-java-full-stack-project-seven.vercel.app", "https://e-commerce-javafullstack-project-2.onrender.com"}, allowCredentials = "true")
     public ResponseEntity<?> deleteProduct(@RequestBody Map<String, Integer> requestBody) {
         try {
             Integer productId = requestBody.get("productId");
@@ -67,6 +66,50 @@ public class AdminProductController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to delete product: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/delete")
+    public ResponseEntity<?> deleteProductPost(@RequestBody Map<String, Integer> requestBody) {
+        return deleteProduct(requestBody);
+    }
+
+    @PutMapping("/update")
+    public ResponseEntity<?> updateProduct(@RequestBody Map<String, Object> requestBody) {
+        try {
+            Integer productId = getRequiredInteger(requestBody, "productId");
+            String name = (String) requestBody.get("name");
+            String description = (String) requestBody.get("description");
+            Double price = requestBody.containsKey("price") && requestBody.get("price") != null
+                    ? getRequiredDouble(requestBody, "price")
+                    : null;
+            Integer stock = requestBody.containsKey("stock") && requestBody.get("stock") != null
+                    ? getRequiredInteger(requestBody, "stock")
+                    : null;
+            Integer categoryId = requestBody.containsKey("categoryId") && requestBody.get("categoryId") != null
+                    ? getRequiredInteger(requestBody, "categoryId")
+                    : null;
+            String imageUrl = (String) requestBody.get("imageUrl");
+
+            Product updatedProduct = adminProductService.updateProduct(productId, name, description, price, stock, categoryId, imageUrl);
+            return ResponseEntity.ok(updatedProduct);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to update product: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllProducts() {
+        try {
+            return ResponseEntity.ok(adminProductService.getAllProducts());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to fetch products: " + e.getMessage());
         }
     }
 

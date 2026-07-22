@@ -39,15 +39,10 @@ public class ProductController {
             @RequestParam(required = false) String category,
             HttpServletRequest request) {
         try {
-            // Retrieve authenticated user from the request attribute set by the filter
             User authenticatedUser = (User) request.getAttribute("authenticatedUser");
+            List<Product> products = productService.getProductsByCategory(category == null || category.isBlank() ? "" : category);
 
-            // Fetch products based on the category filter
-            List<Product> products = productService.getProductsByCategory(category);
-
-            // Build the response
             Map<String, Object> response = new HashMap<>();
-
             if (authenticatedUser != null) {
                 Map<String, String> userInfo = new HashMap<>();
                 userInfo.put("name", authenticatedUser.getUsername());
@@ -57,7 +52,6 @@ public class ProductController {
                 response.put("user", Map.of("name", "Guest", "role", "GUEST"));
             }
 
-            // Add product details
             List<Map<String, Object>> productList = new ArrayList<>();
             for (Product product : products) {
                 Map<String, Object> productDetails = new HashMap<>();
@@ -66,15 +60,12 @@ public class ProductController {
                 productDetails.put("description", product.getDescription());
                 productDetails.put("price", product.getPrice());
                 productDetails.put("stock", product.getStock());
-
-                // Fetch product images
                 List<String> images = productService.getProductImages(product.getProductId());
                 productDetails.put("images", images);
-
                 productList.add(productDetails);
             }
-            response.put("products", productList);
 
+            response.put("products", productList);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

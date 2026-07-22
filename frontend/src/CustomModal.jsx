@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import "./assets/modalStyles.css";
 
-const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loading }) => {
+const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loading, onUpdateProduct, onDeleteProduct, onRefreshProducts }) => {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -16,6 +16,19 @@ const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loadin
         {/* Delete Product Form */}
         {modalType === "deleteProduct" && (
           <DeleteProductForm onSubmit={onSubmit} onClose={onClose} response={response} loading={loading} />
+        )}
+
+        {/* Manage Products */}
+        {modalType === "manageProducts" && (
+          <ManageProductsForm
+            onClose={onClose}
+            response={response}
+            modalData={modalData}
+            loading={loading}
+            onUpdateProduct={onUpdateProduct}
+            onDeleteProduct={onDeleteProduct}
+            onRefreshProducts={onRefreshProducts}
+          />
         )}
 
         {/* View User Form */}
@@ -58,6 +71,134 @@ const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loadin
           <OrdersForm onSubmit={onSubmit} onClose={onClose} response={response} modalData={modalData} loading={loading} />
         )}
       </div>
+    </div>
+  );
+};
+
+// Manage Products Form Component
+const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdateProduct, onDeleteProduct, onRefreshProducts }) => {
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [formData, setFormData] = useState({
+    productId: "",
+    name: "",
+    description: "",
+    price: "",
+    stock: "",
+    categoryId: "",
+    imageUrl: "",
+  });
+
+  React.useEffect(() => {
+    if (selectedProduct) {
+      setFormData({
+        productId: selectedProduct.product_id || selectedProduct.productId || "",
+        name: selectedProduct.name || "",
+        description: selectedProduct.description || "",
+        price: selectedProduct.price || "",
+        stock: selectedProduct.stock || "",
+        categoryId: selectedProduct.categoryId || selectedProduct.category_id || "",
+        imageUrl: selectedProduct.imageUrl || selectedProduct.image_url || "",
+      });
+    }
+  }, [selectedProduct]);
+
+  const handleSelectProduct = (product) => {
+    setSelectedProduct(product);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!selectedProduct) return;
+    onUpdateProduct({
+      productId: parseInt(formData.productId),
+      name: formData.name,
+      description: formData.description,
+      price: parseFloat(formData.price),
+      stock: parseInt(formData.stock),
+      categoryId: parseInt(formData.categoryId),
+      imageUrl: formData.imageUrl,
+    });
+  };
+
+  const handleDelete = () => {
+    if (!selectedProduct) return;
+    onDeleteProduct({ productId: parseInt(selectedProduct.product_id || selectedProduct.productId) });
+  };
+
+  return (
+    <div className="manage-products">
+      <h2>Manage Products</h2>
+      <div className="modal-form-buttons">
+        <button type="button" onClick={onRefreshProducts} disabled={loading}>
+          {loading ? "Loading..." : "Refresh Products"}
+        </button>
+      </div>
+
+      {Array.isArray(modalData) && modalData.length > 0 ? (
+        <div className="products-list">
+          {modalData.map((product) => (
+            <div key={product.product_id || product.productId} className="card product-card">
+              <div className="product-card-content">
+                <h4>{product.name}</h4>
+                <p>ID: {product.product_id || product.productId}</p>
+                <p>Price: {product.price}</p>
+                <p>Stock: {product.stock}</p>
+                <button type="button" onClick={() => handleSelectProduct(product)}>
+                  Edit
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p>No products loaded yet. Click Refresh Products to load products.</p>
+      )}
+
+      {selectedProduct && (
+        <form onSubmit={handleSubmit} className="modal-form">
+          <h3>Edit Product</h3>
+          <div className="modal-form-item">
+            <label htmlFor="productId">Product ID:</label>
+            <input type="text" id="productId" name="productId" value={formData.productId} readOnly />
+          </div>
+          <div className="modal-form-item">
+            <label htmlFor="name">Name:</label>
+            <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required />
+          </div>
+          <div className="modal-form-item">
+            <label htmlFor="description">Description:</label>
+            <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows="3" required />
+          </div>
+          <div className="modal-form-item">
+            <label htmlFor="price">Price:</label>
+            <input type="number" id="price" name="price" value={formData.price} onChange={handleChange} step="0.01" required />
+          </div>
+          <div className="modal-form-item">
+            <label htmlFor="stock">Stock:</label>
+            <input type="number" id="stock" name="stock" value={formData.stock} onChange={handleChange} required />
+          </div>
+          <div className="modal-form-item">
+            <label htmlFor="categoryId">Category ID:</label>
+            <input type="number" id="categoryId" name="categoryId" value={formData.categoryId} onChange={handleChange} required />
+          </div>
+          <div className="modal-form-item">
+            <label htmlFor="imageUrl">Image URL:</label>
+            <input type="url" id="imageUrl" name="imageUrl" value={formData.imageUrl} onChange={handleChange} />
+          </div>
+          {response && <div className={`response-message ${response.includes("Error") ? "error" : "success"}`}>{response}</div>}
+          <div className="modal-form-buttons">
+            <button type="submit" disabled={loading}>{loading ? "Updating..." : "Update Product"}</button>
+            <button type="button" onClick={handleDelete} disabled={loading}>{loading ? "Deleting..." : "Delete Product"}</button>
+            <button type="button" onClick={() => setSelectedProduct(null)}>Clear</button>
+            <button type="button" onClick={onClose}>Cancel</button>
+          </div>
+        </form>
+      )}
     </div>
   );
 };

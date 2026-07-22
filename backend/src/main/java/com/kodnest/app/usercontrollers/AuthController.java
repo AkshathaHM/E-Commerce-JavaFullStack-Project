@@ -22,7 +22,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@CrossOrigin(origins = {"http://localhost:5174", "http://localhost:5173", "http://127.0.0.1:5174", "http://127.0.0.1:5173", "https://e-commerce-java-full-stack-project-five.vercel.app", "https://e-commerce-java-full-stack-project-seven.vercel.app", "https://e-commerce-javafullstack-project-2.onrender.com"}, allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:5174", "http://localhost:5173", "http://127.0.0.1:5174", "http://127.0.0.1:5173", "https://e-commerce-java-full-stack-project.vercel.app", "https://e-commerce-java-full-stack-project-five.vercel.app", "https://e-commerce-java-full-stack-project-seven.vercel.app", "https://e-commerce.javafullstack-project-2.onrender.com"}, allowCredentials = "true")
 @RequestMapping("/api/auth")
 public class AuthController {
 
@@ -69,22 +69,24 @@ public class AuthController {
                 user.setUsername(username);
                 authService.logout(user);
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
+        try {
             boolean secureCookie = request.isSecure() || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"));
             String cookieValue = "authToken=; HttpOnly; Path=/; Max-Age=0; SameSite=None";
             if (secureCookie) {
                 cookieValue += "; Secure";
             }
-            response.addHeader("Set-Cookie", cookieValue);
-
-            Map<String, String> body = new HashMap<>();
-            body.put("message", "Logout successful");
-            return ResponseEntity.ok(body);
+            response.setHeader("Set-Cookie", cookieValue);
         } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", "Logout failed: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+            e.printStackTrace();
         }
+
+        Map<String, String> body = new HashMap<>();
+        body.put("message", "Logout successful");
+        return ResponseEntity.ok(body);
     }
 
     private String extractTokenFromRequest(HttpServletRequest request, String authHeader) {

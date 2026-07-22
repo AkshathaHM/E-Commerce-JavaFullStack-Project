@@ -2,6 +2,7 @@ package com.kodnest.app.adminServiceImplementations;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import com.kodnest.app.adminServices.AdminProductServiceContract;
@@ -58,6 +59,44 @@ public class AdminProductService implements AdminProductServiceContract {
 
         // Single save – cascade saves image automatically
         return productRepository.save(product);
+    }
+
+    @Override
+    public Product updateProduct(Integer productId, String name, String description, Double price, Integer stock,
+                                 Integer categoryId, String imageUrl) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found"));
+
+        if (name != null && !name.isBlank()) {
+            product.setName(name.trim());
+        }
+        if (description != null) {
+            product.setDescription(description);
+        }
+        if (price != null && price > 0) {
+            product.setPrice(BigDecimal.valueOf(price));
+        }
+        if (stock != null && stock >= 0) {
+            product.setStock(stock);
+        }
+        if (categoryId != null) {
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid category ID"));
+            product.setCategory(category);
+        }
+        if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+            ProductImage image = new ProductImage();
+            image.setImageUrl(imageUrl);
+            product.addImage(image);
+        }
+
+        product.setUpdatedAt(LocalDateTime.now());
+        return productRepository.save(product);
+    }
+
+    @Override
+    public java.util.List<Product> getAllProducts() {
+        return productRepository.findAll();
     }
 
     @Override

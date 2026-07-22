@@ -162,9 +162,21 @@ public class AuthService implements AuthServiceContract {
             return;
         }
 
-        JWToken token = jwtTokenRepository.findByUserId(user.getUserId());
+        Integer userId = user.getUserId();
+        if (userId == null && user.getUsername() != null) {
+            Optional<User> userOpt = userRepository.findByUsername(user.getUsername());
+            if (userOpt.isPresent()) {
+                userId = userOpt.get().getUserId();
+            }
+        }
+
+        if (userId == null) {
+            return;
+        }
+
+        JWToken token = jwtTokenRepository.findByUserId(userId);
         if (token != null) {
-            jwtTokenRepository.deleteByUserId(user.getUserId());
+            jwtTokenRepository.deleteByUserId(userId);
             // or: jwtTokenRepository.delete(token);
         }
     }

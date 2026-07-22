@@ -35,18 +35,16 @@ export default function CustomerHomePage() {
 
   const fetchProducts = async (category = '') => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/products${
-          category ? `?category=${encodeURIComponent(category)}` : '?category=Shirts'
-        }`,
-        {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            ...getAuthHeaders(),
-          },
-        }
-      );
+      const url = category ?
+        `${import.meta.env.VITE_API_URL}/api/products?category=${encodeURIComponent(category)}` :
+        `${import.meta.env.VITE_API_URL}/api/products`;
+      const response = await fetch(url, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+      });
 
       const data = await response.json();
 

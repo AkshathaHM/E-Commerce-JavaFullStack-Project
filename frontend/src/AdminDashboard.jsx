@@ -21,7 +21,7 @@ const AdminDashboard = () => {
 
   const cardData = [
     { title: "Add Product", description: "Create new product", team: "Product Management", modalType: "addProduct" },
-    { title: "Delete Product", description: "Remove products", team: "Product Management", modalType: "deleteProduct" },
+    { title: "Manage Products", description: "List, update, and delete products", team: "Product Management", modalType: "manageProducts" },
     { title: "View All Users", description: "List all customers", team: "User Management", modalType: "viewAllUsers" },
     { title: "Modify User", description: "Update user details", team: "User Management", modalType: "modifyUser" },
     { title: "View User Details", description: "Fetch user info", team: "User Management", modalType: "viewUser" },
@@ -109,8 +109,64 @@ const AdminDashboard = () => {
 
       if (response.ok) {
         setResponse("Product deleted successfully!");
+        if (modalType === "manageProducts") {
+          handleManageProducts();
+        }
         setTimeout(() => {
           setModalType(null);
+          setResponse(null);
+        }, 2000);
+      } else {
+        const error = await response.text();
+        setResponse(`Error: ${error}`);
+      }
+    } catch (error) {
+      setResponse(`Error: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleManageProducts = async () => {
+    setLoading(true);
+    setResponse(null);
+    setModalData(null);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/products/all`, {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+      });
+
+      if (response.ok) {
+        const products = await response.json();
+        setModalData(products);
+      } else {
+        const error = await response.text();
+        setResponse(`Error: ${error}`);
+      }
+    } catch (error) {
+      setResponse(`Error: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateProductSubmit = async (data) => {
+    setLoading(true);
+    setResponse(null);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/products/update`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        setResponse("Product updated successfully!");
+        handleManageProducts();
+        setTimeout(() => {
           setResponse(null);
         }, 2000);
       } else {
@@ -452,6 +508,15 @@ const AdminDashboard = () => {
                 }
                 break;
               case "viewAllUsers": handleViewAllUsers(data); break;
+              case "manageProducts":
+                if (data?.action === "updateProduct") {
+                  handleUpdateProductSubmit(data);
+                } else if (data?.action === "deleteProduct") {
+                  handleDeleteProductSubmit(data);
+                } else {
+                  handleManageProducts();
+                }
+                break;
               case "overallRevenue": handleOverallRevenue(data); break;
               case "dailySales": handleDailySales(data); break;
               case "monthlySales": handleMonthlySales(data); break;
@@ -463,6 +528,9 @@ const AdminDashboard = () => {
           response={response}
           modalData={modalData}
           loading={loading}
+          onUpdateProduct={handleUpdateProductSubmit}
+          onDeleteProduct={handleDeleteProductSubmit}
+          onRefreshProducts={handleManageProducts}
         />
       )}
     </div>
