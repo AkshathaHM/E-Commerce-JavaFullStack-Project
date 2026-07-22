@@ -786,9 +786,9 @@ span.username {
 }
 
 .maindiv{
-  background-image: url('/shipped.jpg');
-background-size: cover;
-background-attachment: fixed;  
+  background-image: url('/shipped.png');
+  background-size: cover;
+  background-attachment: fixed;  
 }
 
 .orders-list {

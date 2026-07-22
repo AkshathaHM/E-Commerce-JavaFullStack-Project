@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import LogoImage from './logo.png'; // Make sure logo.png is in src folder
+import { CartIcon } from './CartIcon';
+import { ProfileDropdown } from './ProfileDropdown';
 
 export function Header({ cartCount, username }) {
   const navigate = useNavigate();
@@ -9,7 +10,7 @@ export function Header({ cartCount, username }) {
     <header className="header">
       <div className="header-content">
         <div className="logo-container" onClick={() => navigate('/customerhome')}>
-          <img src={LogoImage} alt="SalesSavvy" className="logo-image" />
+          <img src="/logo.png" alt="SalesSavvy" className="logo-image" />
           <span className="logo-text">SalesSavvy</span>
         </div>
 
