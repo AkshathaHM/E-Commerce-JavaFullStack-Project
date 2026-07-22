@@ -31,7 +31,7 @@ public class Order {
     private LocalDateTime updatedAt;
 
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<OrderItem> orderitems;
 

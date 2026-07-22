@@ -1,10 +1,15 @@
 package com.kodnest.app.adminControllers;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.kodnest.app.adminServices.AdminOrderServiceContract;
+import com.kodnest.app.entities.Order;
 import com.kodnest.app.entities.OrderStatus;
 
 @RestController
@@ -21,7 +26,17 @@ public class AdminOrderController {
     @GetMapping("/all")
     public ResponseEntity<?> getAllOrders() {
         try {
-            return ResponseEntity.status(HttpStatus.OK).body(adminOrderService.getAllOrders());
+            List<Map<String, Object>> orders = adminOrderService.getAllOrders().stream().map(order -> {
+                Map<String, Object> orderMap = new java.util.HashMap<>();
+                orderMap.put("orderId", order.getOrderId());
+                orderMap.put("userId", order.getUserId());
+                orderMap.put("status", order.getStatus());
+                orderMap.put("totalAmount", order.getTotalAmount());
+                orderMap.put("createdAt", order.getCreatedAt());
+                orderMap.put("updatedAt", order.getUpdatedAt());
+                return orderMap;
+            }).collect(Collectors.toList());
+            return ResponseEntity.status(HttpStatus.OK).body(orders);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

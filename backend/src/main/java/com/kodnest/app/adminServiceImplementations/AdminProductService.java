@@ -96,7 +96,7 @@ public class AdminProductService implements AdminProductServiceContract {
 
     @Override
     public java.util.List<Product> getAllProducts() {
-        return productRepository.findAll();
+        return productRepository.findAllWithImages();
     }
 
     @Override

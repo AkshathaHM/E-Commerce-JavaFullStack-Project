@@ -11,6 +11,12 @@ import com.kodnest.app.entities.Product;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Integer> {
+    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.productImages LEFT JOIN FETCH p.category")
+    List<Product> findAllWithImages();
+
+    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.productImages LEFT JOIN FETCH p.category WHERE LOWER(p.category.categoryName) = LOWER(:categoryName)")
+    List<Product> findByCategoryNameIgnoreCaseWithImages(String categoryName);
+
     List<Product> findByCategory_CategoryId(Integer categoryId);
     
     @Query("SELECT p.category.categoryName FROM Product p WHERE p.productId = :productId")

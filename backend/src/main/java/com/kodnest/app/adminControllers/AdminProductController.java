@@ -1,6 +1,8 @@
 package com.kodnest.app.adminControllers;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -105,7 +107,21 @@ public class AdminProductController {
     @GetMapping("/all")
     public ResponseEntity<?> getAllProducts() {
         try {
-            return ResponseEntity.ok(adminProductService.getAllProducts());
+            List<Map<String, Object>> products = adminProductService.getAllProducts().stream().map(product -> {
+                Map<String, Object> productDetails = Map.of(
+                        "productId", product.getProductId(),
+                        "name", product.getName(),
+                        "description", product.getDescription(),
+                        "price", product.getPrice(),
+                        "stock", product.getStock(),
+                        "category", product.getCategory() != null ? product.getCategory().getCategoryName() : null,
+                        "images", product.getProductImages() == null ? List.of() : product.getProductImages().stream()
+                                .map(image -> image.getImageUrl())
+                                .collect(Collectors.toList())
+                );
+                return productDetails;
+            }).collect(Collectors.toList());
+            return ResponseEntity.ok(products);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

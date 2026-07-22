@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
 import useravatar from './useravatar.png';
 import './assets/styles.css';
@@ -9,6 +9,7 @@ export function ProfileDropdown({ username }) {
   const [profileError, setProfileError] = useState(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const navigate = useNavigate(); // Initialize useNavigate hook
+  const dropdownRef = useRef(null);
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('authToken');
@@ -22,6 +23,17 @@ export function ProfileDropdown({ username }) {
       setProfileError(null);
     }
   };
+
+  useEffect(() => {
+    const handleDocumentClick = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleDocumentClick);
+    return () => document.removeEventListener('mousedown', handleDocumentClick);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -85,7 +97,7 @@ export function ProfileDropdown({ username }) {
   };
 
   return (
-    <div className={`profile-dropdown ${isOpen ? 'open' : ''}`}>
+    <div ref={dropdownRef} className={`profile-dropdown ${isOpen ? 'open' : ''}`}>
       <button className="profile-button" onClick={toggleDropdown}>
         <img
           src={useravatar}

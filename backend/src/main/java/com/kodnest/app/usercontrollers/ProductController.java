@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @RestController
 @CrossOrigin(
@@ -60,7 +62,10 @@ public class ProductController {
                 productDetails.put("description", product.getDescription());
                 productDetails.put("price", product.getPrice());
                 productDetails.put("stock", product.getStock());
-                List<String> images = productService.getProductImages(product.getProductId());
+                List<String> images = product.getProductImages() == null ? List.of() : product.getProductImages().stream()
+                        .filter(Objects::nonNull)
+                        .map(image -> image.getImageUrl())
+                        .collect(Collectors.toList());
                 productDetails.put("images", images);
                 productList.add(productDetails);
             }

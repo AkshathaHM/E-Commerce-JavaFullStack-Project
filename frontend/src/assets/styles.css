@@ -271,6 +271,24 @@ nav button:hover {
   align-items: center;
 }
 
+.logo-text {
+  transition: color 0.25s ease, text-shadow 0.25s ease;
+}
+
+.logo-text:hover {
+  color: #000;
+  text-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+}
+
+.footer-link:hover {
+  color: #ffd700;
+  transform: translateY(-1px);
+}
+
+.footer:hover {
+  background-color: #111;
+}
+
 .cart-badge {
   position: absolute;
   top: -5px;
@@ -574,33 +592,38 @@ nav button:hover {
 
 /* Footer */
 .footer {
-  background-color: white;
-  padding: 20px;
-  box-shadow: 0px -4px 10px rgba(0, 0, 0, 0.1);
+  background-color: #000;
+  color: #fff;
+  padding: 24px 32px;
+  box-shadow: 0px -6px 18px rgba(0, 0, 0, 0.25);
 }
 
 .footer-content {
   display: flex;
-      justify-content: space-around;
-      align-items: center;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.footer-links a {
+.footer-links a,
+.footer-links .footer-link {
   margin-right: 15px;
-  color: #00ABE4;
+  color: #fff;
   text-decoration: none;
   font-size: 14px;
 }
 
-.footer-links a:hover {
+.footer-links a:hover,
+.footer-links .footer-link:hover {
   text-decoration: underline;
 }
 
 .footer-bottom {
   text-align: center;
-  margin-top: 10px;
+  margin-top: 16px;
   font-size: 12px;
-  color: #777;
+  color: #ccc;
 }
 .product-grid{
   display: flex;
