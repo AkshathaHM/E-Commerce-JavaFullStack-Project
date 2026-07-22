@@ -55,6 +55,7 @@ public class AuthenticationFilter implements Filter {
         HttpServletResponse response = (HttpServletResponse) res;
 
         String requestURI = request.getRequestURI();
+        logger.debug("AuthFilter: incoming request {} {} from Origin={}", request.getMethod(), requestURI, request.getHeader("Origin"));
 
         // 1. Instantly fulfill OPTIONS preflight requests (CORS)
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
@@ -71,8 +72,8 @@ public class AuthenticationFilter implements Filter {
 
         // 3. Authenticate token from cookie or bearer header
         String token = getAuthToken(request);
-
         if (token == null) {
+            logger.debug("AuthFilter: no token found for request {}", requestURI);
             if (isOptionalAuthPath(requestURI)) {
                 chain.doFilter(request, response);
                 return;
@@ -82,6 +83,7 @@ public class AuthenticationFilter implements Filter {
         }
 
         if (!authService.validateToken(token)) {
+            logger.debug("AuthFilter: token validation failed for token starting={}...", token.length() > 8 ? token.substring(0, 8) : token);
             if (isOptionalAuthPath(requestURI)) {
                 chain.doFilter(request, response);
                 return;

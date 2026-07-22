@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
+@Component
 public class GlobalCorsFilter implements Filter {
 
     @Override
