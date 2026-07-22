@@ -16,7 +16,18 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5174", allowCredentials = "true")
+@CrossOrigin(
+    origins = {
+        "http://localhost:5174",
+        "http://localhost:5173",
+        "http://127.0.0.1:5174",
+        "http://127.0.0.1:5173",
+        "https://e-commerce-java-full-stack-project-five.vercel.app",
+        "https://e-commerce-java-full-stack-project-seven.vercel.app",
+        "https://e-commerce-javafullstack-project-2.onrender.com"
+    },
+    allowCredentials = "true"
+)
 @RequestMapping("/api/products")
 public class ProductController {
 

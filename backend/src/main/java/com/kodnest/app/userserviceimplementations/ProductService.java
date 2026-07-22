@@ -28,12 +28,13 @@ public class ProductService {
 
     public List<Product> getProductsByCategory(String categoryName) {
         if (categoryName != null && !categoryName.isEmpty()) {
-            Optional<Category> categoryOpt = categoryRepository.findByCategoryName(categoryName);
+            Optional<Category> categoryOpt = categoryRepository.findByCategoryNameIgnoreCase(categoryName.trim());
             if (categoryOpt.isPresent()) {
                 Category category = categoryOpt.get();
                 return productRepository.findByCategory_CategoryId(category.getCategoryId());
             } else {
-                throw new RuntimeException("Category not found");
+                // Return empty list when category does not exist to avoid throwing 400
+                return new ArrayList<>();
             }
         } else {
             return productRepository.findAll();

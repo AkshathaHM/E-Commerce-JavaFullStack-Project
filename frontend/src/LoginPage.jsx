@@ -33,10 +33,29 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem('authToken', data.token);
-        setShowToast(true);
-        const path = data.role === "CUSTOMER" ? "/customerhome" : "/admindashboard";
-        setTimeout(() => navigate(path), 1500);
+        // Login sets auth cookie; fetch profile to get username/role
+        try {
+          const meRes = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          const meData = await meRes.json();
+          const role = meData.role || data.role;
+          const username = meData.username || data.username;
+          if (username) localStorage.setItem('username', username);
+          setShowToast(true);
+          const path = role === "CUSTOMER" ? "/customerhome" : "/admindashboard";
+          setTimeout(() => navigate(path), 1500);
+        } catch (e) {
+          // fallback to response body
+          const role = data.role;
+          const username = data.username;
+          if (username) localStorage.setItem('username', username);
+          setShowToast(true);
+          const path = role === "CUSTOMER" ? "/customerhome" : "/admindashboard";
+          setTimeout(() => navigate(path), 1500);
+        }
       } else {
         const errorMessage =
           data.error || "Something went wrong. Please try again.";

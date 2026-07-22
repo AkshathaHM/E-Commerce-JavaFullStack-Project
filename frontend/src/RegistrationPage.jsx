@@ -10,6 +10,7 @@ export default function RegistrationPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('CUSTOMER');
+  const [address, setAddress] = useState('');
   const [error, setError] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -25,7 +26,7 @@ export default function RegistrationPage() {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ username, email, password, role }),
+        body: JSON.stringify({ username, email, password, role, address }),
       });
       
       const data = await response.json();
@@ -83,6 +84,17 @@ export default function RegistrationPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="form-input"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="address" className="form-label">Address</label>
+            <input
+              id="address"
+              type="text"
+              placeholder="Enter your address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
               className="form-input"
             />
           </div>

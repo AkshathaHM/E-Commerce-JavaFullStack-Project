@@ -50,7 +50,7 @@ public class AuthController {
             cookie.setSecure(false); // change to true in production (HTTPS)
             cookie.setPath("/");
             cookie.setMaxAge(3600); // 1 hour
-            cookie.setDomain("localhost");
+            // Do not force a domain here so the cookie works on deployed hosts
             response.addCookie(cookie);
 
             // Optional: extra Set-Cookie header (some clients need it)
@@ -77,6 +77,7 @@ public class AuthController {
             cookie.setHttpOnly(true);
             cookie.setMaxAge(0);
             cookie.setPath("/");
+            // Clearing cookie without domain so it clears on current host
             response.addCookie(cookie);
 
             Map<String, String> body = new HashMap<>();
@@ -89,3 +90,18 @@ public class AuthController {
         }
     }
 }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> me(HttpServletRequest request) {
+        User user = (User) request.getAttribute("authenticatedUser");
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid or missing token"));
+        }
+        Map<String, Object> body = new HashMap<>();
+        body.put("username", user.getUsername());
+        body.put("name", user.getName());
+        body.put("email", user.getEmail());
+        body.put("role", user.getRole().name());
+        body.put("address", user.getAddress());
+        return ResponseEntity.ok(body);
+    }

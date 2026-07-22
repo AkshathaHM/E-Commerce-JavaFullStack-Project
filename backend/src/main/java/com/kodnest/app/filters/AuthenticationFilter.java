@@ -133,6 +133,11 @@ public class AuthenticationFilter implements Filter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7).trim();
         }
+        // support alternative headers used by some frontends
+        String alt = request.getHeader("X-Auth-Token");
+        if (alt != null && !alt.isBlank()) return alt.trim();
+        String alt2 = request.getHeader("x-access-token");
+        if (alt2 != null && !alt2.isBlank()) return alt2.trim();
 
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {

@@ -18,6 +18,7 @@ export function ProfileDropdown({ username }) {
 
       if (response.ok) {
         localStorage.removeItem('authToken');
+        localStorage.removeItem('username');
         console.log('User successfully logged out');
         navigate('/'); // Redirect to login page
       } else {
@@ -25,6 +26,24 @@ export function ProfileDropdown({ username }) {
       }
     } catch (error) {
       console.error('Error during logout:', error);
+    }
+  };
+  const handleViewProfile = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Simple popup for now; can be replaced with modal
+        alert(`Username: ${data.username}\nName: ${data.name}\nEmail: ${data.email}\nAddress: ${data.address || ''}`);
+      } else {
+        console.error('Failed to fetch profile');
+      }
+    } catch (e) {
+      console.error('Error fetching profile', e);
     }
   };
   const handleOrdersClick = () => {
@@ -50,6 +69,7 @@ export function ProfileDropdown({ username }) {
         <div className="dropdown-menu">
           <a href="#" onClick={(e) => { e.preventDefault(); handleCartClick(); }}>Add to Cart</a>
           <a href="#" onClick={(e) => { e.preventDefault(); handleOrdersClick(); }}>Orders</a>
+          <a href="#" onClick={(e) => { e.preventDefault(); handleViewProfile(); }}>View Profile</a>
           <button className="profile-button" onClick={handleLogout}>
             Logout
           </button>

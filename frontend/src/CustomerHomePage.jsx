@@ -8,7 +8,7 @@ import './assets/styles.css';
 export default function CustomerHomePage() {
   const [products, setProducts] = useState([]);
   const [cartCount, setCartCount] = useState(0);
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState(() => localStorage.getItem('username') || '');
   const [cartError, setCartError] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(true);
   const [showCartNotification, setShowCartNotification] = useState(false);
@@ -37,7 +37,7 @@ export default function CustomerHomePage() {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/products${
-          category ? `?category=${category}` : '?category=Shirts'
+          category ? `?category=${encodeURIComponent(category)}` : '?category=Shirts'
         }`,
         {
           credentials: 'include',

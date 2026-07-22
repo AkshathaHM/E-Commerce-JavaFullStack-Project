@@ -86,6 +86,7 @@ public class UserService implements UserServiceContract {
         }
         user.setVerified(false);
         user.setEnabled(false);
+        user.setAddress(request.getAddress());
         user.setUpdatedAt(LocalDateTime.now());
 
         User savedUser;

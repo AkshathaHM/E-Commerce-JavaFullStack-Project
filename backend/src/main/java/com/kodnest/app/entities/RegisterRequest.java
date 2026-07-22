@@ -6,6 +6,7 @@ public class RegisterRequest {
     private String email;
     private String password;
     private String role;
+    private String address;
 
     public RegisterRequest() {
     }
@@ -15,6 +16,14 @@ public class RegisterRequest {
         this.email = email;
         this.password = password;
         this.role = role;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public String getUsername() {
