@@ -21,6 +21,7 @@ const AdminDashboard = () => {
 
   const cardData = [
     { title: "Add Product", description: "Create new product", team: "Product Management", modalType: "addProduct" },
+    { title: "Delete Product", description: "Delete product by ID", team: "Product Management", modalType: "deleteProduct" },
     { title: "Manage Products", description: "List, update, and delete products", team: "Product Management", modalType: "manageProducts" },
     { title: "View All Users", description: "List all customers", team: "User Management", modalType: "viewAllUsers" },
     { title: "Modify User", description: "Update user details", team: "User Management", modalType: "modifyUser" },
@@ -486,7 +487,7 @@ const AdminDashboard = () => {
         <Logo />
         <div className="user-info">
           <span className="username">{adminUsername || "Admin"}</span>
-          <button className="logout-button" onClick={handleLogout}>
+          <button className="logout-button profile-button" onClick={handleLogout}>
             Logout
           </button>
         </div>
