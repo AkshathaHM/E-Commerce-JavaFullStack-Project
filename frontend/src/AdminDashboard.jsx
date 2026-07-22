@@ -100,12 +100,21 @@ const AdminDashboard = () => {
   const handleDeleteProductSubmit = async (data) => {
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/products/delete`, {
+      let response = await fetch(`${import.meta.env.VITE_API_URL}/admin/products/delete`, {
         method: "DELETE",
         credentials: "include",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ productId: data.productId }),
       });
+
+      if (!response.ok && (response.status === 404 || response.status === 405 || response.status === 400)) {
+        response = await fetch(`${import.meta.env.VITE_API_URL}/admin/products/delete`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+          body: JSON.stringify({ productId: data.productId }),
+        });
+      }
 
       if (response.ok) {
         setResponse("Product deleted successfully!");
@@ -149,6 +158,13 @@ const AdminDashboard = () => {
       setResponse(`Error: ${error.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openModal = async (type) => {
+    setModalType(type);
+    if (type === "manageProducts") {
+      await handleManageProducts();
     }
   };
 
@@ -454,6 +470,7 @@ const AdminDashboard = () => {
       });
       if (response.ok) {
         localStorage.removeItem('authToken');
+        localStorage.removeItem('username');
         navigate('/');
       } else {
         console.error('Logout failed');
@@ -478,7 +495,7 @@ const AdminDashboard = () => {
       <main className="dashboard-content">
         <div className="cards-grid">
           {cardData.map((card, index) => (
-            <div key={index} className="card" onClick={() => setModalType(card.modalType)}>
+            <div key={index} className="card" onClick={() => openModal(card.modalType)}>
               <div className="card-content">
                 <h3 className="card-title">{card.title}</h3>
                 <p className="card-description">{card.description}</p>

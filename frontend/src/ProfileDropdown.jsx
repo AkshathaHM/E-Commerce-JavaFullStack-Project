@@ -2,8 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
 import useravatar from './useravatar.png';
 import './assets/styles.css';
+
 export function ProfileDropdown({ username }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [profileData, setProfileData] = useState(null);
+  const [profileError, setProfileError] = useState(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
   const navigate = useNavigate(); // Initialize useNavigate hook
 
   const getAuthHeaders = () => {
@@ -13,12 +17,17 @@ export function ProfileDropdown({ username }) {
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
+    if (isOpen) {
+      setProfileData(null);
+      setProfileError(null);
+    }
   };
+
   const handleLogout = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
-        method: 'POST', // Use POST as logout often involves session clearing
-        credentials: 'include', // Include credentials like cookies for authentication
+        method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           ...getAuthHeaders(),
@@ -37,7 +46,10 @@ export function ProfileDropdown({ username }) {
       console.error('Error during logout:', error);
     }
   };
+
   const handleViewProfile = async () => {
+    setIsLoadingProfile(true);
+    setProfileError(null);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
         method: 'GET',
@@ -49,23 +61,29 @@ export function ProfileDropdown({ username }) {
       });
       if (res.ok) {
         const data = await res.json();
-        // Simple popup for now; can be replaced with modal
-        alert(`Username: ${data.username}\nName: ${data.name}\nEmail: ${data.email}\nAddress: ${data.address || ''}`);
+        setProfileData(data);
       } else {
+        setProfileError('Failed to fetch profile');
         console.error('Failed to fetch profile');
       }
     } catch (e) {
+      setProfileError('Error fetching profile');
       console.error('Error fetching profile', e);
+    } finally {
+      setIsLoadingProfile(false);
     }
   };
+
   const handleOrdersClick = () => {
     navigate('/orders');
     setIsOpen(false);
   };
+
   const handleCartClick = () => {
     navigate('/UserCartPage');
     setIsOpen(false);
   };
+
   return (
     <div className="profile-dropdown">
       <button className="profile-button" onClick={toggleDropdown}>
@@ -75,13 +93,29 @@ export function ProfileDropdown({ username }) {
           className="user-avatar"
           onError={(e) => { e.target.src = 'fallback-logo.png'; }} // Fallback for image error
         />
-        <span className="username">{username || 'Guest'}</span> {/* Display username */}
+        <span className="username">{username || 'Guest'}</span>
       </button>
       {isOpen && (
         <div className="dropdown-menu">
-          <a href="#" onClick={(e) => { e.preventDefault(); handleCartClick(); }}>Add to Cart</a>
-          <a href="#" onClick={(e) => { e.preventDefault(); handleOrdersClick(); }}>Orders</a>
-          <a href="#" onClick={(e) => { e.preventDefault(); handleViewProfile(); }}>View Profile</a>
+          <button className="dropdown-link" onClick={handleCartClick}>Cart</button>
+          <button className="dropdown-link" onClick={handleOrdersClick}>Orders</button>
+          <button className="dropdown-link" onClick={handleViewProfile} disabled={isLoadingProfile}>
+            {isLoadingProfile ? 'Loading profile...' : 'View Profile'}
+          </button>
+
+          {profileError && <div className="dropdown-error">{profileError}</div>}
+
+          {profileData && (
+            <div className="profile-card">
+              <h4>Profile</h4>
+              <p><strong>Username:</strong> {profileData.username || username || 'N/A'}</p>
+              <p><strong>Name:</strong> {profileData.name || 'N/A'}</p>
+              <p><strong>Email:</strong> {profileData.email || 'N/A'}</p>
+              <p><strong>Role:</strong> {profileData.role || 'N/A'}</p>
+              {profileData.address && <p><strong>Address:</strong> {profileData.address}</p>}
+            </div>
+          )}
+
           <button className="profile-button" onClick={handleLogout}>
             Logout
           </button>
