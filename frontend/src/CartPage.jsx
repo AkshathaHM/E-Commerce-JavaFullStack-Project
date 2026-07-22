@@ -312,9 +312,14 @@ const CartPage = () => {
     return (
       <div className="cart-page">
         <Header cartCount="..." username={username || 'Guest'} />
-        <div style={{ textAlign: "center", padding: "120px 20px" }}>
-          <h2>Loading your cart...</h2>
+        <div style={{ textAlign: "center", padding: "60px 20px", minHeight: "60vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
+          <div style={{ marginBottom: "20px" }}>
+            <div style={{ display: "inline-block", width: "50px", height: "50px", border: "4px solid #00ABE4", borderTop: "4px solid #transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
+          </div>
+          <h2 style={{ color: "#333", marginBottom: "10px" }}>Loading your cart...</h2>
+          <p style={{ color: "#666" }}>Please wait while we fetch your cart items.</p>
         </div>
+        <Footer />
       </div>
     );
   }
