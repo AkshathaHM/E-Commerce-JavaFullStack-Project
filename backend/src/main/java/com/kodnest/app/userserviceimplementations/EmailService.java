@@ -14,6 +14,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 
 @Service
@@ -22,6 +23,9 @@ public class EmailService {
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
+    private final Optional<SendGridEmailService> sendGridEmailService;
+    private final boolean sendGridEnabled;
+    private final String sendGridFromAddress;
     private final String fromAddress;
     private final String backendBaseUrl;
     private final String mailHost;
@@ -39,6 +43,9 @@ public class EmailService {
     private volatile String lastEmailError;
 
     public EmailService(JavaMailSender mailSender,
+                        Optional<SendGridEmailService> sendGridEmailService,
+                        @Value("${SENDGRID_API_KEY:}") String sendGridApiKey,
+                        @Value("${SENDGRID_FROM_ADDRESS:}") String sendGridFromAddress,
                         @Value("${spring.mail.host:smtp.gmail.com}") String mailHost,
                         @Value("${spring.mail.port:587}") int mailPort,
                         @Value("${spring.mail.username:}") String fromAddress,
@@ -53,6 +60,9 @@ public class EmailService {
                         @Value("${spring.mail.properties.mail.smtp.ssl.protocols:TLSv1.2}") String sslProtocols,
                         @Value("${app.backend.base-url:http://localhost:10000}") String backendBaseUrl) {
         this.mailSender = mailSender;
+        this.sendGridEmailService = sendGridEmailService;
+        this.sendGridEnabled = sendGridApiKey != null && !sendGridApiKey.isBlank() && sendGridEmailService.isPresent() && sendGridEmailService.get().isEnabled();
+        this.sendGridFromAddress = sendGridFromAddress;
         this.mailHost = mailHost;
         this.mailPort = mailPort;
         this.fromAddress = fromAddress;
@@ -106,6 +116,19 @@ public class EmailService {
     }
 
     private void sendEmail(String to, String subject, String body) {
+        if (sendGridEnabled && sendGridEmailService.isPresent()) {
+            try {
+                sendGridEmailService.get().sendEmail(to, subject, body);
+                logger.info("OTP email sent through SendGrid to {}", to);
+                lastEmailError = null;
+                return;
+            } catch (RuntimeException ex) {
+                logger.error("SendGrid email delivery failed for {}: {}", to, ex.getMessage(), ex);
+                lastEmailError = "SendGrid email delivery failed: " + ex.getMessage();
+                throw ex;
+            }
+        }
+
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromAddress);
         message.setTo(to);
@@ -157,16 +180,19 @@ public class EmailService {
     }
 
     public Map<String, Object> getEmailConfig() {
-        return Map.of(
-                "mailHost", mailHost,
-                "mailPort", mailPort,
-                "mailUsername", mailUsername,
-                "mailAuth", auth,
-                "mailStarttlsEnabled", starttlsEnabled,
-                "mailStarttlsRequired", starttlsRequired,
-                "mailSslTrust", sslTrust,
-                "mailSslProtocols", sslProtocols,
-                "fromAddress", fromAddress
+        return Map.ofEntries(
+                Map.entry("emailProvider", sendGridEnabled ? "sendgrid" : "smtp"),
+                Map.entry("sendGridEnabled", sendGridEnabled),
+                Map.entry("sendGridFromAddress", sendGridFromAddress),
+                Map.entry("mailHost", mailHost),
+                Map.entry("mailPort", mailPort),
+                Map.entry("mailUsername", mailUsername),
+                Map.entry("mailAuth", auth),
+                Map.entry("mailStarttlsEnabled", starttlsEnabled),
+                Map.entry("mailStarttlsRequired", starttlsRequired),
+                Map.entry("mailSslTrust", sslTrust),
+                Map.entry("mailSslProtocols", sslProtocols),
+                Map.entry("fromAddress", fromAddress)
         );
     }
 
