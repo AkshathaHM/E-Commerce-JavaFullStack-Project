@@ -38,4 +38,12 @@ public class EmailDiagnosticsController {
         }
         return ResponseEntity.ok(Map.of("status", "error", "message", lastError));
     }
+
+    @GetMapping("/email-config")
+    public ResponseEntity<?> getEmailConfig() {
+        return ResponseEntity.ok(Map.of(
+                "status", "ok",
+                "config", emailService.getEmailConfig()
+        ));
+    }
 }

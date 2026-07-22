@@ -10,6 +10,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Properties;
 
 @Service
@@ -150,6 +151,20 @@ public class EmailService {
 
     public String getLastEmailError() {
         return lastEmailError;
+    }
+
+    public Map<String, Object> getEmailConfig() {
+        return Map.of(
+                "mailHost", mailHost,
+                "mailPort", mailPort,
+                "mailUsername", mailUsername,
+                "mailAuth", auth,
+                "mailStarttlsEnabled", starttlsEnabled,
+                "mailStarttlsRequired", starttlsRequired,
+                "mailSslTrust", sslTrust,
+                "mailSslProtocols", sslProtocols,
+                "fromAddress", fromAddress
+        );
     }
 
     private JavaMailSenderImpl createSslSender() {
