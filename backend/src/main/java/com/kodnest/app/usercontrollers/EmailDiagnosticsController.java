@@ -46,4 +46,12 @@ public class EmailDiagnosticsController {
                 "config", emailService.getEmailConfig()
         ));
     }
+
+    @GetMapping("/email-smtp-test")
+    public ResponseEntity<?> testSmtpConnection() {
+        return ResponseEntity.ok(Map.of(
+                "status", "ok",
+                "result", emailService.testSmtpConnection()
+        ));
+    }
 }

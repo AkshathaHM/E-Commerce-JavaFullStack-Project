@@ -10,6 +10,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -165,6 +168,21 @@ public class EmailService {
                 "mailSslProtocols", sslProtocols,
                 "fromAddress", fromAddress
         );
+    }
+
+    public Map<String, Object> testSmtpConnection() {
+        Map<String, Object> result = new HashMap<>();
+        result.put("mailHost", mailHost);
+        result.put("mailPort", mailPort);
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress(mailHost, mailPort), connectionTimeout);
+            result.put("reachable", true);
+            result.put("message", "Socket connected successfully to " + mailHost + ":" + mailPort);
+        } catch (Exception ex) {
+            result.put("reachable", false);
+            result.put("message", ex.getClass().getSimpleName() + ": " + ex.getMessage());
+        }
+        return result;
     }
 
     private JavaMailSenderImpl createSslSender() {
