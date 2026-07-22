@@ -1,25 +1,21 @@
-// Footer.jsx
 import React from 'react';
-import './assets/styles.css';
+import './Footer.css';
 
 export function Footer() {
+  const links = ["About Us", "Contact", "Services", "Privacy Policy", "Terms"];
+
   return (
     <footer className="footer">
-      <div className="footer-content">
-        <div className="footer-left">
-          <h3 className="footer-title">SalesSavvy</h3>
-          <p className="footer-tagline">Your one-stop shop for all your needs</p>
-        </div>
-        <div className="footer-links">
-          <button type="button" className="footer-link" onClick={(e) => e.preventDefault()}>About Us</button>
-          <button type="button" className="footer-link" onClick={(e) => e.preventDefault()}>Contact</button>
-          <button type="button" className="footer-link" onClick={(e) => e.preventDefault()}>Terms of Service</button>
-          <button type="button" className="footer-link" onClick={(e) => e.preventDefault()}>Privacy Policy</button>
-        </div>
+      <div className="footer-links">
+        {links.map((text, i) => (
+          <a key={i} href="#" className="footer-link">
+            {text.split('').map((char, j) => (
+              <span key={j}>{char}</span>
+            ))}
+          </a>
+        ))}
       </div>
-      <div className="footer-bottom">
-        <p>© 2026 SalesSavvy. All rights reserved.</p>
-      </div>
+      <p>© 2026 SalesSavvy. All rights reserved.</p>
     </footer>
   );
 }
