@@ -36,7 +36,12 @@ public class MailConfig {
             @Value("${spring.mail.properties.mail.smtp.ssl.protocols:TLSv1.2}") String sslProtocols) {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(host);
-        mailSender.setPort(port);
+        if ("smtp.gmail.com".equalsIgnoreCase(host) && port == 465 && "true".equalsIgnoreCase(starttlsEnable)) {
+            logger.warn("Gmail STARTTLS is enabled but spring.mail.port is 465; switching to port 587 for STARTTLS.");
+            mailSender.setPort(587);
+        } else {
+            mailSender.setPort(port);
+        }
         mailSender.setUsername(username);
         mailSender.setPassword(password);
         mailSender.setProtocol(protocol);
@@ -46,11 +51,14 @@ public class MailConfig {
         properties.put("mail.smtp.auth", auth);
         properties.put("mail.smtp.starttls.enable", starttlsEnable);
         properties.put("mail.smtp.starttls.required", starttlsRequired);
+        properties.put("mail.smtp.ssl.enable", "true".equalsIgnoreCase(starttlsEnable) ? "false" : "true");
+        properties.put("mail.smtp.socketFactory.fallback", "false");
         properties.put("mail.smtp.connectiontimeout", connectionTimeout);
         properties.put("mail.smtp.timeout", timeout);
         properties.put("mail.smtp.writetimeout", writeTimeout);
         properties.put("mail.smtp.ssl.trust", sslTrust);
         properties.put("mail.smtp.ssl.protocols", sslProtocols);
+        properties.put("mail.smtp.ehlo", "true");
         properties.put("mail.debug", "false");
 
         return mailSender;

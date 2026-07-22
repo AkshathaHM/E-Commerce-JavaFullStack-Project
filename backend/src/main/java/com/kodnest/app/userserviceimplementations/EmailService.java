@@ -125,17 +125,21 @@ public class EmailService {
             }
 
             if (mailSender instanceof JavaMailSenderImpl) {
-                JavaMailSenderImpl fallbackSender = mailPort == 465 ? createStartTlsSender() : createSslSender();
-                try {
-                    logger.info("Attempting fallback Gmail SMTP on alternate port for {}", to);
-                    fallbackSender.send(message);
-                    logger.info("OTP email sent via fallback port {} to {}", fallbackSender.getPort(), to);
-                    lastEmailError = null;
-                    return;
-                } catch (MailException fallbackEx) {
-                    logger.error("Fallback Gmail SMTP failed for {}: {}", to, fallbackEx.getMessage(), fallbackEx);
-                    lastEmailError = userMessage + " Fallback attempt also failed: " + fallbackEx.getMessage();
-                    throw new RuntimeException(lastEmailError, fallbackEx);
+                if (mailPort == 465) {
+                    JavaMailSenderImpl fallbackSender = createStartTlsSender();
+                    try {
+                        logger.info("Attempting fallback Gmail SMTP on alternate port for {}", to);
+                        fallbackSender.send(message);
+                        logger.info("OTP email sent via fallback port {} to {}", fallbackSender.getPort(), to);
+                        lastEmailError = null;
+                        return;
+                    } catch (MailException fallbackEx) {
+                        logger.error("Fallback Gmail SMTP failed for {}: {}", to, fallbackEx.getMessage(), fallbackEx);
+                        lastEmailError = userMessage + " Fallback attempt also failed: " + fallbackEx.getMessage();
+                        throw new RuntimeException(lastEmailError, fallbackEx);
+                    }
+                } else {
+                    logger.warn("No alternate Gmail SMTP fallback is configured for port {}. Skipping fallback.", mailPort);
                 }
             }
 
@@ -161,11 +165,13 @@ public class EmailService {
         fallbackProps.put("mail.smtp.ssl.enable", "true");
         fallbackProps.put("mail.smtp.starttls.enable", "false");
         fallbackProps.put("mail.smtp.starttls.required", "false");
+        fallbackProps.put("mail.smtp.socketFactory.fallback", "false");
         fallbackProps.put("mail.smtp.ssl.trust", sslTrust);
         fallbackProps.put("mail.smtp.ssl.protocols", sslProtocols);
         fallbackProps.put("mail.smtp.connectiontimeout", String.valueOf(connectionTimeout));
         fallbackProps.put("mail.smtp.timeout", String.valueOf(timeout));
         fallbackProps.put("mail.smtp.writetimeout", String.valueOf(writeTimeout));
+        fallbackProps.put("mail.smtp.ehlo", "true");
         fallbackProps.put("mail.debug", "false");
 
         fallbackSender.setJavaMailProperties(fallbackProps);
@@ -184,11 +190,14 @@ public class EmailService {
         fallbackProps.put("mail.smtp.auth", String.valueOf(auth));
         fallbackProps.put("mail.smtp.starttls.enable", "true");
         fallbackProps.put("mail.smtp.starttls.required", "true");
+        fallbackProps.put("mail.smtp.ssl.enable", "false");
+        fallbackProps.put("mail.smtp.socketFactory.fallback", "false");
         fallbackProps.put("mail.smtp.ssl.trust", sslTrust);
         fallbackProps.put("mail.smtp.ssl.protocols", sslProtocols);
         fallbackProps.put("mail.smtp.connectiontimeout", String.valueOf(connectionTimeout));
         fallbackProps.put("mail.smtp.timeout", String.valueOf(timeout));
         fallbackProps.put("mail.smtp.writetimeout", String.valueOf(writeTimeout));
+        fallbackProps.put("mail.smtp.ehlo", "true");
         fallbackProps.put("mail.debug", "false");
 
         fallbackSender.setJavaMailProperties(fallbackProps);
