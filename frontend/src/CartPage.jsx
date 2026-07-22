@@ -14,7 +14,6 @@ const CartPage = () => {
   const [showPaymentToast, setShowPaymentToast] = useState(false);
   const [paymentSuccessData, setPaymentSuccessData] = useState(null);
   const [paymentError, setPaymentError] = useState(null);
-  const [paymentDebug, setPaymentDebug] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -192,7 +191,6 @@ const CartPage = () => {
         }))
       };
 
-      setPaymentDebug("Calling /api/payment/create...");
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/create`, {
         method: "POST",
         credentials: "include",
@@ -204,12 +202,9 @@ const CartPage = () => {
         const errText = await res.text();
         const message = `Order creation failed: ${errText || "Server error"}`;
         setPaymentError(message);
-        setPaymentDebug("/api/payment/create failed");
-        alert(message);
+          alert(message);
         return;
       }
-
-      setPaymentDebug("/api/payment/create succeeded");
 
       const data = await res.json();
       const orderId = data.orderId;
@@ -249,7 +244,6 @@ const CartPage = () => {
                 message: verifyMessage || "Payment verified successfully",
               });
               setPaymentError(null);
-              setPaymentDebug("/api/payment/verify succeeded");
               setCartItems([]);
               setSubtotal("0.00");
               setTimeout(() => navigate("/customerhome"), 4000);
@@ -257,7 +251,6 @@ const CartPage = () => {
               const verifyMessage = await verifyRes.text();
               const message = `Payment verification failed: ${verifyMessage}`;
               setPaymentError(message);
-              setPaymentDebug("/api/payment/verify failed");
               alert(message);
             }
           } catch (e) {
@@ -275,7 +268,6 @@ const CartPage = () => {
         modal: {
           ondismiss: () => {
             // Do not show a cancellation message when the Razorpay modal is closed.
-            setPaymentDebug(null);
           },
         },
         theme: { color: "#00ABE4" },
@@ -350,15 +342,10 @@ const CartPage = () => {
   }
 
   return (
-    <div style={{ width: "100vw", minHeight: "100vh" }}>
+    <div style={{ width: "100vw", minHeight: "100vh", paddingBottom: "140px" }}>
       <Toast message="Payment Successful!" show={showPaymentToast} />
       <Header cartCount={totalItems} username={username} />
 
-      {paymentDebug && (
-        <div className="payment-debug-banner">
-          <p>{paymentDebug}</p>
-        </div>
-      )}
 
       {paymentError && (
         <div className="payment-error-banner">

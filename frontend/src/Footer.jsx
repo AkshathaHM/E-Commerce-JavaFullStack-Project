@@ -8,11 +8,14 @@ export function Footer() {
     <footer className="footer">
       <div className="footer-links">
         {links.map((text, i) => (
-          <a key={i} href="#" className="footer-link">
-            {text.split('').map((char, j) => (
-              <span key={j}>{char}</span>
-            ))}
-          </a>
+          <button
+            key={i}
+            type="button"
+            className="footer-link"
+            onClick={(event) => event.preventDefault()}
+          >
+            {text}
+          </button>
         ))}
       </div>
       <p>© 2026 SalesSavvy. All rights reserved.</p>

@@ -10,7 +10,15 @@ export function Header({ cartCount, username }) {
     <header className="header">
       <div className="header-content">
         <div className="logo-container" onClick={() => navigate('/customerhome')}>
-          <img src="/logo.png" alt="SalesSavvy" className="logo-image" />
+          <img
+            src="/logo.png"
+            alt="SalesSavvy"
+            className="logo-image"
+            onError={(event) => {
+              event.target.onerror = null;
+              event.target.src = 'https://via.placeholder.com/48?text=SS';
+            }}
+          />
           <span className="logo-text">SalesSavvy</span>
         </div>
 
