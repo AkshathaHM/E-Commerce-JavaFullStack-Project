@@ -1,5 +1,6 @@
 package com.kodnest.app.config;
 
+import java.util.Optional;
 import java.util.Properties;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -33,7 +34,22 @@ public class MailConfig {
             @Value("${spring.mail.properties.mail.smtp.timeout:10000}") String timeout,
             @Value("${spring.mail.properties.mail.smtp.writetimeout:10000}") String writeTimeout,
             @Value("${spring.mail.properties.mail.smtp.ssl.trust:smtp.gmail.com}") String sslTrust,
-            @Value("${spring.mail.properties.mail.smtp.ssl.protocols:TLSv1.2}") String sslProtocols) {
+            @Value("${spring.mail.properties.mail.smtp.ssl.protocols:TLSv1.2}") String sslProtocols,
+            @Value("${SPRING_MAIL_PORT:#{null}}") Optional<Integer> springMailPort,
+            @Value("${EMAIL_PASSWORD:}") String envEmailPassword,
+            @Value("${EMAIL_USERNAME:}") String envEmailUsername) {
+        if (springMailPort.isPresent()) {
+            logger.info("Render env override detected: SPRING_MAIL_PORT={}", springMailPort.get());
+            port = springMailPort.get();
+        }
+        if (!envEmailUsername.isBlank()) {
+            username = envEmailUsername;
+            logger.info("Render env override detected: EMAIL_USERNAME is set");
+        }
+        if (!envEmailPassword.isBlank()) {
+            password = envEmailPassword;
+            logger.info("Render env override detected: EMAIL_PASSWORD is set");
+        }
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(host);
         if ("smtp.gmail.com".equalsIgnoreCase(host) && port == 465 && "true".equalsIgnoreCase(starttlsEnable)) {
