@@ -11,10 +11,10 @@ export function Footer() {
           <p className="footer-tagline">Your one-stop shop for all your needs</p>
         </div>
         <div className="footer-links">
-          <a href="#">About Us</a>
-          <a href="#">Contact</a>
-          <a href="#">Terms of Service</a>
-          <a href="#">Privacy Policy</a>
+          <button type="button" className="footer-link" onClick={(e) => e.preventDefault()}>About Us</button>
+          <button type="button" className="footer-link" onClick={(e) => e.preventDefault()}>Contact</button>
+          <button type="button" className="footer-link" onClick={(e) => e.preventDefault()}>Terms of Service</button>
+          <button type="button" className="footer-link" onClick={(e) => e.preventDefault()}>Privacy Policy</button>
         </div>
       </div>
       <div className="footer-bottom">

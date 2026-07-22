@@ -2,18 +2,17 @@
 import React from 'react';
 import './assets/styles.css';
 
-export function CategoryNavigation({ onCategoryClick }) {
-  // Static categories list
-  const categories = ['Shirts', 'Pants', 'Accessories', 'Mobiles', 'Mobile Accessories'];
+export function CategoryNavigation({ selectedCategory, onCategoryClick }) {
+  const categories = ['All', 'Shirts', 'Pants', 'Accessories', 'Mobiles', 'Mobile Accessories'];
 
   return (
     <nav className="category-navigation">
       <ul className="category-list">
-        {categories.map((category, index) => (
+        {categories.map((category) => (
           <li
-            key={index}
-            className="category-item"
-            onClick={() => onCategoryClick(category)} // Trigger the click handler on category click
+            key={category}
+            className={`category-item ${selectedCategory === category ? 'active' : ''}`}
+            onClick={() => onCategoryClick(category)}
           >
             {category}
           </li>

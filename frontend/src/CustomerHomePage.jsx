@@ -8,11 +8,11 @@ import './assets/styles.css';
 export default function CustomerHomePage() {
   const [products, setProducts] = useState([]);
   const [cartCount, setCartCount] = useState(0);
-  const [username, setUsername] = useState(() => localStorage.getItem('username') || '');
+  const [username, setUsername] = useState(() => localStorage.getItem('username') || 'Guest');
   const [cartError, setCartError] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(true);
   const [showCartNotification, setShowCartNotification] = useState(false);
-  const [isGuest, setIsGuest] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('authToken');
@@ -20,8 +20,8 @@ export default function CustomerHomePage() {
   };
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    fetchProducts(selectedCategory);
+  }, [selectedCategory]);
 
   useEffect(() => {
     if (username && username !== 'Guest') {
@@ -33,11 +33,10 @@ export default function CustomerHomePage() {
     }
   }, [username]);
 
-  const fetchProducts = async (category = '') => {
+  const fetchProducts = async (category = 'All') => {
     try {
-      const url = category ?
-        `${import.meta.env.VITE_API_URL}/api/products?category=${encodeURIComponent(category)}` :
-        `${import.meta.env.VITE_API_URL}/api/products`;
+      const query = category && category !== 'All' ? `?category=${encodeURIComponent(category)}` : '';
+      const url = `${import.meta.env.VITE_API_URL}/api/products${query}`;
       const response = await fetch(url, {
         credentials: 'include',
         headers: {
@@ -52,7 +51,7 @@ export default function CustomerHomePage() {
         throw new Error(data.error || data.message || 'Failed to load products');
       }
 
-      setUsername(data.user?.name || 'Guest');
+      setUsername(data.user?.name || localStorage.getItem('username') || 'Guest');
       setProducts(data.products || []);
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -99,7 +98,7 @@ export default function CustomerHomePage() {
   };
 
   const handleCategoryClick = (category) => {
-    fetchProducts(category);
+    setSelectedCategory(category);
   };
 
   const handleAddToCart = async (productId) => {
@@ -151,7 +150,13 @@ export default function CustomerHomePage() {
       />
 
       <nav className="navigation">
-        <CategoryNavigation onCategoryClick={handleCategoryClick} />
+        <CategoryNavigation
+          selectedCategory={selectedCategory}
+          onCategoryClick={(category) => {
+            setSelectedCategory(category);
+            handleCategoryClick(category);
+          }}
+        />
       </nav>
 
       <main className="main-content">

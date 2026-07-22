@@ -85,42 +85,46 @@ export function ProfileDropdown({ username }) {
   };
 
   return (
-    <div className="profile-dropdown">
+    <div className={`profile-dropdown ${isOpen ? 'open' : ''}`}>
       <button className="profile-button" onClick={toggleDropdown}>
         <img
           src={useravatar}
           alt="User Avatar"
           className="user-avatar"
-          onError={(e) => { e.target.src = 'fallback-logo.png'; }} // Fallback for image error
+          onError={(e) => { e.target.src = 'fallback-logo.png'; }}
         />
         <span className="username">{username || 'Guest'}</span>
       </button>
-      {isOpen && (
-        <div className="dropdown-menu">
-          <button className="dropdown-link" onClick={handleCartClick}>Cart</button>
-          <button className="dropdown-link" onClick={handleOrdersClick}>Orders</button>
-          <button className="dropdown-link" onClick={handleViewProfile} disabled={isLoadingProfile}>
-            {isLoadingProfile ? 'Loading profile...' : 'View Profile'}
-          </button>
-
-          {profileError && <div className="dropdown-error">{profileError}</div>}
-
-          {profileData && (
-            <div className="profile-card">
-              <h4>Profile</h4>
-              <p><strong>Username:</strong> {profileData.username || username || 'N/A'}</p>
-              <p><strong>Name:</strong> {profileData.name || 'N/A'}</p>
-              <p><strong>Email:</strong> {profileData.email || 'N/A'}</p>
-              <p><strong>Role:</strong> {profileData.role || 'N/A'}</p>
-              {profileData.address && <p><strong>Address:</strong> {profileData.address}</p>}
-            </div>
-          )}
-
-          <button className="profile-button" onClick={handleLogout}>
-            Logout
-          </button>
+      <div className={`dropdown-menu ${isOpen ? 'visible' : ''}`}>
+        <div className="dropdown-top">
+          <button className="dropdown-link" type="button" onClick={handleCartClick}>Cart</button>
+          <button className="dropdown-link" type="button" onClick={handleOrdersClick}>Orders</button>
         </div>
-      )}
+
+        <button className="dropdown-link" type="button" onClick={handleViewProfile} disabled={isLoadingProfile}>
+          {isLoadingProfile ? 'Loading profile...' : 'View Profile'}
+        </button>
+
+        {profileError && <div className="dropdown-error">{profileError}</div>}
+
+        {profileData && (
+          <div className="profile-card card-centered">
+            <h4>Profile Details</h4>
+            <p><strong>Username:</strong> {profileData.username || username || 'N/A'}</p>
+            <p><strong>Name:</strong> {profileData.name || 'N/A'}</p>
+            <p><strong>Email:</strong> {profileData.email || 'N/A'}</p>
+            <p><strong>Role:</strong> {profileData.role || 'N/A'}</p>
+            <p><strong>Verified:</strong> {profileData.verified ? 'Yes' : 'No'}</p>
+            <p><strong>Enabled:</strong> {profileData.enabled ? 'Yes' : 'No'}</p>
+            <p><strong>Address:</strong> {profileData.address || 'Not provided'}</p>
+            {profileData.createdAt && <p><strong>Joined:</strong> {new Date(profileData.createdAt).toLocaleDateString()}</p>}
+          </div>
+        )}
+
+        <button className="profile-button logout-button" type="button" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
     </div>
   );
 }
