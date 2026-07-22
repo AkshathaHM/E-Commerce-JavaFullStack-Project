@@ -17,11 +17,12 @@ import com.kodnest.app.entities.LoginRequest;
 import com.kodnest.app.entities.User;
 import com.kodnest.app.userservices.AuthServiceContract;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@CrossOrigin(allowedOriginPatterns = "*", allowedHeaders = "*", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:5174", "http://localhost:5173", "http://127.0.0.1:5174", "http://127.0.0.1:5173", "https://e-commerce-java-full-stack-project-five.vercel.app", "https://e-commerce-java-full-stack-project-seven.vercel.app", "https://e-commerce-javafullstack-project-2.onrender.com"}, allowCredentials = "true")
 @RequestMapping("/api/auth")
 public class AuthController {
 
@@ -91,9 +92,9 @@ public class AuthController {
             return authHeader.substring(7).trim();
         }
 
-        javax.servlet.http.Cookie[] cookies = request.getCookies();
+        Cookie[] cookies = request.getCookies();
         if (cookies != null) {
-            for (javax.servlet.http.Cookie cookie : cookies) {
+            for (Cookie cookie : cookies) {
                 if ("authToken".equals(cookie.getName())) {
                     return cookie.getValue();
                 }

@@ -11,7 +11,7 @@ import com.kodnest.app.userservices.OrderServiceContract;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@CrossOrigin(allowedOriginPatterns = "*", allowedHeaders = "*", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:5174", "http://localhost:5173", "http://127.0.0.1:5174", "http://127.0.0.1:5173", "https://e-commerce-java-full-stack-project-five.vercel.app", "https://e-commerce-java-full-stack-project-seven.vercel.app", "https://e-commerce.javafullstack-project-2.onrender.com"}, allowCredentials = "true")
 @RequestMapping("/api/orders")
 public class OrderController {
 
