@@ -35,7 +35,9 @@ export default function AdminLogin() {
           throw new Error("Only admin can log in from this page.");
         }
 
-        localStorage.setItem('authToken', data.token);
+        if (data.token) {
+          localStorage.setItem('authToken', data.token);
+        }
         setShowToast(true);
         setTimeout(() => {
           navigate("/admindashboard", { state: { username: data.username || username } });

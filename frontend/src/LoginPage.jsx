@@ -33,6 +33,9 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
+        if (data.token) {
+          localStorage.setItem('authToken', data.token);
+        }
         // Login sets auth cookie; fetch profile to get username/role
         try {
           const meRes = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {

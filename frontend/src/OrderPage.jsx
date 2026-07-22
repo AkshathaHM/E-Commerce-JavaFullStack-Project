@@ -12,6 +12,11 @@ export default function OrderPage() {
   const [cartError, setCartError] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(true);
 
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('authToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   useEffect(() => {
     fetchOrders();
     if (username) {
@@ -23,6 +28,10 @@ export default function OrderPage() {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
         credentials: 'include',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
       });
       if (!response.ok) throw new Error('Failed to fetch orders');
       const data = await response.json();

@@ -6,6 +6,11 @@ export function ProfileDropdown({ username }) {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate(); // Initialize useNavigate hook
 
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('authToken');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
@@ -14,6 +19,10 @@ export function ProfileDropdown({ username }) {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
         method: 'POST', // Use POST as logout often involves session clearing
         credentials: 'include', // Include credentials like cookies for authentication
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
       });
 
       if (response.ok) {
@@ -33,7 +42,10 @@ export function ProfileDropdown({ username }) {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
         method: 'GET',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
       });
       if (res.ok) {
         const data = await res.json();

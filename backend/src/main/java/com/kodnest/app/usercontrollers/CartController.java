@@ -20,7 +20,7 @@ import com.kodnest.app.userservices.CartServiceContract;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5174", allowCredentials="true")
+@CrossOrigin(allowedOriginPatterns = "*", allowedHeaders = "*", allowCredentials = "true")
 @RequestMapping("api/cart")
 public class CartController {
        
@@ -32,7 +32,7 @@ public class CartController {
 }
 
    @PostMapping("/add")
-   @CrossOrigin(origins = "http://localhost:5174", allowCredentials = "true" )
+   @CrossOrigin(allowedOriginPatterns = "*", allowedHeaders = "*", allowCredentials = "true" )
    public ResponseEntity<Void>addToCart(@RequestBody Map<String, Object> request, HttpServletRequest req) {
 	  
 	User user =  (User) req.getAttribute("authenticatedUser");

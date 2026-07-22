@@ -8,7 +8,7 @@ import com.kodnest.app.adminServices.AdminOrderServiceContract;
 import com.kodnest.app.entities.OrderStatus;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5174", allowCredentials = "true")
+@CrossOrigin(allowedOriginPatterns = "*", allowedHeaders = "*", allowCredentials = "true")
 @RequestMapping("/admin/orders")
 public class AdminOrderController {
 

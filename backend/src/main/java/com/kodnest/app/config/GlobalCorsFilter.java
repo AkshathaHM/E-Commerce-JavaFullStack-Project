@@ -31,7 +31,7 @@ public class GlobalCorsFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String origin = request.getHeader("Origin");
 
-        if (origin != null && (ALLOWED_ORIGINS.contains(origin) || origin.endsWith(".vercel.app"))) {
+        if (origin != null) {
             response.setHeader("Access-Control-Allow-Origin", origin);
             response.setHeader("Vary", "Origin");
             response.setHeader("Access-Control-Allow-Credentials", "true");

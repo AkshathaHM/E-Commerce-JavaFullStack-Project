@@ -391,6 +391,10 @@ const AdminDashboard = () => {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
       });
       if (response.ok) {
         localStorage.removeItem('authToken');

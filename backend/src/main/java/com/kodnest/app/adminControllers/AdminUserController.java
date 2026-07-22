@@ -10,7 +10,7 @@ import com.kodnest.app.adminServices.AdminUserServiceContract;
 import com.kodnest.app.entities.User;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5174", allowCredentials = "true")
+@CrossOrigin(allowedOriginPatterns = "*", allowedHeaders = "*", allowCredentials = "true")
 @RequestMapping("/admin/user")
 public class AdminUserController {
 

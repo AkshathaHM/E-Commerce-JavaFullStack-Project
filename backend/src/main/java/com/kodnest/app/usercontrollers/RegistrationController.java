@@ -14,17 +14,7 @@ import com.kodnest.app.entities.User;
 import com.kodnest.app.userservices.UserServiceContract;
 
 @RestController
-@CrossOrigin(
-    origins = {
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:3000",
-        "https://e-commerce-java-full-stack-project-five.vercel.app",
-        "https://e-commerce-java-full-stack-project-seven.vercel.app"
-    },
-    allowedHeaders = {"Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Cookie"},
-    allowCredentials = "true"
-)
+@CrossOrigin(allowedOriginPatterns = "*", allowedHeaders = "*", allowCredentials = "true")
 @RequestMapping("/api/auth")
 public class RegistrationController {
     private final UserServiceContract userService;

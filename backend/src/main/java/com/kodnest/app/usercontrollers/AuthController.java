@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,22 +17,11 @@ import com.kodnest.app.entities.LoginRequest;
 import com.kodnest.app.entities.User;
 import com.kodnest.app.userservices.AuthServiceContract;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@CrossOrigin(
-    origins = {
-        "http://localhost:5173",
-        "http://localhost:5174",
-        "http://localhost:3000",
-        "https://e-commerce-java-full-stack-project-five.vercel.app",
-        "https://e-commerce-java-full-stack-project-seven.vercel.app"
-    },
-    allowedHeaders = {"Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Cookie"},
-    allowCredentials = "true"
-)
+@CrossOrigin(allowedOriginPatterns = "*", allowedHeaders = "*", allowCredentials = "true")
 @RequestMapping("/api/auth")
 public class AuthController {
 
@@ -42,27 +32,23 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
         try {
             User user = authService.authenticate(loginRequest.getUsername(), loginRequest.getPassword());
             String token = authService.generateToken(user);
 
-            Cookie cookie = new Cookie("authToken", token);
-            cookie.setHttpOnly(true);
-            cookie.setSecure(false); // change to true in production (HTTPS)
-            cookie.setPath("/");
-            cookie.setMaxAge(3600); // 1 hour
-            // Do not force a domain here so the cookie works on deployed hosts
-            response.addCookie(cookie);
-
-            // Optional: extra Set-Cookie header (some clients need it)
-            response.addHeader("Set-Cookie",
-                    "authToken=" + token + "; HttpOnly; Path=/; Max-Age=3600; SameSite=None");
+            boolean secureCookie = request.isSecure() || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"));
+            String cookieValue = "authToken=" + token + "; HttpOnly; Path=/; Max-Age=3600; SameSite=None";
+            if (secureCookie) {
+                cookieValue += "; Secure";
+            }
+            response.addHeader("Set-Cookie", cookieValue);
 
             Map<String, Object> body = new HashMap<>();
             body.put("message", "Login successful");
             body.put("role", user.getRole().name());
             body.put("username", user.getUsername());
+            body.put("token", token);
 
             return ResponseEntity.ok(body);
         } catch (RuntimeException e) {
@@ -72,15 +58,23 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout(HttpServletResponse response) {
+    public ResponseEntity<Map<String, String>> logout(HttpServletRequest request, HttpServletResponse response,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
-            // Clear cookie
-            Cookie cookie = new Cookie("authToken", null);
-            cookie.setHttpOnly(true);
-            cookie.setMaxAge(0);
-            cookie.setPath("/");
-            // Clearing cookie without domain so it clears on current host
-            response.addCookie(cookie);
+            String token = extractTokenFromRequest(request, authHeader);
+            if (token != null && authService.validateToken(token)) {
+                String username = authService.extractUsername(token);
+                User user = new User();
+                user.setUsername(username);
+                authService.logout(user);
+            }
+
+            boolean secureCookie = request.isSecure() || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"));
+            String cookieValue = "authToken=; HttpOnly; Path=/; Max-Age=0; SameSite=None";
+            if (secureCookie) {
+                cookieValue += "; Secure";
+            }
+            response.addHeader("Set-Cookie", cookieValue);
 
             Map<String, String> body = new HashMap<>();
             body.put("message", "Logout successful");
@@ -90,6 +84,22 @@ public class AuthController {
             error.put("message", "Logout failed: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
+    }
+
+    private String extractTokenFromRequest(HttpServletRequest request, String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7).trim();
+        }
+
+        javax.servlet.http.Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (javax.servlet.http.Cookie cookie : cookies) {
+                if ("authToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
 
     @GetMapping("/me")

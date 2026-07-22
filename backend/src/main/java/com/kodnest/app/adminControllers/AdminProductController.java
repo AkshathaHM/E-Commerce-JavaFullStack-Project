@@ -8,7 +8,7 @@ import com.kodnest.app.adminServices.AdminProductServiceContract;
 import com.kodnest.app.entities.Product;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5174", allowCredentials = "true")
+@CrossOrigin(allowedOriginPatterns = "*", allowedHeaders = "*", allowCredentials = "true")
 @RequestMapping("/admin/products")
 public class AdminProductController {
 
@@ -50,7 +50,7 @@ public class AdminProductController {
     }
 
     @DeleteMapping("/delete")
-    @CrossOrigin(origins = "http://localhost:5174", allowCredentials = "true")  // ← ADD THIS LINE FOR DELETE
+    @CrossOrigin(allowedOriginPatterns = "*", allowedHeaders = "*", allowCredentials = "true")
     public ResponseEntity<?> deleteProduct(@RequestBody Map<String, Integer> requestBody) {
         try {
             Integer productId = requestBody.get("productId");
