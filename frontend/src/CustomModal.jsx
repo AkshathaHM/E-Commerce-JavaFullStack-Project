@@ -595,80 +595,32 @@ export default CustomModal;
 
 // View All Users Component
 const ViewAllUsersForm = ({ onSubmit, onClose, response, modalData, loading }) => {
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [loadingUserId, setLoadingUserId] = useState(null);
-
   const handleSubmit = (e) => {
     e.preventDefault();
-    setSelectedUser(null);
     onSubmit({});
-  };
-
-  const fetchUserDetails = async (userId) => {
-    setLoadingUserId(userId);
-    setSelectedUser(null);
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/user/getbyid`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        setSelectedUser(userData);
-      } else {
-        const errorText = await response.text();
-        console.error(errorText);
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoadingUserId(null);
-    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="modal-form">
       <h2>View All Users</h2>
-      <p>Fetch all registered users and display them in cards.</p>
+      <p>All registered users are loaded automatically when this modal opens. Use the button below to refresh the list.</p>
 
-      {selectedUser && (
-        <div className="card user-card selected-user-card">
-          <h3>User Details</h3>
-          <p><strong>ID:</strong> {selectedUser.userId || selectedUser.id}</p>
-          <p><strong>Username:</strong> {selectedUser.username || selectedUser.name}</p>
-          <p><strong>Email:</strong> {selectedUser.email}</p>
-          <p><strong>Role:</strong> {selectedUser.role}</p>
-        </div>
-      )}
-
-      {modalData && Array.isArray(modalData) && (
+      {modalData && Array.isArray(modalData) && modalData.length > 0 ? (
         <div className="view-all-users-list">
           {modalData.map((user) => {
             const idValue = user.userId || user.id;
-            const isSelected = selectedUser && (selectedUser.userId === idValue || selectedUser.id === idValue);
             return (
               <div key={idValue} className="card user-card">
                 <h3>{user.username || user.name || "User"}</h3>
                 <p><strong>ID:</strong> {idValue}</p>
                 <p><strong>Email:</strong> {user.email}</p>
                 <p><strong>Role:</strong> {user.role}</p>
-                {!isSelected && (
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => fetchUserDetails(idValue)}
-                    disabled={loadingUserId === idValue}
-                  >
-                    {loadingUserId === idValue ? "Loading..." : "Get User"}
-                  </button>
-                )}
               </div>
             );
           })}
         </div>
+      ) : (
+        <p className="empty-state">No users are loaded yet. Click refresh to load users.</p>
       )}
 
       {response && response.includes("Error") && (
@@ -677,7 +629,7 @@ const ViewAllUsersForm = ({ onSubmit, onClose, response, modalData, loading }) =
 
       <div className="modal-form-buttons">
         <button type="submit" disabled={loading}>
-          {loading ? "Loading..." : "Get All Users"}
+          {loading ? "Refreshing..." : "Refresh Users"}
         </button>
         <button type="button" onClick={onClose}>Cancel</button>
       </div>

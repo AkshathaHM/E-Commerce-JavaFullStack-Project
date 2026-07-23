@@ -1,11 +1,11 @@
 import React from 'react';
 import './Footer.css';
 
-export function Footer() {
+export function Footer({ fixed = false }) {
   const links = ["About Us", "Contact", "Services", "Privacy Policy", "Terms"];
 
   return (
-    <footer className="footer">
+    <footer className={`footer${fixed ? ' fixed' : ''}`}>
       <div className="footer-links">
         {links.map((text, i) => (
           <button

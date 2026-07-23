@@ -106,7 +106,7 @@ export default function CustomerHomePage() {
       <main className="main-content">
         {loading && products.length === 0 ? <p>Loading products...</p> : <ProductList products={products} onAddToCart={handleAddToCart} />}
       </main>
-      <Footer />
+      <Footer fixed />
     </div>
   );
 }

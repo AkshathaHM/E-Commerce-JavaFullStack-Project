@@ -2,7 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import useravatar from './useravatar.png';
 
-export function ProfileDropdown({ username, showOrders = true, showCart = true, showProfile = true, showLogout = true }) {
+export function ProfileDropdown({ username, showOrders = true, showCart = true, showProfile = true, showLogout = true, logoutRedirect = '/' }) {
   const [isOpen, setIsOpen] = useState(false);
   const [activePanel, setActivePanel] = useState(null);
   const [profileData, setProfileData] = useState(null);
@@ -46,7 +46,7 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
       console.error('Logout failed', logoutError);
     }
     localStorage.clear();
-    navigate('/');
+    navigate(logoutRedirect);
   };
 
   const loadProfile = async () => {

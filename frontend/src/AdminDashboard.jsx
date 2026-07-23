@@ -160,8 +160,17 @@ const AdminDashboard = () => {
 
   const openModal = async (type) => {
     setModalType(type);
+
     if (type === "manageProducts") {
       await handleManageProducts();
+    }
+
+    if (type === "viewAllUsers") {
+      await handleViewAllUsers();
+    }
+
+    if (type === "orders") {
+      await handleViewOrders();
     }
   };
 
@@ -480,7 +489,7 @@ const AdminDashboard = () => {
       <header className="dashboard-header">
         <Logo />
         <div className="user-info">
-          <ProfileDropdown username={adminUsername || "Admin"} showOrders={false} showCart={false} />
+          <ProfileDropdown username={adminUsername || "Admin"} showOrders={false} showCart={false} logoutRedirect="/admin" />
         </div>
       </header>
 
