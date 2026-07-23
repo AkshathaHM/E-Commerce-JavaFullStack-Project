@@ -8,6 +8,7 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.net.InetSocketAddress;
@@ -83,6 +84,7 @@ public class EmailService {
         }
     }
 
+    @Async("emailTaskExecutor")
     public void sendVerificationEmail(User user, String token) {
         if (user == null || token == null || token.isBlank()) {
             logger.warn("Cannot send verification email: missing user or token");
@@ -99,6 +101,7 @@ public class EmailService {
         sendEmail(user.getEmail(), subject, body);
     }
 
+    @Async("emailTaskExecutor")
     public void sendOtpEmail(User user, String otp) {
         if (user == null || otp == null || otp.isBlank()) {
             logger.warn("Cannot send OTP email: missing user or OTP");

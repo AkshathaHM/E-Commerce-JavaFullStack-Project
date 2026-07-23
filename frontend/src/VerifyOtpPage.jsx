@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import "./assets/styles.css";
 import { Toast } from "./Toast";
@@ -6,18 +6,36 @@ import { Toast } from "./Toast";
 export default function VerifyOtpPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState(location.state?.email || "");
-  const [role] = useState(location.state?.role || "CUSTOMER");
+  const savedEmail = location.state?.email || window.localStorage.getItem("registrationEmail") || "";
+  const savedRole = location.state?.role || "CUSTOMER";
+  const [email, setEmail] = useState(savedEmail);
+  const [role] = useState(savedRole);
   const [otp, setOtp] = useState("");
   const [error, setError] = useState(null);
-  const [message, setMessage] = useState(null);
-  const [showToast, setShowToast] = useState(false);
+  const [message, setMessage] = useState(location.state?.successMessage || null);
+  const [showToast, setShowToast] = useState(!!location.state?.successMessage);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
+
+  useEffect(() => {
+    if (email && email.trim()) {
+      window.localStorage.setItem("registrationEmail", email.trim());
+    }
+  }, [email]);
+
+  useEffect(() => {
+    if (!showToast) {
+      return;
+    }
+    const timer = window.setTimeout(() => setShowToast(false), 4000);
+    return () => window.clearTimeout(timer);
+  }, [showToast]);
 
   const handleVerifyOtp = async (event) => {
     event.preventDefault();
     setError(null);
     setMessage(null);
+    setIsSubmitting(true);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
@@ -33,11 +51,14 @@ export default function VerifyOtpPage() {
         throw new Error(data.error || "OTP verification failed");
       }
 
+      window.localStorage.removeItem("registrationEmail");
       setShowToast(true);
       setMessage("Registration successful. Redirecting to login...");
       navigate(role === "ADMIN" ? "/admin" : "/", { replace: true });
     } catch (err) {
       setError(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -65,9 +86,12 @@ export default function VerifyOtpPage() {
         throw new Error(data.error || "Could not resend OTP");
       }
 
-      setMessage(data.message || "OTP resent successfully. Check your email.");
+      const successMessage = data.message || "OTP resent successfully. Check your email.";
+      setMessage(successMessage);
+      setShowToast(true);
     } catch (err) {
       setError(err.message);
+      setShowToast(false);
     } finally {
       setIsResending(false);
     }
@@ -107,11 +131,13 @@ export default function VerifyOtpPage() {
             />
           </div>
           <div className="otp-actions">
-            <button type="submit" className="form-button">Verify OTP</button>
+            <button type="submit" className="form-button" disabled={isSubmitting}>
+              {isSubmitting ? "Verifying…" : "Verify OTP"}
+            </button>
             <button
               type="button"
               onClick={handleResendOtp}
-              disabled={isResending}
+              disabled={isResending || isSubmitting}
               className="form-button secondary"
             >
               {isResending ? "Resending..." : "Resend OTP"}

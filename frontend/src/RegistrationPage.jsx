@@ -16,9 +16,12 @@ export default function RegistrationPage() {
   const [showToast, setShowToast] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSignUp = async (e) => {
     e.preventDefault();
-    setError(null); // Clear previous errors
+    setError(null);
+    setIsSubmitting(true);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
@@ -33,13 +36,22 @@ export default function RegistrationPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setShowToast(true);
-        navigate('/verify-otp', { state: { email, role }, replace: true });
+        window.localStorage.setItem('registrationEmail', email.trim());
+        navigate('/verify-otp', {
+          state: {
+            email,
+            role,
+            successMessage: 'Registration succeeded. OTP sent — check your inbox now.',
+          },
+          replace: true,
+        });
       } else {
         throw new Error(data.error || 'Registration failed');
       }
     } catch (err) {
       setError(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -136,7 +148,9 @@ export default function RegistrationPage() {
                 </select>
               </div>
 
-              <button type="submit" className="form-button">Sign Up</button>
+              <button type="submit" className="form-button" disabled={isSubmitting}>
+                {isSubmitting ? 'Signing up…' : 'Sign Up'}
+              </button>
             </form>
 
             <div className="registration-links-block">

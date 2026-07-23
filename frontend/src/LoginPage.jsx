@@ -12,12 +12,16 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSignIn = async (e) => {
     e.preventDefault();
     setError(null);
+    setIsSubmitting(true);
 
     if (!username.trim() || !password.trim()) {
       setError("Username and password are required");
+      setIsSubmitting(false);
       return;
     }
 
@@ -37,36 +41,21 @@ export default function LoginPage() {
         if (data.token) {
           localStorage.setItem('authToken', data.token);
         }
-        // Login sets auth cookie; fetch profile to get username/role
-        try {
-          const meRes = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-          });
-          const meData = await meRes.json();
-          const role = meData.role || data.role;
-          const username = meData.username || data.username;
-          if (username) localStorage.setItem('username', username);
-          setShowToast(true);
-          const path = role === "CUSTOMER" ? "/customerhome" : "/admindashboard";
-          navigate(path, { replace: true });
-        } catch (e) {
-          // fallback to response body
-          const role = data.role;
-          const username = data.username;
-          if (username) localStorage.setItem('username', username);
-          setShowToast(true);
-          const path = role === "CUSTOMER" ? "/customerhome" : "/admindashboard";
-          navigate(path, { replace: true });
-        }
+
+        const role = data.role || "CUSTOMER";
+        const loggedInUsername = data.username || username;
+        localStorage.setItem('username', loggedInUsername);
+        setShowToast(true);
+        const path = role === "CUSTOMER" ? "/customerhome" : "/admindashboard";
+        navigate(path, { replace: true });
       } else {
-        const errorMessage =
-          data.error || "Something went wrong. Please try again.";
+        const errorMessage = data.error || "Something went wrong. Please try again.";
         throw new Error(errorMessage);
       }
     } catch (err) {
       setError(err.message || "Unexpected error occurred");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -120,8 +109,8 @@ export default function LoginPage() {
                 </span>
               </div>
             </div>
-            <button type="submit" className="form-button">
-              Sign In
+            <button type="submit" className="form-button" disabled={isSubmitting}>
+              {isSubmitting ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
           <div className="form-footer">
