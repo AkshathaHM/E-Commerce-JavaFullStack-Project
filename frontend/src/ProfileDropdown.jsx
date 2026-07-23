@@ -12,6 +12,8 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
+  const modalRef = useRef(null);
+  const previousFocusedElement = useRef(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -34,6 +36,35 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
 
   const closePanel = () => {
     setActivePanel(null);
+  };
+
+  const trapFocus = (event) => {
+    if (!modalRef.current) {
+      return;
+    }
+
+    const focusableElements = modalRef.current.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+
+    const elements = Array.from(focusableElements).filter(
+      (element) => !element.hasAttribute('disabled') && element.offsetParent !== null
+    );
+
+    if (elements.length === 0) {
+      return;
+    }
+
+    const firstElement = elements[0];
+    const lastElement = elements[elements.length - 1];
+
+    if (event.shiftKey && document.activeElement === firstElement) {
+      event.preventDefault();
+      lastElement.focus();
+    } else if (!event.shiftKey && document.activeElement === lastElement) {
+      event.preventDefault();
+      firstElement.focus();
+    }
   };
 
   const formatLabel = (key) => {
@@ -155,6 +186,45 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
     navigate('/orders');
   };
 
+  useEffect(() => {
+    if (activePanel !== 'profile') {
+      return undefined;
+    }
+
+    previousFocusedElement.current = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        closePanel();
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        closePanel();
+      } else if (event.key === 'Tab') {
+        trapFocus(event);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    const closeButton = modalRef.current?.querySelector('.profile-modal-close');
+    if (closeButton) {
+      closeButton.focus();
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (previousFocusedElement.current) {
+        previousFocusedElement.current.focus();
+      }
+    };
+  }, [activePanel]);
+
   return (
     <div className={`profile-dropdown ${isOpen ? 'open' : ''}`} ref={dropdownRef}>
       <button
@@ -195,28 +265,41 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
 
       {activePanel === 'profile' && (
         <div className="profile-modal" onClick={closePanel}>
-          <div className="profile-card profile-card--modal" onClick={(event) => event.stopPropagation()}>
-            <button type="button" className="card-close" onClick={closePanel}>
-              ×
-            </button>
+          <div
+            ref={modalRef}
+            className="profile-card profile-card--modal"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-modal-title"
+          >
+            <div className="profile-modal-header">
+              <h3 id="profile-modal-title">Profile Details</h3>
+              <button
+                type="button"
+                className="profile-modal-close"
+                aria-label="Close profile details"
+                onClick={closePanel}
+              >
+                ×
+              </button>
+            </div>
+
             {loadingProfile ? (
-              <p>Loading profile...</p>
+              <p className="profile-modal-status">Loading profile...</p>
             ) : profileData ? (
-              <div>
-                <h3>{profileData.role === 'ADMIN' ? 'Admin Profile Details' : 'Profile Details'}</h3>
-                <div className="profile-details-grid">
-                  {Object.entries(profileData)
-                    .filter(([key]) => !['password', 'confirmPassword', 'token', 'authToken'].includes(key.toLowerCase()))
-                    .map(([key, value]) => (
-                      <div key={key} className="profile-detail-row">
-                        <span className="profile-detail-label">{formatLabel(key)}</span>
-                        <span className="profile-detail-value">{renderProfileValue(value)}</span>
-                      </div>
-                    ))}
-                </div>
+              <div className="profile-details-grid">
+                {Object.entries(profileData)
+                  .filter(([key]) => !['password', 'confirmPassword', 'token', 'authToken'].includes(key.toLowerCase()))
+                  .map(([key, value]) => (
+                    <div key={key} className="profile-detail-row">
+                      <span className="profile-detail-label">{formatLabel(key)}</span>
+                      <span className="profile-detail-value">{renderProfileValue(value)}</span>
+                    </div>
+                  ))}
               </div>
             ) : (
-              <p>No profile data available.</p>
+              <p className="profile-modal-status">No profile data available.</p>
             )}
           </div>
         </div>
