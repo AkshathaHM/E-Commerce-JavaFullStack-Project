@@ -106,16 +106,18 @@ export default function VerifyOtpPage() {
               className="form-input"
             />
           </div>
-          <button type="submit" className="form-button">Verify OTP</button>
+          <div className="otp-actions">
+            <button type="submit" className="form-button">Verify OTP</button>
+            <button
+              type="button"
+              onClick={handleResendOtp}
+              disabled={isResending}
+              className="form-button secondary"
+            >
+              {isResending ? "Resending..." : "Resend OTP"}
+            </button>
+          </div>
         </form>
-        <button
-          type="button"
-          onClick={handleResendOtp}
-          disabled={isResending}
-          className="form-button secondary"
-        >
-          {isResending ? "Resending..." : "Resend OTP"}
-        </button>
         <p className="form-footer">
           <Link to="/" className="form-link">Back to login</Link>
         </p>

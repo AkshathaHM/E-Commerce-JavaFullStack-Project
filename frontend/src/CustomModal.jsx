@@ -408,7 +408,7 @@ const ViewUserForm = ({ onSubmit, onClose, response, modalData, loading }) => {
       )}
 
       <div className="modal-form-buttons">
-        <button type="submit" disabled={loading}>
+        <button type="submit" className="secondary-button" disabled={loading}>
           {loading ? "Fetching..." : "Get User"}
         </button>
         <button type="button" onClick={onClose}>Cancel</button>
@@ -490,7 +490,7 @@ const ModifyUserForm = ({ onSubmit, onClose, response, modalData, loading }) => 
         )}
 
         <div className="modal-form-buttons">
-          <button type="submit" disabled={loading}>
+          <button type="submit" className="secondary-button" disabled={loading}>
             {loading ? "Fetching..." : "Get User"}
           </button>
           <button type="button" onClick={onClose}>Cancel</button>
@@ -930,36 +930,45 @@ const OrdersForm = ({ onSubmit, onClose, response, modalData, loading }) => {
       <p>View all orders in the system</p>
 
       {modalData && Array.isArray(modalData) && (
-        <div className="orders-list-container">
-          {modalData.map((order) => (
-            <div key={order.orderId} className="order-card">
-              <div className="order-card-header">
-                <h3>Order</h3>
-              </div>
-              <div className="order-card-body">
-                <div className="order-details">
-                  <p><strong>User ID:</strong> {order.userId}</p>
-                  <p><strong>Status:</strong> {order.status}</p>
-                  <p><strong>Total:</strong> {order.totalAmount}</p>
-                  <p><strong>Created:</strong> {order.createdAt}</p>
+        <>
+          <div className="orders-summary">
+            <p><strong>Order Count:</strong> {modalData.length}</p>
+            <p><strong>Total Product Count:</strong> {modalData.reduce((sum, order) => {
+              const items = order.orderitems || order.orderItems || [];
+              return sum + (Array.isArray(items) ? items.length : 0);
+            }, 0)}</p>
+          </div>
+          <div className="orders-list-container">
+            {modalData.map((order) => (
+              <div key={order.orderId} className="order-card">
+                <div className="order-card-header">
+                  <h3>Order</h3>
                 </div>
-                {(order.orderitems || order.orderItems) && (
-                  <div className="order-items">
-                    <h4>Items</h4>
-                    {(order.orderitems || order.orderItems).map((item) => (
-                      <div key={item.id || item.productId} className="order-item-card">
-                        <p><strong>Product ID:</strong> {item.productId}</p>
-                        <p><strong>Quantity:</strong> {item.quantity}</p>
-                        <p><strong>Unit Price:</strong> {item.pricePerUnit}</p>
-                        <p><strong>Total:</strong> {item.totalPrice}</p>
-                      </div>
-                    ))}
+                <div className="order-card-body">
+                  <div className="order-details">
+                    <p><strong>User ID:</strong> {order.userId}</p>
+                    <p><strong>Status:</strong> {order.status}</p>
+                    <p><strong>Total:</strong> {order.totalAmount}</p>
+                    <p><strong>Created:</strong> {order.createdAt}</p>
                   </div>
-                )}
+                  {(order.orderitems || order.orderItems) && (
+                    <div className="order-items">
+                      <h4>Items</h4>
+                      {(order.orderitems || order.orderItems).map((item) => (
+                        <div key={item.id || item.productId} className="order-item-card">
+                          <p><strong>Product ID:</strong> {item.productId}</p>
+                          <p><strong>Quantity:</strong> {item.quantity}</p>
+                          <p><strong>Unit Price:</strong> {item.pricePerUnit}</p>
+                          <p><strong>Total:</strong> {item.totalPrice}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
 
       {response && response.includes("Error") && (

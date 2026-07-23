@@ -2,7 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import useravatar from './useravatar.png';
 
-export function ProfileDropdown({ username }) {
+export function ProfileDropdown({ username, showOrders = true, showCart = true, showProfile = true, showLogout = true }) {
   const [isOpen, setIsOpen] = useState(false);
   const [activePanel, setActivePanel] = useState(null);
   const [profileData, setProfileData] = useState(null);
@@ -120,18 +120,26 @@ export function ProfileDropdown({ username }) {
 
       <div className={`dropdown-menu ${isOpen ? 'visible' : ''}`}>
         <div className="dropdown-top">
-          <button type="button" className="dropdown-link" onClick={handleViewProfile}>
-            View Profile
-          </button>
-          <button type="button" className="dropdown-link" onClick={handleViewOrders}>
-            Orders
-          </button>
-          <button type="button" className="dropdown-link" onClick={() => navigate('/UserCartPage')}>
-            Cart
-          </button>
-          <button type="button" className="dropdown-link dropdown-logout" onClick={handleLogout}>
-            Logout
-          </button>
+            {showProfile && (
+            <button type="button" className="dropdown-link" onClick={handleViewProfile}>
+              View Profile
+            </button>
+          )}
+          {showOrders && (
+            <button type="button" className="dropdown-link" onClick={handleViewOrders}>
+              Orders
+            </button>
+          )}
+          {showCart && (
+            <button type="button" className="dropdown-link" onClick={() => navigate('/UserCartPage')}>
+              Cart
+            </button>
+          )}
+          {showLogout && (
+            <button type="button" className="dropdown-link dropdown-logout" onClick={handleLogout}>
+              Logout
+            </button>
+          )}
         </div>
 
         {error && <div className="dropdown-error">{error}</div>}
