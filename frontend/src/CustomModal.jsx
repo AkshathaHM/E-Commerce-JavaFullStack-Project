@@ -629,7 +629,7 @@ const ViewAllUsersForm = ({ onSubmit, onClose, response, modalData, loading }) =
 
       <div className="modal-form-buttons">
         <button type="submit" disabled={loading}>
-          {loading ? "Refreshing..." : "Refresh Users"}
+          {loading ? "Refreshing..." : "Get All Users"}
         </button>
         <button type="button" onClick={onClose}>Cancel</button>
       </div>

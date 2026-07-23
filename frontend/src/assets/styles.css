@@ -670,6 +670,7 @@ select {
   max-width: 320px;
   padding: 18px;
   text-align: left;
+  color: #111111;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -705,13 +706,19 @@ select {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  color: #111111;
 }
 
 .product-name {
   font-size: 1rem;
   font-weight: 700;
   margin: 0;
-  color: #111827;
+  color: #111111;
+}
+
+.product-description {
+  color: #111111;
+  margin: 0;
 }
 
 .product-price {
@@ -1372,6 +1379,7 @@ span.username {
   min-height: 100vh;
   min-width: 100vw;
   background-color: #f9fafb;
+  color: #111111;
   font-family: Arial, sans-serif;
 }
 
@@ -1443,6 +1451,7 @@ span.username {
   transition: transform 0.2s, box-shadow 0.2s;
   cursor: pointer;
   width: 650px;
+  color: #111111;
   border: .5px solid #2a0303;
 }
 
