@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import useravatar from './useravatar.png';
 
@@ -263,47 +264,49 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
         {error && <div className="dropdown-error">{error}</div>}
       </div>
 
-      {activePanel === 'profile' && (
-        <div className="profile-modal" onClick={closePanel}>
-          <div
-            ref={modalRef}
-            className="profile-card profile-card--modal"
-            onClick={(event) => event.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="profile-modal-title"
-          >
-            <div className="profile-modal-header">
-              <h3 id="profile-modal-title">Profile Details</h3>
-              <button
-                type="button"
-                className="profile-modal-close"
-                aria-label="Close profile details"
-                onClick={closePanel}
-              >
-                ×
-              </button>
-            </div>
-
-            {loadingProfile ? (
-              <p className="profile-modal-status">Loading profile...</p>
-            ) : profileData ? (
-              <div className="profile-details-grid">
-                {Object.entries(profileData)
-                  .filter(([key]) => !['password', 'confirmPassword', 'token', 'authToken'].includes(key.toLowerCase()))
-                  .map(([key, value]) => (
-                    <div key={key} className="profile-detail-row">
-                      <span className="profile-detail-label">{formatLabel(key)}</span>
-                      <span className="profile-detail-value">{renderProfileValue(value)}</span>
-                    </div>
-                  ))}
+      {activePanel === 'profile' &&
+        createPortal(
+          <div className="profile-modal" onClick={closePanel}>
+            <div
+              ref={modalRef}
+              className="profile-card profile-card--modal"
+              onClick={(event) => event.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="profile-modal-title"
+            >
+              <div className="profile-modal-header">
+                <h3 id="profile-modal-title">Profile Details</h3>
+                <button
+                  type="button"
+                  className="profile-modal-close"
+                  aria-label="Close profile details"
+                  onClick={closePanel}
+                >
+                  ×
+                </button>
               </div>
-            ) : (
-              <p className="profile-modal-status">No profile data available.</p>
-            )}
-          </div>
-        </div>
-      )}
+
+              {loadingProfile ? (
+                <p className="profile-modal-status">Loading profile...</p>
+              ) : profileData ? (
+                <div className="profile-details-grid">
+                  {Object.entries(profileData)
+                    .filter(([key]) => !['password', 'confirmPassword', 'token', 'authToken'].includes(key.toLowerCase()))
+                    .map(([key, value]) => (
+                      <div key={key} className="profile-detail-row">
+                        <span className="profile-detail-label">{formatLabel(key)}</span>
+                        <span className="profile-detail-value">{renderProfileValue(value)}</span>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <p className="profile-modal-status">No profile data available.</p>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
