@@ -51,7 +51,7 @@ export default function RegistrationPage() {
           <div className="registration-brand-stack">
             <Logo />
             <div className="registration-brand-copy">
-              <div className="registration-brand-name">SalesSavvy</div>
+        
               <h1 className="registration-heading">Join the SalesSavvy Family</h1>
               <p className="registration-description">
                 Create your free SalesSavvy account and unlock a smarter way to shop.
