@@ -73,17 +73,22 @@ select {
 /* Registration Auth Card Layout */
 .registration-page-shell {
   padding: 24px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .registration-auth-card {
-  width: min(1100px, calc(100vw - 32px));
+  width: min(1100px, 100%);
+  max-width: 1100px;
   min-height: 650px;
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 32px 80px rgba(15, 23, 42, 0.18);
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 50% 50%;
   background: #ffffff;
+  box-sizing: border-box;
 }
 
 .registration-left-panel {
@@ -92,6 +97,8 @@ select {
   align-items: center;
   justify-content: center;
   padding: 40px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .registration-brand-stack {
@@ -100,6 +107,9 @@ select {
   align-items: center;
   text-align: center;
   gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .registration-brand-name {
@@ -132,17 +142,24 @@ select {
   align-items: center;
   justify-content: center;
   padding: 32px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .registration-form-card {
-  width: min(100%, 430px);
+  width: min(100%, 420px);
+  max-width: 100%;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 18px;
+  box-sizing: border-box;
 }
 
 .registration-form-content {
+  width: 100%;
   gap: 14px;
+  align-items: center;
 }
 
 /* Form Container */
@@ -151,8 +168,10 @@ select {
   padding: 28px 24px 26px;
   border-radius: 18px;
   box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
-  width: min(460px, calc(100vw - 32px));
+  width: min(460px, 100%);
+  max-width: 100%;
   text-align: center;
+  box-sizing: border-box;
 }
 
 /* Form Title */
@@ -186,6 +205,7 @@ select {
   flex-direction: column;
   align-items: flex-start;
   width: 100%;
+  box-sizing: border-box;
 }
 
 /* Form Label */
@@ -200,6 +220,7 @@ select {
 .form-input,
 .form-select {
   width: 100%;
+  max-width: 420px;
   min-height: 52px;
   padding: 12px 14px;
   border: 1.5px solid #89dbff;
@@ -263,6 +284,7 @@ select {
 /* Button */
 .form-button {
   width: 100%;
+  max-width: 420px;
   min-height: 52px;
   padding: 12px;
   font-size: 1rem;
@@ -920,6 +942,160 @@ select {
   }
 }
 
+@media (min-width: 1400px) {
+  .registration-auth-card {
+    max-width: 1180px;
+    min-height: 680px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .registration-auth-card {
+    width: min(100%, 1100px);
+    grid-template-columns: 45% 55%;
+  }
+
+  .registration-heading {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 992px) {
+  .registration-auth-card {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .registration-left-panel,
+  .registration-right-panel {
+    width: 100%;
+  }
+
+  .registration-left-panel {
+    padding: 32px 20px;
+  }
+
+  .registration-heading {
+    font-size: 32px;
+  }
+
+  .registration-description {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .registration-page-shell {
+    padding: 16px;
+  }
+
+  .registration-auth-card {
+    width: 100%;
+    max-width: 95%;
+    border-radius: 18px;
+    grid-template-columns: 1fr;
+  }
+
+  .registration-left-panel {
+    padding: 32px 20px;
+    width: 100%;
+    min-height: auto;
+  }
+
+  .registration-right-panel {
+    padding: 20px;
+  }
+
+  .registration-brand-stack {
+    gap: 12px;
+  }
+
+  .registration-heading {
+    font-size: 28px;
+  }
+
+  .registration-description {
+    font-size: 15px;
+  }
+
+  .registration-form-card {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .form-input,
+  .form-select,
+  .form-button {
+    max-width: 420px;
+  }
+}
+
+@media (max-width: 576px) {
+  .registration-page-shell {
+    padding: 12px;
+  }
+
+  .registration-auth-card {
+    max-width: 100%;
+    border-radius: 16px;
+  }
+
+  .registration-left-panel,
+  .registration-right-panel {
+    padding: 20px 14px;
+  }
+
+  .registration-heading {
+    font-size: 24px;
+  }
+
+  .registration-description {
+    font-size: 14px;
+  }
+
+  .form-footer {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .registration-auth-card {
+    max-width: 95%;
+  }
+
+  .registration-brand-stack {
+    gap: 10px;
+  }
+
+  .logo-image {
+    width: 48px;
+    height: 48px;
+  }
+
+  .logo-text {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .registration-page-shell {
+    padding: 10px;
+  }
+
+  .registration-left-panel,
+  .registration-right-panel {
+    padding: 16px 12px;
+  }
+
+  .registration-heading {
+    font-size: 21px;
+  }
+
+  .registration-description {
+    font-size: 13px;
+  }
+}
+
 @media (max-width: 720px) {
   .profile-card--modal {
     width: 95%;
@@ -1065,9 +1241,11 @@ select {
 .logo-image {
   width: 60px;
   height: 60px;
+  max-width: 100%;
   margin-right: 8px;
   border-radius: 50%; /* Makes the logo circular */
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow */
+  object-fit: contain;
 }
 
 /* Logo Text */
