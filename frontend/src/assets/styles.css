@@ -76,9 +76,8 @@ select {
 }
 
 .registration-auth-card {
-  width: min(1000px, calc(100vw - 32px));
-  min-height: 580px;
-  height: min(620px, calc(100vh - 48px));
+  width: min(1100px, calc(100vw - 32px));
+  min-height: 650px;
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 32px 80px rgba(15, 23, 42, 0.18);
@@ -314,7 +313,9 @@ select {
   margin: 0;
   color: #475569;
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
   gap: 6px;
 }
 
@@ -322,6 +323,8 @@ select {
   color: #00ABE4;
   text-decoration: none;
   font-weight: 700;
+  display: inline-block;
+  cursor: pointer;
 }
 
 .form-link:hover {
@@ -333,6 +336,7 @@ select {
   flex-direction: column;
   gap: 10px;
   align-items: center;
+  text-align: center;
 }
 
 .admin-note {
@@ -802,16 +806,15 @@ select {
   position: fixed;
   inset: 0;
   background: rgba(7, 18, 30, 0.72);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   padding: 24px;
   z-index: 1100;
 }
 
 .profile-card--modal {
-  width: min(640px, 100%);
-  max-height: min(84vh, 680px);
+  width: min(680px, 100%);
+  max-height: min(90vh, 760px);
   overflow-y: auto;
   padding: 30px 28px 28px;
   border-radius: 24px;
