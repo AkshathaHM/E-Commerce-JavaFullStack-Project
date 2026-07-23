@@ -421,8 +421,7 @@ const CartPage = () => {
   }
 
   return (
-    <div style={{ width: "100vw", minHeight: "100vh" }}>
-      <Toast message="Payment Successful!" show={showPaymentToast} />
+      <div className="page-shell cart-shell">
       <Header cartCount={totalItems} username={username} />
 
 

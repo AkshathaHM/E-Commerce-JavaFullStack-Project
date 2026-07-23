@@ -61,7 +61,9 @@
 
 .cart-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
   padding: 16px;
   background: #fff;
   border-radius: 12px;
@@ -69,19 +71,18 @@
 }
 
 .cart-item img {
-  width: 80px;
-  height: 80px;
+  width: 100%;
+  max-width: 120px;
+  height: auto;
   object-fit: cover;
   border-radius: 8px;
-  margin-right: 16px;
 }
 
 .item-details {
-  flex: 1;
+  flex: 1 1 100%;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 350px;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .item-info h3 {
@@ -98,10 +99,11 @@
 
 .item-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: end;
+  justify-content: space-between;
   width: 100%;
-  gap: 16px;
+  gap: 12px;
 }
 
 .quantity-controls {
@@ -114,8 +116,9 @@
   border: none;
   padding: 8px;
   border-radius: 4px;
-  height: 30px;
-  width: 30px;
+  min-height: 34px;
+  min-width: 34px;
+  width: 34px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -154,7 +157,7 @@
 
 .cart-container {
   display: grid;
-  grid-template-columns: 1.5fr 0.9fr;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.8fr);
   gap: 24px;
   max-width: 1200px;
   margin: 0 auto;
@@ -172,6 +175,7 @@
   height: fit-content;
   position: sticky;
   top: 120px;
+  align-self: start;
 }
 
 .checkout-section h2 {
@@ -230,9 +234,68 @@
   text-align: center;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .cart-container {
     grid-template-columns: 1fr;
+    padding: 20px 16px 120px;
+  }
+
+  .checkout-section {
+    position: static;
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .cart-container {
+    padding: 16px 12px 120px;
+  }
+
+  .cart-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cart-item img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .item-details {
+    max-width: 100%;
+  }
+
+  .item-actions {
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .price {
+    width: 100%;
+    text-align: left;
+  }
+
+  .checkout-section {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .back-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cart-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .cart-header p {
+    font-size: 0.95rem;
+  }
+
+  .checkout-summary {
+    gap: 12px;
   }
 }
 

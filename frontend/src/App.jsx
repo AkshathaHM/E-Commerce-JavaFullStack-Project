@@ -6,7 +6,9 @@ import './assets/styles.css';
 function App() {
   return (
     <Router>
-      <AppRoutes />
+      <div className="app-shell">
+        <AppRoutes />
+      </div>
     </Router>
   );
 }
