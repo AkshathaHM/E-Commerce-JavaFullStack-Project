@@ -4,10 +4,12 @@
   color: #fff;
   padding: 30px 20px;
   text-align: center;
-  position: relative;
+  position: sticky;
+  bottom: 0;
+  left: 0;
   width: 100%;
   z-index: 999;
-  margin-top: auto;
+  flex-shrink: 0;
 }
 
 .footer-links {

@@ -82,11 +82,9 @@ const AdminDashboard = () => {
 
       if (response.ok) {
         setResponse("Product added successfully!");
-        setTimeout(() => {
-          setModalType(null);
-          setResponse(null);
-          setModalData(null);
-        }, 2000);
+        setModalType(null);
+        setResponse(null);
+        setModalData(null);
       } else {
         const error = await response.text();
         setResponse(`Error: ${error}`);
@@ -122,10 +120,8 @@ const AdminDashboard = () => {
         if (modalType === "manageProducts") {
           handleManageProducts();
         }
-        setTimeout(() => {
-          setModalType(null);
-          setResponse(null);
-        }, 2000);
+        setModalType(null);
+        setResponse(null);
       } else {
         const error = await response.text();
         setResponse(`Error: ${error}`);
@@ -183,9 +179,7 @@ const AdminDashboard = () => {
       if (response.ok) {
         setResponse("Product updated successfully!");
         handleManageProducts();
-        setTimeout(() => {
-          setResponse(null);
-        }, 2000);
+        setResponse(null);
       } else {
         const error = await response.text();
         setResponse(`Error: ${error}`);

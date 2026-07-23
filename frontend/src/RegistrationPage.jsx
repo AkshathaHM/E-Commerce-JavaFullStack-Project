@@ -33,9 +33,7 @@ export default function RegistrationPage() {
 
       if (response.ok) {
         setShowToast(true);
-        setTimeout(() => {
-          navigate('/verify-otp', { state: { email, role } });
-        }, 1000);
+        navigate('/verify-otp', { state: { email, role }, replace: true });
       } else {
         throw new Error(data.error || 'Registration failed');
       }

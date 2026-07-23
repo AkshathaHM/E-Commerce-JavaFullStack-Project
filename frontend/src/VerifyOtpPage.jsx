@@ -35,7 +35,7 @@ export default function VerifyOtpPage() {
 
       setShowToast(true);
       setMessage("Registration successful. Redirecting to login...");
-      setTimeout(() => navigate(role === "ADMIN" ? "/admin" : "/"), 1600);
+      navigate(role === "ADMIN" ? "/admin" : "/", { replace: true });
     } catch (err) {
       setError(err.message);
     }

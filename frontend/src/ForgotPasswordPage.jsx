@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
 
       if (response.ok) {
         setShowToast(true);
-        setTimeout(() => navigate(returnTo), 1500);
+        navigate(returnTo, { replace: true });
       } else {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.error || data.message || "Failed to reset password. Please try again.");

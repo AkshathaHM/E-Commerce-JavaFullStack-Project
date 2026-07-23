@@ -49,7 +49,7 @@ export default function LoginPage() {
           if (username) localStorage.setItem('username', username);
           setShowToast(true);
           const path = role === "CUSTOMER" ? "/customerhome" : "/admindashboard";
-          setTimeout(() => navigate(path), 1500);
+          navigate(path, { replace: true });
         } catch (e) {
           // fallback to response body
           const role = data.role;
@@ -57,7 +57,7 @@ export default function LoginPage() {
           if (username) localStorage.setItem('username', username);
           setShowToast(true);
           const path = role === "CUSTOMER" ? "/customerhome" : "/admindashboard";
-          setTimeout(() => navigate(path), 1500);
+          navigate(path, { replace: true });
         }
       } else {
         const errorMessage =

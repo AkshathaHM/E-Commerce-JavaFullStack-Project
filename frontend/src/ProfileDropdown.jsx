@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useravatar from './useravatar.png';
 
@@ -11,6 +11,21 @@ export function ProfileDropdown({ username }) {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('authToken');
@@ -93,7 +108,7 @@ export function ProfileDropdown({ username }) {
   };
 
   return (
-    <div className={`profile-dropdown ${isOpen ? 'open' : ''}`}>
+    <div className={`profile-dropdown ${isOpen ? 'open' : ''}`} ref={dropdownRef}>
       <button
         className="profile-button"
         type="button"
@@ -114,7 +129,7 @@ export function ProfileDropdown({ username }) {
           <button type="button" className="dropdown-link" onClick={() => navigate('/UserCartPage')}>
             Cart
           </button>
-          <button type="button" className="dropdown-link logout-button" onClick={handleLogout}>
+          <button type="button" className="dropdown-link dropdown-logout" onClick={handleLogout}>
             Logout
           </button>
         </div>

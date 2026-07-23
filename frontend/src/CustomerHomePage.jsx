@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { CategoryNavigation } from './CategoryNavigation';
@@ -11,6 +11,8 @@ export default function CustomerHomePage() {
   const [username, setUsername] = useState('Guest');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [loading, setLoading] = useState(false);
+  const productsCache = useRef({});
+  const cartCountCache = useRef(0);
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('authToken');
@@ -18,6 +20,13 @@ export default function CustomerHomePage() {
   };
 
   const fetchProducts = useCallback(async (category = 'All') => {
+    // Return cached products immediately if available
+    const cacheKey = category;
+    if (productsCache.current[cacheKey]) {
+      setProducts(productsCache.current[cacheKey]);
+      return;
+    }
+
     setLoading(true);
     try {
       const query = category !== 'All' ? `?category=${encodeURIComponent(category)}` : '';
@@ -26,7 +35,9 @@ export default function CustomerHomePage() {
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
       });
       const data = await res.json();
-      setProducts(data.products || []);
+      const productList = data.products || [];
+      productsCache.current[cacheKey] = productList;
+      setProducts(productList);
       setUsername(data.user?.name || 'Guest');
     } catch (err) {
       console.error(err);
@@ -44,6 +55,7 @@ export default function CustomerHomePage() {
       });
       if (res.ok) {
         const count = await res.json();
+        cartCountCache.current = count;
         setCartCount(count);
       }
     } catch (e) {}
@@ -57,17 +69,33 @@ export default function CustomerHomePage() {
     fetchCartCount();
   }, [username, fetchCartCount]);
 
-  const handleAddToCart = async (productId) => {
+  const handleAddToCart = useCallback(async (productId) => {
+    // Optimistic update
+    const newCount = cartCount + 1;
+    setCartCount(newCount);
+    cartCountCache.current = newCount;
+
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/cart/add`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/add`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ username, productId })
       });
-      fetchCartCount();
-    } catch (e) {}
-  };
+      
+      if (!res.ok) {
+        // Revert on failure
+        const revertedCount = newCount - 1;
+        setCartCount(revertedCount);
+        cartCountCache.current = revertedCount;
+      }
+    } catch (e) {
+      // Revert on error
+      const revertedCount = newCount - 1;
+      setCartCount(revertedCount);
+      cartCountCache.current = revertedCount;
+    }
+  }, [cartCount, username]);
 
   return (
     <div className="customer-homepage">
@@ -76,7 +104,7 @@ export default function CustomerHomePage() {
         <CategoryNavigation selectedCategory={selectedCategory} onCategoryClick={setSelectedCategory} />
       </nav>
       <main className="main-content">
-        {loading ? <p>Loading products...</p> : <ProductList products={products} onAddToCart={handleAddToCart} />}
+        {loading && products.length === 0 ? <p>Loading products...</p> : <ProductList products={products} onAddToCart={handleAddToCart} />}
       </main>
       <Footer />
     </div>

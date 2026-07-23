@@ -51,6 +51,8 @@ const CartPage = () => {
       return;
     }
 
+    // Don't show loading state, fetch in background
+    setLoading(false);
     fetchCartItems();
   }, []);
 
@@ -246,7 +248,7 @@ const CartPage = () => {
               setPaymentError(null);
               setCartItems([]);
               setSubtotal("0.00");
-              setTimeout(() => navigate("/customerhome"), 4000);
+              navigate("/customerhome", { replace: true });
             } else {
               const verifyMessage = await verifyRes.text();
               const message = `Payment verification failed: ${verifyMessage}`;
@@ -309,19 +311,8 @@ const CartPage = () => {
   }
 
   if (loading) {
-    return (
-      <div className="cart-page">
-        <Header cartCount="..." username={username || 'Guest'} />
-        <div style={{ textAlign: "center", padding: "60px 20px", minHeight: "60vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center" }}>
-          <div style={{ marginBottom: "20px" }}>
-            <div style={{ display: "inline-block", width: "50px", height: "50px", border: "4px solid #00ABE4", borderTop: "4px solid #transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
-          </div>
-          <h2 style={{ color: "#333", marginBottom: "10px" }}>Loading your cart...</h2>
-          <p style={{ color: "#666" }}>Please wait while we fetch your cart items.</p>
-        </div>
-        <Footer />
-      </div>
-    );
+    // Skip loading screen and show empty cart immediately
+    setLoading(false);
   }
 
   if (error) {
