@@ -70,6 +70,81 @@ select {
   background-repeat: no-repeat;
 }
 
+/* Registration Auth Card Layout */
+.registration-page-shell {
+  padding: 24px;
+}
+
+.registration-auth-card {
+  width: min(1100px, calc(100vw - 32px));
+  min-height: 650px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(15, 23, 42, 0.18);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #ffffff;
+}
+
+.registration-left-panel {
+  background: linear-gradient(135deg, #dff6ff, #bdefff, #89dbff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.registration-brand-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+}
+
+.registration-brand-name {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+}
+
+.registration-heading {
+  margin: 0;
+  font-size: 42px;
+  line-height: 1.15;
+  font-weight: 800;
+  color: #0f172a;
+  font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+}
+
+.registration-description {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.registration-right-panel {
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+
+.registration-form-card {
+  width: min(100%, 430px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.registration-form-content {
+  gap: 14px;
+}
+
 /* Form Container */
 .form-container {
   background: white;
@@ -78,18 +153,6 @@ select {
   box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
   width: min(460px, calc(100vw - 32px));
   text-align: center;
-}
-
-.auth-brand-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 20px;
-}
-
-.auth-copy-block {
-  width: min(100%, 340px);
 }
 
 /* Form Title */
@@ -122,31 +185,43 @@ select {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  width: 100%;
 }
 
 /* Form Label */
 .form-label {
   font-size: 0.9rem;
   color: #00ABE4;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  font-weight: 700;
 }
 
 /* Input Fields */
 .form-input,
 .form-select {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #00ABE4;
-  border-radius: 6px;
+  min-height: 52px;
+  padding: 12px 14px;
+  border: 1.5px solid #89dbff;
+  border-radius: 10px;
   font-size: 1rem;
   outline: none;
   box-sizing: border-box;
+  background: #ffffff;
+  color: #0f172a;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.form-input::placeholder {
+  color: #94a3b8;
+  font-size: 0.98rem;
 }
 
 .form-input:focus,
 .form-select:focus {
   border-color: #0078a0;
-  box-shadow: 0 0 4px #00ABE4;
+  box-shadow: 0 0 0 4px rgba(0, 171, 228, 0.18);
+  transform: translateY(-1px);
 }
 
 /* Password input with Show/Hide toggle */
@@ -159,15 +234,17 @@ select {
 
 .password-input-wrap .form-input {
   flex: 1;
-  padding-right: 60px;
+  padding-right: 76px;
 }
 
 .password-toggle {
   position: absolute;
   right: 12px;
-  color: #00ABE4;
-  font-size: 0.9rem;
-  font-weight: 600;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #0078a0;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
   user-select: none;
 }
@@ -186,15 +263,17 @@ select {
 /* Button */
 .form-button {
   width: 100%;
+  min-height: 52px;
   padding: 12px;
   font-size: 1rem;
-  font-weight: bold;
+  font-weight: 800;
   color: white;
-  background-color: #00ABE4;
+  background: linear-gradient(135deg, #00ABE4, #0078A0);
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  box-shadow: 0 12px 24px rgba(0, 171, 228, 0.24);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
 .form-button.secondary {
@@ -207,7 +286,9 @@ select {
 }
 
 .form-button:hover {
-  background-color: #0078a0;
+  transform: translateY(-2px);
+  filter: brightness(1.04);
+  box-shadow: 0 16px 30px rgba(0, 171, 228, 0.34);
 }
 
 .otp-actions {
@@ -228,21 +309,29 @@ select {
 
 /* Footer */
 .form-footer {
-  font-size: 0.9rem;
-  margin-top: 16px;
-  color: #00ABE4;
+  font-size: 0.95rem;
+  margin: 0;
+  color: #475569;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .form-link {
-  color: #0078a0;
+  color: #00ABE4;
   text-decoration: none;
+  font-weight: 700;
 }
 
 .form-link:hover {
   text-decoration: underline;
+}
+
+.registration-links-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
 }
 
 .admin-note {
