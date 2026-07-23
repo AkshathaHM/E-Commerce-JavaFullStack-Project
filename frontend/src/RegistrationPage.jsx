@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import './assets/styles.css';
 import { useNavigate, Link } from 'react-router-dom';
 import { Toast } from './Toast';
+import Logo from './Logo';
 
 export default function RegistrationPage() {
   const navigate = useNavigate();
@@ -46,7 +47,13 @@ export default function RegistrationPage() {
     <div className="page-container">
       <Toast message="Registration Successful!" show={showToast} />
       <div className="form-container">
-        <h1 className="form-title">Register</h1>
+        <div className="auth-brand-header">
+          <Logo />
+          <div className="auth-copy-block">
+            <h1 className="form-title">Join the SalesSavvy Family</h1>
+            <p className="form-subtitle">Create your free SalesSavvy account and unlock a smarter way to shop.</p>
+          </div>
+        </div>
         {error && <p className="error-message">{error}</p>}
         <form onSubmit={handleSignUp} className="form-content">
           <div className="form-group">

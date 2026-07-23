@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import "./assets/styles.css";
 import { Toast } from "./Toast";
+import Logo from "./Logo";
 
 export default function ForgotPasswordPage() {
   const [username, setUsername] = useState("");
@@ -61,8 +62,13 @@ export default function ForgotPasswordPage() {
       <Toast message="Password changed successfully! Please login." show={showToast} />
       <div className="page-container">
         <div className="form-container">
-          <h1 className="form-title">Forgot Password</h1>
-          <p className="form-subtitle">Enter your username and create a new password</p>
+          <div className="auth-brand-header">
+            <Logo />
+            <div className="auth-copy-block">
+              <h1 className="form-title">Forgot Password</h1>
+              <p className="form-subtitle">Enter your username and create a new password for SalesSavvy.</p>
+            </div>
+          </div>
           {error && <p className="error-message">{error}</p>}
           <form onSubmit={handleSubmit} className="form-content">
             <div className="form-group">

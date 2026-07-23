@@ -112,11 +112,16 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid or missing token"));
         }
         Map<String, Object> body = new HashMap<>();
+        body.put("userId", user.getUserId());
         body.put("username", user.getUsername());
         body.put("name", user.getName());
         body.put("email", user.getEmail());
         body.put("role", user.getRole().name());
         body.put("address", user.getAddress());
+        body.put("verified", user.isVerified());
+        body.put("enabled", user.isEnabled());
+        body.put("createdAt", user.getCreatedAt());
+        body.put("updatedAt", user.getUpdatedAt());
         return ResponseEntity.ok(body);
     }
 

@@ -149,9 +149,10 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
     await loadProfile();
   };
 
-  const handleViewOrders = async () => {
-    setActivePanel('orders');
-    await loadOrders();
+  const handleViewOrders = () => {
+    setIsOpen(false);
+    setActivePanel(null);
+    navigate('/orders');
   };
 
   return (
@@ -167,7 +168,7 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
 
       <div className={`dropdown-menu ${isOpen ? 'visible' : ''}`}>
         <div className="dropdown-top">
-            {showProfile && (
+          {showProfile && (
             <button type="button" className="dropdown-link" onClick={handleViewProfile}>
               View Profile
             </button>
@@ -190,47 +191,36 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
         </div>
 
         {error && <div className="dropdown-error">{error}</div>}
+      </div>
 
-        {activePanel === 'orders' && (
-          <div className="profile-card orders-panel">
+      {activePanel === 'profile' && (
+        <div className="profile-modal" onClick={closePanel}>
+          <div className="profile-card profile-card--modal" onClick={(event) => event.stopPropagation()}>
             <button type="button" className="card-close" onClick={closePanel}>
               ×
             </button>
-            <h3>Order History</h3>
-            {loadingOrders ? (
-              <p>Loading orders...</p>
-            ) : orders.length === 0 ? (
-              <p>No orders found.</p>
-            ) : (
-              orders.map((order, index) => (
-                <div key={index} className="order-item">
-                  <img
-                    src={
-                      order.image_url?.startsWith('http')
-                        ? order.image_url
-                        : order.images?.[0]?.startsWith('http')
-                        ? order.images[0]
-                        : 'https://via.placeholder.com/70'
-                    }
-                    alt={order.name || 'Order item'}
-                    onError={(event) => {
-                      event.target.onerror = null;
-                      event.target.src = 'https://via.placeholder.com/70';
-                    }}
-                  />
-                  <div className="order-details">
-                    <h4>Order ID: {order.order_id || order.id || index + 1}</h4>
-                    <p><strong>Product:</strong> {order.name || order.product_name || 'N/A'}</p>
-                    {order.quantity !== undefined && <p><strong>Qty:</strong> {order.quantity}</p>}
-                    {order.price_per_unit !== undefined && <p><strong>Price:</strong> ₹{Number(order.price_per_unit).toFixed(2)}</p>}
-                    {order.total_price !== undefined && <p><strong>Total:</strong> ₹{Number(order.total_price).toFixed(2)}</p>}
-                  </div>
+            {loadingProfile ? (
+              <p>Loading profile...</p>
+            ) : profileData ? (
+              <div>
+                <h3>{profileData.role === 'ADMIN' ? 'Admin Profile Details' : 'Profile Details'}</h3>
+                <div className="profile-details-grid">
+                  {Object.entries(profileData)
+                    .filter(([key]) => !['password', 'confirmPassword', 'token', 'authToken'].includes(key.toLowerCase()))
+                    .map(([key, value]) => (
+                      <div key={key} className="profile-detail-row">
+                        <span className="profile-detail-label">{formatLabel(key)}</span>
+                        <span className="profile-detail-value">{renderProfileValue(value)}</span>
+                      </div>
+                    ))}
                 </div>
-              ))
+              </div>
+            ) : (
+              <p>No profile data available.</p>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

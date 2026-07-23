@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./assets/styles.css";
 import { Toast } from "./Toast";
+import Logo from "./Logo";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -74,7 +75,13 @@ export default function LoginPage() {
       <Toast message="Login Successful!" show={showToast} />
       <div className="page-container">
         <div className="form-container">
-          <h1 className="form-title">Login</h1>
+          <div className="auth-brand-header">
+            <Logo />
+            <div className="auth-copy-block">
+              <h1 className="form-title">Welcome Back</h1>
+              <p className="form-subtitle">Sign in to continue your SalesSavvy shopping experience.</p>
+            </div>
+          </div>
           {error && <p className="error-message">{error}</p>}
           <form onSubmit={handleSignIn} className="form-content">
               <div className="form-group">
