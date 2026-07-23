@@ -876,42 +876,57 @@ const OrdersForm = ({ onSubmit, onClose, response, modalData, loading }) => {
     onSubmit({});
   };
 
+  const orders = Array.isArray(modalData) ? modalData : [];
+  const userIds = new Set(
+    orders.map((order) => {
+      if (order?.userId) return order.userId;
+      if (order?.user?.id) return order.user.id;
+      if (order?.user?.userId) return order.user.userId;
+      if (order?.user?.email) return order.user.email;
+      if (order?.user_email) return order.user_email;
+      return order?.email || null;
+    }).filter(Boolean)
+  );
+
+  const totalProductCount = orders.reduce((sum, order) => {
+    const items = order.orderitems || order.orderItems || [];
+    return sum + (Array.isArray(items) ? items.length : 0);
+  }, 0);
+
   return (
     <form onSubmit={handleSubmit} className="modal-form">
       <h2>Order Management</h2>
       <p>View all orders in the system</p>
 
-      {modalData && Array.isArray(modalData) && (
+      {orders.length > 0 && (
         <>
           <div className="orders-summary">
-            <p><strong>Order Count:</strong> {modalData.length}</p>
-            <p><strong>Total Product Count:</strong> {modalData.reduce((sum, order) => {
-              const items = order.orderitems || order.orderItems || [];
-              return sum + (Array.isArray(items) ? items.length : 0);
-            }, 0)}</p>
+            <p><strong>Order Count:</strong> {orders.length}</p>
+            <p><strong>User Count:</strong> {userIds.size}</p>
+            <p><strong>Total Product Count:</strong> {totalProductCount}</p>
           </div>
           <div className="orders-list-container">
-            {modalData.map((order) => (
-              <div key={order.orderId} className="order-card">
+            {orders.map((order, index) => (
+              <div key={order.orderId || order.id || index} className="order-card">
                 <div className="order-card-header">
-                  <h3>Order</h3>
+                  <h3>Order #{order.orderId || order.id || index + 1}</h3>
                 </div>
                 <div className="order-card-body">
                   <div className="order-details">
-                    <p><strong>User ID:</strong> {order.userId}</p>
-                    <p><strong>Status:</strong> {order.status}</p>
-                    <p><strong>Total:</strong> {order.totalAmount}</p>
-                    <p><strong>Created:</strong> {order.createdAt}</p>
+                    <p><strong>User:</strong> {order.user?.username || order.user?.name || order.user?.email || order.userId || order.user_email || 'N/A'}</p>
+                    <p><strong>Status:</strong> {order.status || 'N/A'}</p>
+                    <p><strong>Total:</strong> {order.totalAmount ?? order.total_price ?? order.amount ?? 'N/A'}</p>
+                    <p><strong>Created:</strong> {order.createdAt || order.created_at || order.date || 'N/A'}</p>
                   </div>
                   {(order.orderitems || order.orderItems) && (
                     <div className="order-items">
                       <h4>Items</h4>
-                      {(order.orderitems || order.orderItems).map((item) => (
-                        <div key={item.id || item.productId} className="order-item-card">
-                          <p><strong>Product ID:</strong> {item.productId}</p>
-                          <p><strong>Quantity:</strong> {item.quantity}</p>
-                          <p><strong>Unit Price:</strong> {item.pricePerUnit}</p>
-                          <p><strong>Total:</strong> {item.totalPrice}</p>
+                      {(order.orderitems || order.orderItems).map((item, itemIndex) => (
+                        <div key={item.id || item.productId || itemIndex} className="order-item-card">
+                          <p><strong>Product ID:</strong> {item.productId || item.product_id || 'N/A'}</p>
+                          <p><strong>Quantity:</strong> {item.quantity ?? item.qty ?? 'N/A'}</p>
+                          <p><strong>Unit Price:</strong> {item.pricePerUnit ?? item.price ?? 'N/A'}</p>
+                          <p><strong>Total:</strong> {item.totalPrice ?? item.total_price ?? 'N/A'}</p>
                         </div>
                       ))}
                     </div>

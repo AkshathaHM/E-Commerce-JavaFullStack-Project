@@ -36,6 +36,52 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
     setActivePanel(null);
   };
 
+  const formatLabel = (key) => {
+    const labels = {
+      username: 'Username',
+      name: 'Name',
+      email: 'Email',
+      role: 'Role',
+      phone: 'Phone',
+      address: 'Address',
+      city: 'City',
+      state: 'State',
+      country: 'Country',
+      postalCode: 'Zip / Postal Code',
+      createdAt: 'Joined',
+      created_at: 'Joined',
+      updatedAt: 'Updated',
+      updated_at: 'Updated',
+      dateOfBirth: 'Date of Birth',
+      dob: 'Date of Birth',
+    };
+    return (
+      labels[key] ||
+      key
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase())
+    );
+  };
+
+  const renderProfileValue = (value) => {
+    if (value === null || value === undefined || value === '') {
+      return 'N/A';
+    }
+
+    if (Array.isArray(value)) {
+      return value.length ? value.join(', ') : 'N/A';
+    }
+
+    if (typeof value === 'object') {
+      return Object.entries(value)
+        .map(([subKey, subValue]) => `${formatLabel(subKey)}: ${renderProfileValue(subValue)}`)
+        .join(', ');
+    }
+
+    return String(value);
+  };
+
   const handleLogout = async () => {
     try {
       await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
@@ -98,6 +144,7 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
   };
 
   const handleViewProfile = async () => {
+    setIsOpen(false);
     setActivePanel('profile');
     await loadProfile();
   };
@@ -143,31 +190,6 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
         </div>
 
         {error && <div className="dropdown-error">{error}</div>}
-
-        {activePanel === 'profile' && (
-          <div className="profile-card">
-            <button type="button" className="card-close" onClick={closePanel}>
-              ×
-            </button>
-            {loadingProfile ? (
-              <p>Loading profile...</p>
-            ) : profileData ? (
-              <div>
-                <h3>Profile Details</h3>
-                <div className="card-centered">
-                  <p><strong>Name:</strong> {profileData.name || profileData.username || 'N/A'}</p>
-                  <p><strong>Email:</strong> {profileData.email || 'N/A'}</p>
-                  <p><strong>Username:</strong> {profileData.username || 'Guest'}</p>
-                  <p><strong>Role:</strong> {profileData.role || 'Customer'}</p>
-                  {profileData.phone && <p><strong>Phone:</strong> {profileData.phone}</p>}
-                  {profileData.address && <p><strong>Address:</strong> {profileData.address}</p>}
-                </div>
-              </div>
-            ) : (
-              <p>No profile data available.</p>
-            )}
-          </div>
-        )}
 
         {activePanel === 'orders' && (
           <div className="profile-card orders-panel">

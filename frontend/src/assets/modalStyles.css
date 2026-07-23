@@ -159,6 +159,16 @@
     border-radius: 4px;
     padding: 15px;
     margin: 10px 0;
+    color: #111111;
+  }
+
+  .user-details-display p,
+  .view-all-users-list .user-card p,
+  .orders-summary p,
+  .order-details p,
+  .order-item-card p,
+  .order-card-header h3 {
+    color: #111111;
   }
 
   .user-details-display p {
@@ -167,7 +177,7 @@
   }
 
   .user-details-display strong {
-    color: #333;
+    color: #111111;
   }
   
   /* Product details */
