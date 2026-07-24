@@ -49,7 +49,7 @@ public class SendGridEmailService {
 
         Email from = new Email(fromAddress, fromName);
         Email toEmail = new Email(to);
-        Content content = new Content("text/plain", body);
+        Content content = new Content("text/html", body);
         Mail mail = new Mail(from, subject, toEmail, content);
 
         Request request = new Request();
