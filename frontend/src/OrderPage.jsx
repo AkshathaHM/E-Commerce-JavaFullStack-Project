@@ -2,8 +2,8 @@ import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
-import OrderDetailsModal from './components/OrderDetailsModal';
 import { OrderCardSkeleton } from './components/Skeleton';
+import { getCountdownLabel, getDerivedOrderStatus, getExpectedDelivery, getStatusLabel } from './utils/orderStatus';
 import './assets/styles.css';
 
 const NO_IMAGE = '/images/no-image.png';
@@ -42,11 +42,19 @@ const normalizeOrderPayload = (order) => ({
   category: order?.category || order?.productCategory || 'N/A',
 });
 
-const OrderCard = memo(function OrderCard({ order, username, onOpenDetails, onTrackOrder, onContinueShopping }) {
+const OrderCard = memo(function OrderCard({ order, onTrackOrder, onCancelOrder, onContinueShopping }) {
   const fallbackImage = (event) => {
     event.currentTarget.onerror = null;
     event.currentTarget.src = NO_IMAGE;
   };
+
+  const derivedStatus = getDerivedOrderStatus(order.orderDate, order.status);
+  const statusLabel = getStatusLabel(derivedStatus);
+  const expectedDelivery = getExpectedDelivery(order.orderDate);
+  const countdown = getCountdownLabel(order.orderDate, derivedStatus);
+  const showCancel = ['placed', 'confirmed', 'packed'].includes(derivedStatus);
+  const isCancelled = derivedStatus === 'cancelled';
+  const isDelivered = derivedStatus === 'delivered';
 
   return (
     <article className="order-card">
@@ -65,16 +73,23 @@ const OrderCard = memo(function OrderCard({ order, username, onOpenDetails, onTr
         <div className="order-details">
           <div className="order-detail-row"><span>Product</span><strong>{order.name}</strong></div>
           <div className="order-detail-row"><span>Order Number</span><strong>{order.orderId}</strong></div>
-          <div className="order-detail-row"><span>Status</span><strong>{order.status}</strong></div>
-          <div className="order-detail-row"><span>Payment</span><strong>{order.paymentStatus || 'Paid'}</strong></div>
+          <div className="order-detail-row"><span>Quantity</span><strong>{order.quantity}</strong></div>
           <div className="order-detail-row"><span>Total</span><strong>{formatCurrency(order.totalPrice)}</strong></div>
+          <div className="order-detail-row"><span>Payment</span><strong>{order.paymentStatus || 'Paid'}</strong></div>
           <div className="order-detail-row"><span>Order Date</span><strong>{new Date(order.orderDate).toLocaleString('en-IN')}</strong></div>
+          <div className="order-detail-row"><span>Expected Delivery</span><strong>{expectedDelivery.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: 'numeric' })}</strong></div>
+          <div className="order-detail-row"><span>Countdown</span><strong>{countdown}</strong></div>
         </div>
       </div>
-      <div className="order-card-actions">
-        <button className="order-card-action" type="button" onClick={() => onTrackOrder(order)}>Track Order</button>
-        <button className="order-card-action order-card-action--secondary" type="button" onClick={() => onOpenDetails(order)}>View Details</button>
-        <button className="order-card-action order-card-action--ghost" type="button" onClick={onContinueShopping}>Continue Shopping</button>
+      <div className="order-card-footer">
+        <div className={`order-status-badge ${isCancelled ? 'order-status-badge--cancelled' : isDelivered ? 'order-status-badge--delivered' : 'order-status-badge--default'}`}>
+          {statusLabel}
+        </div>
+        <div className="order-card-actions">
+          {!isCancelled && <button className="order-card-action" type="button" onClick={() => onTrackOrder(order)}>Track Order</button>}
+          {showCancel && <button className="order-card-action order-card-action--danger" type="button" onClick={() => onCancelOrder(order)}>Cancel Order</button>}
+          <button className="order-card-action order-card-action--ghost" type="button" onClick={onContinueShopping}>Continue Shopping</button>
+        </div>
       </div>
     </article>
   );
@@ -89,6 +104,8 @@ export default function OrderPage() {
   const [cartError, setCartError] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [cancelMessage, setCancelMessage] = useState('');
+  const [pendingCancelOrder, setPendingCancelOrder] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -184,6 +201,18 @@ export default function OrderPage() {
     });
   };
 
+  const handleCancelOrder = (order) => {
+    setPendingCancelOrder(order);
+  };
+
+  const confirmCancelOrder = () => {
+    if (!pendingCancelOrder) return;
+
+    setOrders((currentOrders) => currentOrders.map((entry) => entry.orderId === pendingCancelOrder.orderId ? { ...entry, status: 'Cancelled' } : entry));
+    setCancelMessage('Your order has been cancelled successfully.');
+    setPendingCancelOrder(null);
+  };
+
   return (
     <div className="maindiv">
       <div className="customer-homepage">
@@ -199,6 +228,10 @@ export default function OrderPage() {
             </div>
             <span className="section-pill">Track every delivery</span>
           </section>
+
+          {cancelMessage && (
+            <div className="order-success-banner">{cancelMessage}</div>
+          )}
 
           {loading && (
             <div className="orders-list" aria-label="Loading orders">
@@ -230,17 +263,25 @@ export default function OrderPage() {
                 <OrderCard
                   key={order.orderId}
                   order={order}
-                  username={username}
-                  onOpenDetails={(selected) => setSelectedOrder({ ...selected, customerName: username || selected.customerName || 'Customer' })}
                   onTrackOrder={handleTrackOrder}
+                  onCancelOrder={handleCancelOrder}
                   onContinueShopping={() => navigate('/customerhome')}
                 />
               ))}
             </div>
           )}
 
-          {selectedOrder && (
-            <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+          {pendingCancelOrder && (
+            <div className="confirmation-dialog-overlay" onClick={() => setPendingCancelOrder(null)}>
+              <div className="confirmation-dialog" onClick={(event) => event.stopPropagation()}>
+                <h3>Cancel Order?</h3>
+                <p>Are you sure you want to cancel this order?</p>
+                <div className="confirmation-dialog-actions">
+                  <button className="order-card-action order-card-action--danger" type="button" onClick={confirmCancelOrder}>Yes Cancel</button>
+                  <button className="order-card-action order-card-action--ghost" type="button" onClick={() => setPendingCancelOrder(null)}>No</button>
+                </div>
+              </div>
+            </div>
           )}
         </main>
         <Footer />

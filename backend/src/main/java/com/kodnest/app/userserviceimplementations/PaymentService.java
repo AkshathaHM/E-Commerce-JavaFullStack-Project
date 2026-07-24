@@ -3,7 +3,9 @@ package com.kodnest.app.userserviceimplementations;
 import com.kodnest.app.entities.Order;
 import com.kodnest.app.entities.OrderItem;
 import com.kodnest.app.entities.OrderStatus;
+import com.kodnest.app.entities.User;
 import com.kodnest.app.userservices.PaymentServiceContract;
+import com.kodnest.app.usersrepositaries.UserRepository;
 import com.kodnest.app.usersrepositaries.CartRepository;
 import com.kodnest.app.usersrepositaries.OrderItemRepository;
 import com.kodnest.app.usersrepositaries.OrderRepository;
@@ -31,16 +33,22 @@ public class PaymentService implements PaymentServiceContract {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartRepository cartRepository;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
 
     private RazorpayClient razorpayClient;
 
     public PaymentService(
             OrderRepository orderRepository,
             OrderItemRepository orderItemRepository,
-            CartRepository cartRepository) {
+            CartRepository cartRepository,
+            UserRepository userRepository,
+            EmailService emailService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.cartRepository = cartRepository;
+        this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     // Lazy init RazorpayClient (only when needed)
@@ -63,26 +71,12 @@ public class PaymentService implements PaymentServiceContract {
         orderRequest.put("receipt", "txn_" + System.currentTimeMillis());
 
         com.razorpay.Order razorpayOrder = razorpayClient.orders.create(orderRequest);
-
-        Order order = new Order();
-        order.setOrderId(razorpayOrder.get("id"));
-        order.setUserId(userId);
-        order.setTotalAmount(totalAmount);
-        order.setStatus(OrderStatus.PENDING);
-        order.setCreatedAt(LocalDateTime.now());
-        orderRepository.save(order);
-
-        for (OrderItem item : orderItems) {
-            item.setOrder(order);
-            orderItemRepository.save(item);
-        }
-
         return razorpayOrder.get("id");
     }
 
     @Override
     @Transactional
-    public boolean verifyPayment(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature, int userId) {
+    public boolean verifyPayment(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature, int userId, BigDecimal totalAmount, List<OrderItem> orderItems) {
         try {
             JSONObject attributes = new JSONObject();
             attributes.put("razorpay_order_id", razorpayOrderId);
@@ -92,16 +86,29 @@ public class PaymentService implements PaymentServiceContract {
             boolean valid = Utils.verifyPaymentSignature(attributes, razorpayKeySecret);
             if (!valid) return false;
 
-            Order order = orderRepository.findById(razorpayOrderId)
-                    .orElseThrow(() -> new RuntimeException("Order not found"));
+            if (orderRepository.existsById(razorpayOrderId)) {
+                return false;
+            }
 
-            if (order.getUserId() != userId) return false;
-
+            Order order = new Order();
+            order.setOrderId(razorpayOrderId);
+            order.setUserId(userId);
+            order.setTotalAmount(totalAmount != null ? totalAmount : BigDecimal.ZERO);
             order.setStatus(OrderStatus.SUCCESS);
+            order.setCreatedAt(LocalDateTime.now());
             order.setUpdatedAt(LocalDateTime.now());
             orderRepository.save(order);
 
+            for (OrderItem item : orderItems) {
+                item.setOrder(order);
+                orderItemRepository.save(item);
+            }
+
             cartRepository.deleteAllByUserUserId(userId);
+
+            userRepository.findById(userId).ifPresent(user -> {
+                emailService.sendOrderConfirmationEmail(user, razorpayOrderId, totalAmount != null ? totalAmount.toPlainString() : "0");
+            });
 
             return true;
         } catch (Exception e) {

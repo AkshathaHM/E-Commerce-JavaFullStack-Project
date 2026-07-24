@@ -1,45 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getAuthHeaders } from '../auth';
-import OrderDetailsModal from './OrderDetailsModal';
-import OrderActionButtons from './OrderActionButtons';
+import { getCountdownLabel, getDerivedOrderStatus, getExpectedDelivery, getOrderHistoryEntries, getStatusLabel, ORDER_STATUS_SEQUENCE } from '../utils/orderStatus';
 import StatusBadge from './StatusBadge';
 import TrackingTimeline from './TrackingTimeline';
 
 const FALLBACK_IMAGE = '/images/no-image.png';
-const TRACKING_STEPS = [
-  { key: 'placed', label: 'Order Placed' },
-  { key: 'confirmed', label: 'Confirmed' },
-  { key: 'packed', label: 'Packed' },
-  { key: 'shipped', label: 'Shipped' },
-  { key: 'out_for_delivery', label: 'Out For Delivery' },
-  { key: 'delivered', label: 'Delivered' },
-];
-
-const normalizeStatus = (status) => {
-  const text = typeof status === 'string' ? status.trim().toLowerCase() : 'placed';
-  if (text.includes('delivered')) return 'delivered';
-  if (text.includes('out for delivery') || text.includes('out_for_delivery') || text.includes('delivery')) return 'out_for_delivery';
-  if (text.includes('packed')) return 'packed';
-  if (text.includes('confirmed')) return 'confirmed';
-  if (text.includes('shipped')) return 'shipped';
-  return 'placed';
-};
-
-const getStatusLabel = (status) => {
-  if (status === 'out_for_delivery') return 'Out For Delivery';
-  if (status === 'confirmed') return 'Confirmed';
-  if (status === 'packed') return 'Packed';
-  if (status === 'shipped') return 'Shipped';
-  if (status === 'delivered') return 'Delivered';
-  return 'Order Placed';
-};
-
-const getEstimatedDelivery = (createdAt) => {
-  const date = new Date(createdAt || new Date().toISOString());
-  date.setDate(date.getDate() + 4);
-  return date.toLocaleString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' });
-};
 
 const readSafeValue = (value, fallback = 'N/A') => {
   if (value === null || value === undefined || value === '') return fallback;
@@ -72,18 +38,17 @@ export default function OrderTracking() {
   const location = useLocation();
   const navigate = useNavigate();
   const { orderId } = useParams();
-  const [showDetails, setShowDetails] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [displayOrder, setDisplayOrder] = useState(buildDisplayOrder(location.state?.order, orderId));
-  const [status, setStatus] = useState(normalizeStatus(location.state?.order?.status || location.state?.order?.orderStatus));
+  const [status, setStatus] = useState(getDerivedOrderStatus(location.state?.order?.orderDate || location.state?.order?.createdAt || location.state?.order?.created_at, location.state?.order?.status || location.state?.order?.orderStatus));
 
   useEffect(() => {
     const initialOrder = location.state?.order;
     if (initialOrder) {
       const nextOrder = buildDisplayOrder(initialOrder, orderId);
       setDisplayOrder(nextOrder);
-      setStatus(normalizeStatus(initialOrder.status || initialOrder.orderStatus));
+      setStatus(getDerivedOrderStatus(nextOrder.createdAt, nextOrder.status));
       setLoading(false);
       setError(null);
       return;
@@ -117,7 +82,7 @@ export default function OrderTracking() {
 
         const nextOrder = buildDisplayOrder(matchedOrder, orderId);
         setDisplayOrder(nextOrder);
-        setStatus(normalizeStatus(matchedOrder.status || matchedOrder.orderStatus));
+        setStatus(getDerivedOrderStatus(nextOrder.createdAt, nextOrder.status));
       } catch (caughtError) {
         setError(caughtError.message || 'Unable to load tracking details.');
       } finally {
@@ -128,18 +93,11 @@ export default function OrderTracking() {
     fetchTrackingDetails();
   }, [location.state?.order, orderId]);
 
-  const orderHistory = useMemo(() => [
-    { label: 'Order Placed', detail: `Order ${displayOrder.orderId} received` },
-    { label: 'Confirmed', detail: 'Seller confirmed the order' },
-    { label: 'Packed', detail: 'Items packed and ready to ship' },
-    { label: 'Shipped', detail: 'Courier has picked up the package' },
-    { label: 'Out For Delivery', detail: 'Courier is on the way to you' },
-    { label: 'Delivered', detail: 'Package delivered successfully' },
-  ], [displayOrder.orderId]);
-
-  const statusIndex = TRACKING_STEPS.findIndex((step) => step.key === status);
+  const orderHistory = useMemo(() => getOrderHistoryEntries(displayOrder.orderId), [displayOrder.orderId]);
   const currentStepLabel = getStatusLabel(status);
-  const estimatedDelivery = getEstimatedDelivery(displayOrder.createdAt);
+  const expectedDelivery = getExpectedDelivery(displayOrder.createdAt);
+  const countdown = getCountdownLabel(displayOrder.createdAt, status);
+  const isCancelled = status === 'cancelled';
 
   if (loading) {
     return (
@@ -159,7 +117,10 @@ export default function OrderTracking() {
         <div className="order-tracking-card">
           <h2>Unable to load order tracking</h2>
           <p>{error}</p>
-          <button className="order-card-action" type="button" onClick={() => navigate('/orders')}>Back to Orders</button>
+          <div className="order-tracking-actions">
+            <button className="order-card-action" type="button" onClick={() => navigate('/orders')}>Back to Orders</button>
+            <button className="order-card-action order-card-action--ghost" type="button" onClick={() => navigate('/customerhome')}>Continue Shopping</button>
+          </div>
         </div>
       </div>
     );
@@ -171,23 +132,31 @@ export default function OrderTracking() {
         <div className="order-tracking-card__top">
           <div>
             <p className="order-tracking-card__eyebrow">Order tracking</p>
-            <h2>{currentStepLabel}</h2>
+            <h2>{isCancelled ? 'Cancelled' : currentStepLabel}</h2>
           </div>
-          <StatusBadge status={currentStepLabel} />
+          <StatusBadge status={isCancelled ? 'Cancelled' : currentStepLabel} />
         </div>
 
-        <div className="tracking-status-banner">
-          <div>
-            <span>Expected Delivery</span>
-            <strong>{estimatedDelivery}</strong>
+        {isCancelled ? (
+          <div className="cancelled-banner">
+            <strong>Cancelled</strong>
+            <p>Your order has been cancelled successfully.</p>
           </div>
-          <div>
-            <span>Tracking Status</span>
-            <strong>{currentStepLabel}</strong>
-          </div>
-        </div>
-
-        <TrackingTimeline currentStatus={status} steps={TRACKING_STEPS} />
+        ) : (
+          <>
+            <div className="tracking-status-banner">
+              <div>
+                <span>Expected Delivery</span>
+                <strong>{expectedDelivery.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: 'numeric' })}</strong>
+              </div>
+              <div>
+                <span>Tracking Status</span>
+                <strong>{currentStepLabel}</strong>
+              </div>
+            </div>
+            <TrackingTimeline currentStatus={status} steps={ORDER_STATUS_SEQUENCE} />
+          </>
+        )}
 
         <div className="order-tracking-details-grid">
           <div><span>Order Number</span><strong>{displayOrder.orderId}</strong></div>
@@ -196,30 +165,29 @@ export default function OrderTracking() {
           <div><span>Phone</span><strong>{displayOrder.phone}</strong></div>
           <div><span>Payment Method</span><strong>{displayOrder.paymentMethod}</strong></div>
           <div><span>Payment Status</span><strong>{displayOrder.paymentStatus}</strong></div>
-          <div><span>Expected Delivery</span><strong>{estimatedDelivery}</strong></div>
-          <div><span>Tracking Status</span><strong>{currentStepLabel}</strong></div>
+          <div><span>Expected Delivery</span><strong>{expectedDelivery.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: 'numeric' })}</strong></div>
+          <div><span>Countdown</span><strong>{countdown}</strong></div>
         </div>
 
-        <div className="tracking-history-card">
-          <h3>Order History</h3>
-          <ul className="tracking-history-list">
-            {orderHistory.map((entry) => (
-              <li key={entry.label}>
-                <span>{entry.label}</span>
-                <strong>{entry.detail}</strong>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {!isCancelled && (
+          <div className="tracking-history-card">
+            <h3>Order History</h3>
+            <ul className="tracking-history-list">
+              {orderHistory.map((entry) => (
+                <li key={entry.label}>
+                  <span>{entry.label}</span>
+                  <strong>{entry.detail}</strong>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-        <OrderActionButtons
-          onTrack={() => navigate(`/orders/${displayOrder.orderId}/tracking`, { state: { order: displayOrder }, replace: true })}
-          onViewDetails={() => setShowDetails(true)}
-          onContinueShopping={() => navigate('/customerhome')}
-        />
+        <div className="order-tracking-actions">
+          <button className="order-card-action" type="button" onClick={() => navigate('/orders')}>Back to Orders</button>
+          {!isCancelled && <button className="order-card-action order-card-action--ghost" type="button" onClick={() => navigate('/customerhome')}>Continue Shopping</button>}
+        </div>
       </div>
-
-      {showDetails && <OrderDetailsModal order={displayOrder} onClose={() => setShowDetails(false)} />}
     </div>
   );
 }

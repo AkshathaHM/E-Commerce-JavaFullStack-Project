@@ -118,6 +118,7 @@ public class AuthController {
         body.put("email", user.getEmail());
         body.put("role", user.getRole().name());
         body.put("address", user.getAddress());
+        body.put("mobileNumber", user.getMobileNumber());
         body.put("verified", user.isVerified());
         body.put("enabled", user.isEnabled());
         body.put("createdAt", user.getCreatedAt());

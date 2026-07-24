@@ -9,6 +9,8 @@ public interface AdminOrderServiceContract {
 
     public List<Order> getAllOrders();
 
+    public List<Map<String, Object>> getAllOrdersForAdmin();
+
     public List<Order> getOrdersByStatus(OrderStatus status);
 
     public Map<String, Object> getOrdersAnalytics();

@@ -13,7 +13,7 @@ import java.util.Random;
 public class EmailOtpService {
 
     private static final int OTP_LENGTH = 6;
-    private static final int OTP_EXPIRY_MINUTES = 5;
+    private static final int OTP_EXPIRY_MINUTES = 3;
 
     private final EmailOtpRepository otpRepository;
 

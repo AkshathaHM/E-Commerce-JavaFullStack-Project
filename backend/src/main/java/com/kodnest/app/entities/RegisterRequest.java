@@ -7,6 +7,7 @@ public class RegisterRequest {
     private String password;
     private String role;
     private String address;
+    private String mobileNumber;
 
     public RegisterRequest() {
     }
@@ -24,6 +25,14 @@ public class RegisterRequest {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getMobileNumber() {
+        return mobileNumber;
+    }
+
+    public void setMobileNumber(String mobileNumber) {
+        this.mobileNumber = mobileNumber;
     }
 
     public String getUsername() {

@@ -104,8 +104,25 @@ public class PaymentController {
                 return ResponseEntity.badRequest().body("Missing verification parameters");
             }
 
+            Object totalAmountObj = requestBody.get("totalAmount");
+            BigDecimal totalAmount = totalAmountObj == null ? null : new BigDecimal(totalAmountObj.toString());
+
+            List<Map<String, Object>> cartItemsRaw = (List<Map<String, Object>>) requestBody.get("cartItems");
+            List<OrderItem> orderItems = List.of();
+            if (cartItemsRaw != null) {
+                orderItems = cartItemsRaw.stream().map(item -> {
+                    OrderItem oi = new OrderItem();
+                    oi.setProductId((Integer) item.get("productId"));
+                    oi.setQuantity((Integer) item.get("quantity"));
+                    BigDecimal price = new BigDecimal(item.get("price").toString());
+                    oi.setPricePerUnit(price);
+                    oi.setTotalPrice(price.multiply(BigDecimal.valueOf(oi.getQuantity())));
+                    return oi;
+                }).collect(Collectors.toList());
+            }
+
             boolean valid = paymentService.verifyPayment(
-                    orderId, paymentId, signature, user.getUserId()
+                    orderId, paymentId, signature, user.getUserId(), totalAmount, orderItems
             );
 
             return ResponseEntity.ok(valid ? "Payment verified successfully" : "Payment verification failed");

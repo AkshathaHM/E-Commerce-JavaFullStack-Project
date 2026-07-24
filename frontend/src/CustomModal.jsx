@@ -970,48 +970,13 @@ const YearlySalesForm = ({ onSubmit, onClose, response, modalData, loading }) =>
 
 // Orders Component
 const OrdersForm = ({ onClose, response, modalData, loading }) => {
-  const [localStatus, setLocalStatus] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [sortField, setSortField] = useState("createdAt");
   const [sortDirection, setSortDirection] = useState("desc");
   const [currentPage, setCurrentPage] = useState(1);
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
   const pageSize = 5;
-
-  useEffect(() => {
-    try {
-      const storedStatus = {};
-      for (const key of Object.keys(localStorage)) {
-        if (key.startsWith("order-status-")) {
-          storedStatus[key.replace("order-status-", "")] = localStorage.getItem(key);
-        }
-      }
-      setLocalStatus(storedStatus);
-    } catch {
-      setLocalStatus({});
-    }
-  }, []);
-
-  const updateOrderStatus = (orderId, nextStatus) => {
-    const normalized = toSafeLower(nextStatus);
-    const statusMap = {
-      pending: "PENDING",
-      success: "SUCCESS",
-      failed: "FAILED",
-      placed: "Order Placed",
-      shipped: "Shipped",
-      transit: "In Transit",
-      delivered: "Delivered",
-    };
-
-    const nextVisibleStatus = statusMap[normalized] || toSafeString(nextStatus);
-    setLocalStatus((prev) => ({ ...prev, [orderId]: nextVisibleStatus }));
-    try {
-      localStorage.setItem(`order-status-${orderId}`, nextVisibleStatus);
-    } catch {
-      // ignore storage failures gracefully
-    }
-  };
 
   const formatAmount = (value) => {
     if (value === null || value === undefined || value === "") return "N/A";
@@ -1025,9 +990,13 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
   };
 
   const getOrderValue = (order, field) => {
-    if (field === "user") return order?.user?.username || order?.user?.name || order?.user?.email || order?.userId || order?.user_email || "N/A";
+    if (field === "user") return order?.customerName || order?.user?.username || order?.user?.name || order?.user?.email || order?.userId || order?.user_email || "N/A";
+    if (field === "email") return order?.customerEmail || order?.user?.email || order?.email || "N/A";
+    if (field === "mobile") return order?.customerMobile || order?.user?.mobileNumber || order?.mobile || order?.phone || "N/A";
+    if (field === "address") return order?.customerAddress || order?.address || order?.deliveryAddress || "N/A";
+    if (field === "userId") return order?.userId || order?.user?.id || order?.user_id || order?.customerId || order?.customer_id || "N/A";
     if (field === "createdAt") return order?.createdAt || order?.created_at || order?.date || "";
-    if (field === "status") return localStatus[order?.orderId || order?.id] || order?.status || "N/A";
+    if (field === "status") return order?.status || order?.orderStatus || order?.order_status || "N/A";
     if (field === "total") return order?.totalAmount ?? order?.total_price ?? order?.amount ?? 0;
     return order?.[field] || "";
   };
@@ -1074,7 +1043,7 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
   return (
     <div className="modal-form orders-management">
       <h2>Order Management</h2>
-      <p className="section-subtitle">Live order overview with quick status updates and a cleaner admin view.</p>
+      <p className="section-subtitle">Live order overview showing customer details and current order status.</p>
 
       {loading ? (
         <div className="loading-state">Loading orders...</div>
@@ -1118,46 +1087,126 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
             <table className="orders-table">
               <thead>
                 <tr>
+                  <th style={{width: "40px"}}></th>
                   <th>#</th>
                   <th>Customer</th>
+                  <th>Contact</th>
+                  <th>Address</th>
                   <th>Order ID</th>
                   <th>Status</th>
                   <th>Total</th>
                   <th>Created</th>
-                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedOrders.map((order, index) => {
                   const orderId = order.orderId || order.id;
-                  const orderStatus = localStatus[orderId] || order.status || "N/A";
+                  const orderStatus = getOrderValue(order, "status");
                   const badgeClass = toSafeLower(orderStatus).replace(/\s+/g, "-");
                   const rowNumber = (currentPage - 1) * pageSize + index + 1;
+                  const isExpanded = expandedOrderId === orderId;
 
                   return (
-                    <tr key={orderId}>
-                      <td>{rowNumber}</td>
-                      <td>{getOrderValue(order, "user")}</td>
-                      <td>{toSafeString(orderId)}</td>
-                      <td><span className={`status-badge ${badgeClass}`}>{toSafeString(orderStatus)}</span></td>
-                      <td>{formatAmount(getOrderValue(order, "total"))}</td>
-                      <td>{toSafeString(getOrderValue(order, "createdAt") || "N/A")}</td>
-                      <td>
-                        <select
-                          value={toSafeString(orderStatus)}
-                          onChange={(e) => updateOrderStatus(orderId, e.target.value)}
-                          className="order-status-select"
-                        >
-                          <option value="PENDING">PENDING</option>
-                          <option value="SUCCESS">SUCCESS</option>
-                          <option value="FAILED">FAILED</option>
-                          <option value="Order Placed">Order Placed</option>
-                          <option value="Shipped">Shipped</option>
-                          <option value="In Transit">In Transit</option>
-                          <option value="Delivered">Delivered</option>
-                        </select>
-                      </td>
-                    </tr>
+                    <React.Fragment key={orderId}>
+                      <tr className={isExpanded ? "expanded-row" : ""}>
+                        <td style={{width: "40px", textAlign: "center"}}>
+                          <button
+                            className="expand-btn"
+                            onClick={() => setExpandedOrderId(isExpanded ? null : orderId)}
+                            style={{
+                              background: "none",
+                              border: "none",
+                              cursor: "pointer",
+                              fontSize: "18px",
+                              padding: "0",
+                            }}
+                          >
+                            {isExpanded ? "▼" : "▶"}
+                          </button>
+                        </td>
+                        <td>{rowNumber}</td>
+                        <td>
+                          <div>
+                            <strong>{toSafeString(getOrderValue(order, "user"))}</strong>
+                            <div>{toSafeString(getOrderValue(order, "email"))}</div>
+                          </div>
+                        </td>
+                        <td>{toSafeString(getOrderValue(order, "mobile"))}</td>
+                        <td>{toSafeString(getOrderValue(order, "address"))}</td>
+                        <td>{toSafeString(orderId)}</td>
+                        <td><span className={`status-badge ${badgeClass}`}>{toSafeString(orderStatus)}</span></td>
+                        <td>{formatAmount(getOrderValue(order, "total"))}</td>
+                        <td>{toSafeString(getOrderValue(order, "createdAt") || "N/A")}</td>
+                      </tr>
+                      {isExpanded && (
+                        <tr className="order-details-row">
+                          <td colSpan="9">
+                            <div className="order-details-panel">
+                              <div className="details-section">
+                                <h3>Order Items</h3>
+                                {order.items && order.items.length > 0 ? (
+                                  <div className="items-list">
+                                    <table className="items-table">
+                                      <thead>
+                                        <tr>
+                                          <th>Product ID</th>
+                                          <th>Quantity</th>
+                                          <th>Price per Unit</th>
+                                          <th>Total</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {order.items.map((item, idx) => (
+                                          <tr key={item.id || idx}>
+                                            <td>#{item.productId}</td>
+                                            <td style={{textAlign: "center"}}>{item.quantity}</td>
+                                            <td>{formatAmount(item.pricePerUnit)}</td>
+                                            <td><strong>{formatAmount(item.totalPrice)}</strong></td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                    <div className="order-summary">
+                                      <div className="summary-row">
+                                        <span>Subtotal:</span>
+                                        <span>{formatAmount(order.items.reduce((sum, item) => sum + Number(item.totalPrice || 0), 0))}</span>
+                                      </div>
+                                      <div className="summary-row total-row">
+                                        <span>Order Total:</span>
+                                        <span>{formatAmount(getOrderValue(order, "total"))}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="no-items">No items in this order</p>
+                                )}
+                              </div>
+                              <div className="details-section">
+                                <h3>Order Information</h3>
+                                <div className="info-grid">
+                                  <div className="info-item">
+                                    <label>Order ID:</label>
+                                    <span>{toSafeString(orderId)}</span>
+                                  </div>
+                                  <div className="info-item">
+                                    <label>Status:</label>
+                                    <span className={`status-badge ${badgeClass}`}>{toSafeString(orderStatus)}</span>
+                                  </div>
+                                  <div className="info-item">
+                                    <label>Created:</label>
+                                    <span>{toSafeString(getOrderValue(order, "createdAt") || "N/A")}</span>
+                                  </div>
+                                  <div className="info-item">
+                                    <label>Updated:</label>
+                                    <span>{toSafeString(order.updatedAt || "N/A")}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   );
                 })}
               </tbody>

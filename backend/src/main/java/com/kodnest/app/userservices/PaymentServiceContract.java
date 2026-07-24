@@ -10,5 +10,5 @@ public interface PaymentServiceContract {
 
     String createOrder(int userId, BigDecimal totalAmount, List<OrderItem> orderItems) throws RazorpayException;
 
-    boolean verifyPayment(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature, int userId);
+    boolean verifyPayment(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature, int userId, BigDecimal totalAmount, List<OrderItem> orderItems);
 }

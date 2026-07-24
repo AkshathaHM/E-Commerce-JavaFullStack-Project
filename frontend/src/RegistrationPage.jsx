@@ -13,6 +13,7 @@ export default function RegistrationPage() {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('CUSTOMER');
   const [address, setAddress] = useState('');
+  const [mobileNumber, setMobileNumber] = useState('');
   const [error, setError] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -30,7 +31,7 @@ export default function RegistrationPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ username, email, password, role, address }),
+        body: JSON.stringify({ username, email, password, role, address, mobileNumber }),
       });
 
       const data = await response.json().catch(() => ({}));
@@ -114,6 +115,20 @@ export default function RegistrationPage() {
                     {showPassword ? "Hide" : "Show"}
                   </span>
                 </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="mobileNumber" className="form-label">Mobile Number</label>
+                <input
+                  id="mobileNumber"
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="Enter your 10-digit mobile number"
+                  value={mobileNumber}
+                  onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                  required
+                  className="form-input"
+                />
               </div>
 
               <div className="form-group">

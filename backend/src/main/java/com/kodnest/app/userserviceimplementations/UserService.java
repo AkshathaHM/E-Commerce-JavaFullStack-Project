@@ -37,6 +37,7 @@ public class UserService implements UserServiceContract {
         String username = request.getUsername();
         String email = request.getEmail();
         String password = request.getPassword();
+        String mobileNumber = request.getMobileNumber();
 
         if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Username is required");
@@ -70,6 +71,15 @@ public class UserService implements UserServiceContract {
             throw new IllegalArgumentException("Password must be at least 6 characters");
         }
 
+        if (mobileNumber == null || mobileNumber.isBlank()) {
+            throw new IllegalArgumentException("Mobile number is required");
+        }
+
+        mobileNumber = mobileNumber.trim();
+        if (!mobileNumber.matches("^[0-9]{10}$")) {
+            throw new IllegalArgumentException("Mobile number must be a valid 10-digit number");
+        }
+
         User user = new User();
         user.setUsername(username);
         user.setName(username);
@@ -87,6 +97,7 @@ public class UserService implements UserServiceContract {
         user.setVerified(false);
         user.setEnabled(false);
         user.setAddress(request.getAddress());
+        user.setMobileNumber(mobileNumber);
         user.setUpdatedAt(LocalDateTime.now());
 
         User savedUser;

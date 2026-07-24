@@ -26,16 +26,7 @@ public class AdminOrderController {
     @GetMapping("/all")
     public ResponseEntity<?> getAllOrders() {
         try {
-            List<Map<String, Object>> orders = adminOrderService.getAllOrders().stream().map(order -> {
-                Map<String, Object> orderMap = new java.util.HashMap<>();
-                orderMap.put("orderId", order.getOrderId());
-                orderMap.put("userId", order.getUserId());
-                orderMap.put("status", order.getStatus());
-                orderMap.put("totalAmount", order.getTotalAmount());
-                orderMap.put("createdAt", order.getCreatedAt());
-                orderMap.put("updatedAt", order.getUpdatedAt());
-                return orderMap;
-            }).collect(Collectors.toList());
+            List<Map<String, Object>> orders = adminOrderService.getAllOrdersForAdmin();
             return ResponseEntity.status(HttpStatus.OK).body(orders);
         } catch (Exception e) {
             e.printStackTrace();

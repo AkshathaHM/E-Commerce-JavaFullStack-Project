@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./CartPage.css";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { Toast } from "./Toast";
 import { useNavigate } from "react-router-dom";
-import OrderSuccess from "./components/OrderSuccess";
 import { CartItemSkeleton } from "./components/Skeleton";
+import { getPaymentErrorDetails } from "./utils/paymentFlow";
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -17,10 +17,13 @@ const CartPage = () => {
   const [paymentSuccessData, setPaymentSuccessData] = useState(null);
   const [paymentError, setPaymentError] = useState(null);
   const [error, setError] = useState(null);
-  const [showTrackingCard, setShowTrackingCard] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("success");
-  const [orderSummaryItems, setOrderSummaryItems] = useState([]);
+  const [paymentState, setPaymentState] = useState("idle");
+  const [sdkReady, setSdkReady] = useState(false);
+  const [sdkError, setSdkError] = useState(null);
+  const checkoutAttemptRef = useRef(0);
+  const razorpayScriptRef = useRef(null);
   const navigate = useNavigate();
 
   const getAuthHeaders = () => {
@@ -28,19 +31,38 @@ const CartPage = () => {
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
-  const loadRazorpayScript = () => {
-    return new Promise((resolve, reject) => {
-      if (window.Razorpay) {
-        return resolve(window.Razorpay);
-      }
+  const loadRazorpayScript = async () => {
+    if (window.Razorpay) {
+      setSdkReady(true);
+      setSdkError(null);
+      return window.Razorpay;
+    }
 
+    if (razorpayScriptRef.current) {
+      return new Promise((resolve, reject) => {
+        razorpayScriptRef.current.addEventListener('load', () => resolve(window.Razorpay), { once: true });
+        razorpayScriptRef.current.addEventListener('error', () => reject(new Error('Failed to load Razorpay checkout script')), { once: true });
+      });
+    }
+
+    return new Promise((resolve, reject) => {
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.async = true;
       script.crossOrigin = 'anonymous';
-      script.onload = () => resolve(window.Razorpay);
-      script.onerror = () => reject(new Error('Failed to load Razorpay checkout script'));
+      script.onload = () => {
+        setSdkReady(true);
+        setSdkError(null);
+        resolve(window.Razorpay);
+      };
+      script.onerror = () => {
+        const message = 'Failed to load Razorpay checkout script';
+        setSdkReady(false);
+        setSdkError(message);
+        reject(new Error(message));
+      };
       document.body.appendChild(script);
+      razorpayScriptRef.current = script;
     });
   };
 
@@ -178,7 +200,6 @@ const CartPage = () => {
     }
   };
 
-  // Checkout
   const handleCheckout = async () => {
     if (checkoutLoading) return;
     if (Number(subtotal) <= 0) {
@@ -190,6 +211,10 @@ const CartPage = () => {
     }
 
     setCheckoutLoading(true);
+    setPaymentError(null);
+    setPaymentState("creating-order");
+    checkoutAttemptRef.current += 1;
+    const attemptId = checkoutAttemptRef.current;
 
     try {
       const payload = {
@@ -210,20 +235,19 @@ const CartPage = () => {
 
       if (!res.ok) {
         const errText = await res.text();
-        const message = `Order creation failed: ${errText || "Server error"}`;
-        setPaymentError(message);
-        setToastMessage(message);
-        setToastType("error");
-        return;
+        throw new Error(errText || "Server error while creating the payment order");
       }
 
       const data = await res.json();
       const orderId = data.orderId;
       const amountPaise = data.amountPaise;
 
-      if (!orderId?.startsWith("order_") || !amountPaise || amountPaise < 100) {
+      if (!orderId || !amountPaise || amountPaise < 100) {
         throw new Error("Invalid order data received from server");
       }
+
+      const Razorpay = await loadRazorpayScript();
+      if (attemptId !== checkoutAttemptRef.current) return;
 
       const options = {
         key: "rzp_test_TAsqtBKY9SkyQb",
@@ -231,9 +255,10 @@ const CartPage = () => {
         currency: "INR",
         name: "SalesSavvy",
         description: "Cart Payment",
-        order_id: orderId.trim(),
+        order_id: String(orderId).trim(),
         handler: async (rzpRes) => {
           try {
+            setPaymentState("verifying-payment");
             const verifyRes = await fetch(`${import.meta.env.VITE_API_URL}/api/payment/verify`, {
               method: "POST",
               credentials: "include",
@@ -242,59 +267,63 @@ const CartPage = () => {
                 razorpay_order_id: rzpRes.razorpay_order_id,
                 razorpay_payment_id: rzpRes.razorpay_payment_id,
                 razorpay_signature: rzpRes.razorpay_signature,
+                totalAmount: Number(subtotal),
+                cartItems: cartItems.map((item) => ({
+                  productId: item.product_id,
+                  quantity: item.quantity,
+                  price: Number(item.price_per_unit)
+                }))
               }),
             });
 
-            if (verifyRes.ok) {
+            if (!verifyRes.ok) {
               const verifyMessage = await verifyRes.text();
-              const deliveryDate = new Date();
-              deliveryDate.setDate(deliveryDate.getDate() + 4);
-              const formattedDeliveryDate = deliveryDate.toLocaleDateString('en-IN', {
-                weekday: 'long',
-                month: 'short',
-                day: 'numeric',
-              });
-              const trackingId = `SS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-
-              setShowPaymentToast(true);
-              setToastMessage("Payment successful! Your order is being prepared.");
-              setToastType("success");
-              const successOrder = {
-                orderId: rzpRes.razorpay_order_id,
-                paymentId: rzpRes.razorpay_payment_id,
-                amount: Number(subtotal).toFixed(2),
-                paymentStatus: 'Paid',
-                orderDate: new Date().toLocaleString('en-IN'),
-                estimatedDelivery: formattedDeliveryDate,
-                trackingCode: trackingId,
-                totalAmount: Number(subtotal).toFixed(2),
-                name: cartItems[0]?.name || 'Order Items',
-                imageUrl: cartItems[0]?.image_url || '/images/no-image.png',
-                quantity: cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0),
-                price: Number(subtotal).toFixed(2),
-                deliveryCharges: '0.00',
-                tax: '0.00',
-              };
-              localStorage.setItem('lastOrder', JSON.stringify(successOrder));
-              setPaymentSuccessData(successOrder);
-              navigate('/order-success', { state: { order: successOrder }, replace: true });
-              setOrderSummaryItems(cartItems);
-              setPaymentError(null);
-              setCartItems([]);
-              setSubtotal("0.00");
-            } else {
-              const verifyMessage = await verifyRes.text();
-              const message = `Payment verification failed: ${verifyMessage}`;
-              setPaymentError(message);
-              setToastMessage(message);
-              setToastType("error");
+              throw new Error(verifyMessage || "Payment verification failed");
             }
+
+            const deliveryDate = new Date();
+            deliveryDate.setDate(deliveryDate.getDate() + 4);
+            const formattedDeliveryDate = deliveryDate.toLocaleDateString('en-IN', {
+              weekday: 'long',
+              month: 'short',
+              day: 'numeric',
+            });
+            const trackingId = `SS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+            const successOrder = {
+              orderId: rzpRes.razorpay_order_id,
+              paymentId: rzpRes.razorpay_payment_id,
+              amount: Number(subtotal).toFixed(2),
+              paymentStatus: 'Paid',
+              orderDate: new Date().toLocaleString('en-IN'),
+              estimatedDelivery: formattedDeliveryDate,
+              trackingCode: trackingId,
+              totalAmount: Number(subtotal).toFixed(2),
+              name: cartItems[0]?.name || 'Order Items',
+              imageUrl: cartItems[0]?.image_url || '/images/no-image.png',
+              quantity: cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0),
+              price: Number(subtotal).toFixed(2),
+              deliveryCharges: '0.00',
+              tax: '0.00',
+            };
+
+            localStorage.setItem('lastOrder', JSON.stringify(successOrder));
+            setPaymentSuccessData(successOrder);
+            setToastMessage("Payment successful! Your order is being prepared.");
+            setToastType("success");
+            setShowPaymentToast(true);
+            setPaymentError(null);
+            setPaymentState("success");
+            setCartItems([]);
+            setSubtotal("0.00");
+            navigate('/order-success', { state: { order: successOrder }, replace: true });
           } catch (e) {
             console.error("Payment verification error:", e);
-            const message = "Payment processed but verification failed.";
-            setPaymentError(message);
-            setToastMessage(message);
+            const details = getPaymentErrorDetails(e, "Payment processed but verification failed.");
+            setPaymentError(details.message);
+            setToastMessage(details.message);
             setToastType("error");
+            setPaymentState("failed");
           }
         },
         prefill: {
@@ -304,26 +333,40 @@ const CartPage = () => {
         },
         modal: {
           ondismiss: () => {
-            const message = "Checkout canceled. No charges were made.";
-            setPaymentError(null);
-            setToastMessage(message);
+            const details = getPaymentErrorDetails(new Error('payment cancelled'), 'Payment cancelled.');
+            setPaymentError(details.message);
+            setToastMessage(details.message);
             setToastType("info");
+            setPaymentState("cancelled");
           },
         },
         theme: { color: "#00ABE4" },
+        remember_customer: false,
+        timeout: 300,
+        notes: {
+          source: 'web-checkout',
+          cart_items: cartItems.length,
+        },
       };
 
-      const Razorpay = await loadRazorpayScript();
       const rzp = new Razorpay(options);
-      rzp.open();
+      setPaymentState("opening-checkout");
+      try {
+        rzp.open();
+      } catch (openError) {
+        throw new Error(openError?.message || 'Unable to open payment popup. Please allow pop-ups and try again.');
+      }
     } catch (err) {
       console.error("Checkout process failed:", err);
-      const message = err.message || "Something went wrong during checkout.";
-      setPaymentError(message);
-      setToastMessage(message);
+      const details = getPaymentErrorDetails(err, err.message || "Something went wrong during checkout.");
+      setPaymentError(details.message);
+      setToastMessage(details.message);
       setToastType("error");
+      setPaymentState("failed");
     } finally {
-      setCheckoutLoading(false);
+      if (checkoutAttemptRef.current === attemptId) {
+        setCheckoutLoading(false);
+      }
     }
   };
 
@@ -472,8 +515,22 @@ const CartPage = () => {
               onClick={handleCheckout}
               disabled={checkoutLoading || Number(subtotal) <= 0}
             >
-              {checkoutLoading ? "Processing..." : "Proceed to Checkout"}
+              {checkoutLoading ? (paymentState === "creating-order" ? "Creating Order..." : "Processing Payment...") : "Proceed to Checkout"}
             </button>
+
+            {checkoutLoading && (
+              <div className="payment-progress-state" role="status" aria-live="polite">
+                <div className="payment-progress-spinner" />
+                <span>{paymentState === "creating-order" ? "Creating secure payment order..." : paymentState === "opening-checkout" ? "Opening Razorpay checkout..." : "Processing Payment..."}</span>
+              </div>
+            )}
+
+            {sdkError && (
+              <div className="payment-error-banner payment-error-banner--inline">
+                <p>Unable to load payment gateway. Please check your internet connection.</p>
+                <button className="retry-payment-button" type="button" onClick={handleCheckout}>Retry Payment</button>
+              </div>
+            )}
           </div>
         </div>
       </div>

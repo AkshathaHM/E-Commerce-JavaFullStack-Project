@@ -90,11 +90,13 @@ public class EmailService {
         }
         String verificationLink = String.format("%s/api/auth/verify?token=%s", backendBaseUrl, token);
         String subject = "Verify your Sales Savvy account";
-        String body = "Hi " + user.getUsername() + ",\n\n"
-                + "Thank you for registering on Sales Savvy. Please verify your email by clicking the link below:\n\n"
-                + verificationLink + "\n\n"
-                + "If you did not register, please ignore this message.\n\n"
-                + "Regards,\nSales Savvy Team";
+        String body = buildHtmlTemplate(
+                "Verify your account",
+                "Hi " + user.getUsername() + ",",
+                "Thank you for registering with Sales Savvy. Please verify your account by clicking the button below.",
+                verificationLink,
+                "Verify Account"
+        );
 
         sendEmail(user.getEmail(), subject, body);
     }
@@ -105,14 +107,99 @@ public class EmailService {
             return;
         }
 
-        String subject = "Your Sales Savvy OTP code";
-        String body = "Hi " + user.getUsername() + ",\n\n"
-                + "Your verification code is: " + otp + "\n\n"
-                + "This code is valid for 5 minutes.\n\n"
-                + "If you did not register, please ignore this message.\n\n"
-                + "Regards,\nSales Savvy Team";
+        String subject = "Your Sales Savvy verification code";
+        String body = buildHtmlTemplate(
+                "Verify your email",
+                "Hi " + user.getUsername() + ",",
+                "Use the verification code below to complete your signup. This code is valid for 3 minutes.",
+                null,
+                otp,
+                true
+        );
 
         sendEmail(user.getEmail(), subject, body);
+    }
+
+    public void sendOrderConfirmationEmail(User user, String orderId, String orderTotal) {
+        if (user == null || user.getEmail() == null || user.getEmail().isBlank()) {
+            return;
+        }
+        String subject = "Order confirmed - Sales Savvy";
+        String body = buildHtmlTemplate(
+                "Order confirmed",
+                "Hi " + user.getUsername() + ",",
+                "Your order " + orderId + " has been confirmed and is being prepared for dispatch.",
+                null,
+                "Total paid: ₹" + orderTotal,
+                true
+        );
+        sendEmail(user.getEmail(), subject, body);
+    }
+
+    public void sendOutForDeliveryEmail(User user, String orderId) {
+        if (user == null || user.getEmail() == null || user.getEmail().isBlank()) {
+            return;
+        }
+        String subject = "Your order is out for delivery";
+        String body = buildHtmlTemplate(
+                "Out for delivery",
+                "Hi " + user.getUsername() + ",",
+                "Your order " + orderId + " is on the way and will be delivered shortly.",
+                null,
+                "Track your order from the Orders page",
+                true
+        );
+        sendEmail(user.getEmail(), subject, body);
+    }
+
+    public void sendDeliveredEmail(User user, String orderId) {
+        if (user == null || user.getEmail() == null || user.getEmail().isBlank()) {
+            return;
+        }
+        String subject = "Your order has been delivered";
+        String body = buildHtmlTemplate(
+                "Delivered",
+                "Hi " + user.getUsername() + ",",
+                "Your order " + orderId + " has been delivered successfully. We hope you enjoy your purchase.",
+                null,
+                "Thank you for shopping with Sales Savvy",
+                true
+        );
+        sendEmail(user.getEmail(), subject, body);
+    }
+
+    public void sendOrderCancelledEmail(User user, String orderId) {
+        if (user == null || user.getEmail() == null || user.getEmail().isBlank()) {
+            return;
+        }
+        String subject = "Order cancelled - Sales Savvy";
+        String body = buildHtmlTemplate(
+                "Order cancelled",
+                "Hi " + user.getUsername() + ",",
+                "Your order " + orderId + " has been cancelled as requested.",
+                null,
+                "If this was not intended, please contact support",
+                true
+        );
+        sendEmail(user.getEmail(), subject, body);
+    }
+
+    private String buildHtmlTemplate(String heading, String greeting, String message, String actionUrl, String actionText) {
+        return buildHtmlTemplate(heading, greeting, message, actionUrl, actionText, false);
+    }
+
+    private String buildHtmlTemplate(String heading, String greeting, String message, String actionUrl, String actionText, boolean isCodeStyle) {
+        String actionBlock = actionUrl == null ? "" : "<p style=\"margin: 24px 0;\"><a href=\"" + actionUrl + "\" style=\"background-color:#2563eb;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:999px;display:inline-block;\">" + actionText + "</a></p>";
+        String codeBlock = isCodeStyle ? "<div style=\"display:inline-block;background:#f3f4f6;padding:12px 16px;border-radius:8px;font-size:24px;letter-spacing:4px;font-weight:700;color:#111827;\">" + actionText + "</div>" : "";
+        return "<div style=\"font-family:Arial,sans-serif;color:#111827;line-height:1.6;\">"
+                + "<div style=\"max-width:640px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:16px;background:#ffffff;\">"
+                + "<h2 style=\"margin:0 0 12px;font-size:24px;color:#111827;\">" + heading + "</h2>"
+                + "<p style=\"margin:0 0 12px;\">" + greeting + "</p>"
+                + "<p style=\"margin:0 0 16px;\">" + message + "</p>"
+                + actionBlock
+                + codeBlock
+                + "<p style=\"margin-top:20px;color:#6b7280;font-size:13px;\">Thanks,<br/>Sales Savvy Team</p>"
+                + "</div></div>";
     }
 
     private void sendEmail(String to, String subject, String body) {

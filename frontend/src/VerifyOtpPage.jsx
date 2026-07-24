@@ -116,7 +116,7 @@ export default function VerifyOtpPage() {
           <h1 className="form-title">Verify Your Email</h1>
           <p className="otp-helper-text">We’ve sent a 6-digit verification code to</p>
           <div className="otp-email-pill">{email || "your email address"}</div>
-          <p className="otp-helper-text">Please check your inbox and spam folder if you do not see it.</p>
+          <p className="otp-helper-text">Please check your inbox and spam folder if you do not see it. The code is valid for 3 minutes.</p>
         </div>
 
         {error && <p className="error-message">{error}</p>}
