@@ -179,6 +179,124 @@
   .user-details-display strong {
     color: #111111;
   }
+
+  .section-subtitle {
+    margin: 0;
+    color: #5b6472;
+    font-size: 14px;
+  }
+
+  .admin-list-toolbar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .admin-list-toolbar input,
+  .admin-list-toolbar select,
+  .order-status-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .loading-state,
+  .empty-state {
+    padding: 14px;
+    border-radius: 8px;
+    background: #f7f9fc;
+    color: #445063;
+    border: 1px solid #dfe5ef;
+  }
+
+  .orders-summary {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .summary-pill {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: #eef4ff;
+    color: #244a93;
+    font-size: 13px;
+    border: 1px solid #d8e4ff;
+  }
+
+  .orders-table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #dfe5ef;
+    border-radius: 8px;
+  }
+
+  .orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .orders-table th,
+  .orders-table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #edf1f7;
+    color: #111111;
+  }
+
+  .orders-table th {
+    background: #f5f7fb;
+    font-weight: 700;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: #edf2f7;
+    color: #334155;
+  }
+
+  .status-badge.pending,
+  .status-badge.order-placed {
+    background: #fff4d6;
+    color: #9a6700;
+  }
+
+  .status-badge.success,
+  .status-badge.delivered {
+    background: #ddf6e6;
+    color: #12663b;
+  }
+
+  .status-badge.failed {
+    background: #ffe0e3;
+    color: #a1263c;
+  }
+
+  .status-badge.shipped,
+  .status-badge.in-transit {
+    background: #e3efff;
+    color: #1f4e9a;
+  }
+
+  .orders-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: #445063;
+  }
+
+  .orders-pagination button {
+    padding: 8px 12px;
+  }
   
   /* Product details */
   .product-details {

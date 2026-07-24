@@ -594,20 +594,45 @@ const ModifyUserForm = ({ onSubmit, onClose, response, modalData, loading }) => 
 export default CustomModal;
 
 // View All Users Component
-const ViewAllUsersForm = ({ onSubmit, onClose, response, modalData, loading }) => {
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit({});
-  };
+const ViewAllUsersForm = ({ onClose, response, modalData, loading }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("ALL");
+
+  const users = Array.isArray(modalData) ? modalData : [];
+
+  const filteredUsers = users.filter((user) => {
+    const username = (user.username || user.name || "").toLowerCase();
+    const email = (user.email || "").toLowerCase();
+    const role = (user.role || "").toLowerCase();
+    const matchesSearch = !searchTerm || username.includes(searchTerm.toLowerCase()) || email.includes(searchTerm.toLowerCase());
+    const matchesRole = roleFilter === "ALL" || role === roleFilter.toLowerCase();
+    return matchesSearch && matchesRole;
+  });
 
   return (
-    <form onSubmit={handleSubmit} className="modal-form">
+    <div className="modal-form">
       <h2>View All Users</h2>
-      <p>All registered users are loaded automatically when this modal opens. Use the button below to refresh the list.</p>
+      <p className="section-subtitle">All registered users are loaded automatically when this modal opens.</p>
 
-      {modalData && Array.isArray(modalData) && modalData.length > 0 ? (
+      <div className="admin-list-toolbar">
+        <input
+          type="text"
+          placeholder="Search by name or email"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+          <option value="ALL">All Roles</option>
+          <option value="ADMIN">Admin</option>
+          <option value="CUSTOMER">Customer</option>
+        </select>
+      </div>
+
+      {loading ? (
+        <div className="loading-state">Loading users...</div>
+      ) : filteredUsers.length > 0 ? (
         <div className="view-all-users-list">
-          {modalData.map((user) => {
+          {filteredUsers.map((user) => {
             const idValue = user.userId || user.id;
             return (
               <div key={idValue} className="card user-card">
@@ -620,7 +645,7 @@ const ViewAllUsersForm = ({ onSubmit, onClose, response, modalData, loading }) =
           })}
         </div>
       ) : (
-        <p className="empty-state">No users are loaded yet. Click refresh to load users.</p>
+        <p className="empty-state">No users match the current search.</p>
       )}
 
       {response && response.includes("Error") && (
@@ -628,12 +653,9 @@ const ViewAllUsersForm = ({ onSubmit, onClose, response, modalData, loading }) =
       )}
 
       <div className="modal-form-buttons">
-        <button type="submit" disabled={loading}>
-          {loading ? "Refreshing..." : "Get All Users"}
-        </button>
-        <button type="button" onClick={onClose}>Cancel</button>
+        <button type="button" onClick={onClose}>Close</button>
       </div>
-    </form>
+    </div>
   );
 };
 
@@ -870,94 +892,204 @@ const YearlySalesForm = ({ onSubmit, onClose, response, modalData, loading }) =>
 };
 
 // Orders Component
-const OrdersForm = ({ onSubmit, onClose, response, modalData, loading }) => {
+const OrdersForm = ({ onClose, response, modalData, loading }) => {
   const [localStatus, setLocalStatus] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [sortField, setSortField] = useState("createdAt");
+  const [sortDirection, setSortDirection] = useState("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit({});
-  };
+  useEffect(() => {
+    const storedStatus = {};
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith("order-status-")) {
+        storedStatus[key.replace("order-status-", "")] = localStorage.getItem(key);
+      }
+    }
+    setLocalStatus(storedStatus);
+  }, []);
 
   const updateOrderStatus = (orderId, nextStatus) => {
     const normalized = nextStatus.toLowerCase();
     const statusMap = {
-      placed: 'Order Placed',
-      shipped: 'Shipped',
-      transit: 'In Transit',
-      delivered: 'Delivered',
+      pending: "PENDING",
+      success: "SUCCESS",
+      failed: "FAILED",
+      placed: "Order Placed",
+      shipped: "Shipped",
+      transit: "In Transit",
+      delivered: "Delivered",
     };
 
-    setLocalStatus((prev) => ({ ...prev, [orderId]: statusMap[normalized] || nextStatus }));
-    localStorage.setItem(`order-status-${orderId}`, statusMap[normalized] || nextStatus);
-    window.dispatchEvent(new Event('order-status-updated'));
+    const nextVisibleStatus = statusMap[normalized] || nextStatus;
+    setLocalStatus((prev) => ({ ...prev, [orderId]: nextVisibleStatus }));
+    localStorage.setItem(`order-status-${orderId}`, nextVisibleStatus);
+  };
+
+  const formatAmount = (value) => {
+    if (value === null || value === undefined || value === "") return "N/A";
+    const numericValue = typeof value === "number" ? value : Number(value);
+    if (Number.isNaN(numericValue)) return value;
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 2,
+    }).format(numericValue);
+  };
+
+  const getOrderValue = (order, field) => {
+    if (field === "user") return order.user?.username || order.user?.name || order.user?.email || order.userId || order.user_email || "N/A";
+    if (field === "createdAt") return order.createdAt || order.created_at || order.date || "";
+    if (field === "status") return localStatus[order.orderId || order.id] || order.status || "N/A";
+    if (field === "total") return order.totalAmount ?? order.total_price ?? order.amount ?? 0;
+    return order[field] || "";
   };
 
   const orders = Array.isArray(modalData) ? modalData : [];
-  const userIds = new Set(
-    orders.map((order) => {
-      if (order?.userId) return order.userId;
-      if (order?.user?.id) return order.user.id;
-      if (order?.user?.userId) return order.user.userId;
-      if (order?.user?.email) return order.user.email;
-      if (order?.user_email) return order.user_email;
-      return order?.email || null;
-    }).filter(Boolean)
-  );
 
-  const totalProductCount = orders.reduce((sum, order) => {
-    const items = order.orderitems || order.orderItems || [];
-    return sum + (Array.isArray(items) ? items.length : 0);
-  }, 0);
+  const filteredOrders = orders
+    .filter((order) => {
+      const userMatch = (getOrderValue(order, "user") || "").toLowerCase().includes(searchTerm.toLowerCase());
+      const orderIdMatch = (order.orderId || order.id || "").toString().toLowerCase().includes(searchTerm.toLowerCase());
+      const statusValue = (getOrderValue(order, "status") || "").toLowerCase();
+      const matchesSearch = !searchTerm || userMatch || orderIdMatch;
+      const matchesStatus = statusFilter === "ALL" || statusValue.includes(statusFilter.toLowerCase());
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      const aValue = getOrderValue(a, sortField);
+      const bValue = getOrderValue(b, sortField);
+
+      if (sortField === "total") {
+        return sortDirection === "asc"
+          ? Number(aValue) - Number(bValue)
+          : Number(bValue) - Number(aValue);
+      }
+
+      return sortDirection === "asc"
+        ? String(aValue).localeCompare(String(bValue))
+        : String(bValue).localeCompare(String(aValue));
+    });
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
+  const paginatedOrders = filteredOrders.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
+  const orderCount = orders.length;
+  const uniqueCustomers = new Set(
+    orders.map((order) => getOrderValue(order, "user")).filter((value) => value && value !== "N/A")
+  ).size;
 
   return (
-    <form onSubmit={handleSubmit} className="modal-form">
+    <div className="modal-form orders-management">
       <h2>Order Management</h2>
-      <p>View all orders in the system</p>
+      <p className="section-subtitle">Live order overview with quick status updates and a cleaner admin view.</p>
 
-      {orders.length > 0 && (
+      {loading ? (
+        <div className="loading-state">Loading orders...</div>
+      ) : orders.length > 0 ? (
         <>
           <div className="orders-summary">
-            <p><strong>Order Count:</strong> {orders.length}</p>
-            <p><strong>User Count:</strong> {userIds.size}</p>
-            <p><strong>Total Product Count:</strong> {totalProductCount}</p>
+            <div className="summary-pill"><strong>Orders:</strong> {orderCount}</div>
+            <div className="summary-pill"><strong>Customers:</strong> {uniqueCustomers}</div>
           </div>
-          <div className="orders-list-container">
-            {orders.map((order, index) => (
-              <div key={order.orderId || order.id || index} className="order-card">
-                <div className="order-card-header">
-                  <h3>Order #{order.orderId || order.id || index + 1}</h3>
-                </div>
-                <div className="order-card-body">
-                  <div className="order-details">
-                    <p><strong>User:</strong> {order.user?.username || order.user?.name || order.user?.email || order.userId || order.user_email || 'N/A'}</p>
-                    <p><strong>Status:</strong> {localStatus[order.orderId || order.id] || order.status || 'N/A'}</p>
-                    <p><strong>Total:</strong> {order.totalAmount ?? order.total_price ?? order.amount ?? 'N/A'}</p>
-                    <p><strong>Created:</strong> {order.createdAt || order.created_at || order.date || 'N/A'}</p>
-                  </div>
-                  <div className="order-status-actions">
-                    <button type="button" onClick={() => updateOrderStatus(order.orderId || order.id, 'placed')}>Order Placed</button>
-                    <button type="button" onClick={() => updateOrderStatus(order.orderId || order.id, 'shipped')}>Shipped</button>
-                    <button type="button" onClick={() => updateOrderStatus(order.orderId || order.id, 'transit')}>In Transit</button>
-                    <button type="button" onClick={() => updateOrderStatus(order.orderId || order.id, 'delivered')}>Delivered</button>
-                  </div>
-                  {(order.orderitems || order.orderItems) && (
-                    <div className="order-items">
-                      <h4>Items</h4>
-                      {(order.orderitems || order.orderItems).map((item, itemIndex) => (
-                        <div key={item.id || item.productId || itemIndex} className="order-item-card">
-                          <p><strong>Product ID:</strong> {item.productId || item.product_id || 'N/A'}</p>
-                          <p><strong>Quantity:</strong> {item.quantity ?? item.qty ?? 'N/A'}</p>
-                          <p><strong>Unit Price:</strong> {item.pricePerUnit ?? item.price ?? 'N/A'}</p>
-                          <p><strong>Total:</strong> {item.totalPrice ?? item.total_price ?? 'N/A'}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+
+          <div className="admin-list-toolbar">
+            <input
+              type="text"
+              placeholder="Search by order ID or customer"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <option value="ALL">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="SUCCESS">Success</option>
+              <option value="FAILED">Failed</option>
+              <option value="Placed">Order Placed</option>
+              <option value="Shipped">Shipped</option>
+              <option value="Transit">In Transit</option>
+              <option value="Delivered">Delivered</option>
+            </select>
+            <select value={`${sortField}-${sortDirection}`} onChange={(e) => {
+              const [field, direction] = e.target.value.split("-");
+              setSortField(field);
+              setSortDirection(direction);
+            }}>
+              <option value="createdAt-desc">Newest first</option>
+              <option value="createdAt-asc">Oldest first</option>
+              <option value="total-desc">Highest total</option>
+              <option value="total-asc">Lowest total</option>
+            </select>
+          </div>
+
+          <div className="orders-table-wrapper">
+            <table className="orders-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Customer</th>
+                  <th>Order ID</th>
+                  <th>Status</th>
+                  <th>Total</th>
+                  <th>Created</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedOrders.map((order, index) => {
+                  const orderId = order.orderId || order.id;
+                  const orderStatus = localStatus[orderId] || order.status || "N/A";
+                  const badgeClass = (orderStatus || "").toString().toLowerCase().replace(/\s+/g, "-");
+                  const rowNumber = (currentPage - 1) * pageSize + index + 1;
+
+                  return (
+                    <tr key={orderId}>
+                      <td>{rowNumber}</td>
+                      <td>{getOrderValue(order, "user")}</td>
+                      <td>{orderId}</td>
+                      <td><span className={`status-badge ${badgeClass}`}>{orderStatus}</span></td>
+                      <td>{formatAmount(getOrderValue(order, "total"))}</td>
+                      <td>{getOrderValue(order, "createdAt") || "N/A"}</td>
+                      <td>
+                        <select
+                          value={orderStatus}
+                          onChange={(e) => updateOrderStatus(orderId, e.target.value)}
+                          className="order-status-select"
+                        >
+                          <option value="PENDING">PENDING</option>
+                          <option value="SUCCESS">SUCCESS</option>
+                          <option value="FAILED">FAILED</option>
+                          <option value="Order Placed">Order Placed</option>
+                          <option value="Shipped">Shipped</option>
+                          <option value="In Transit">In Transit</option>
+                          <option value="Delivered">Delivered</option>
+                        </select>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="orders-pagination">
+            <button type="button" onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
+              Previous
+            </button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <button type="button" onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
+              Next
+            </button>
           </div>
         </>
+      ) : (
+        <div className="empty-state">No orders are available right now.</div>
       )}
 
       {response && response.includes("Error") && (
@@ -965,13 +1097,8 @@ const OrdersForm = ({ onSubmit, onClose, response, modalData, loading }) => {
       )}
 
       <div className="modal-form-buttons">
-        {!modalData && (
-          <button type="submit" disabled={loading}>
-            {loading ? "Loading..." : "Get All Orders"}
-          </button>
-        )}
-        <button type="button" onClick={onClose}>Cancel</button>
+        <button type="button" onClick={onClose}>Close</button>
       </div>
-    </form>
+    </div>
   );
 };

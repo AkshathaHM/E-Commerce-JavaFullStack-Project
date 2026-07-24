@@ -262,12 +262,13 @@ const AdminDashboard = () => {
       if (response.ok) {
         const updatedUser = await response.json();
         setResponse("User updated successfully!");
+        await handleViewAllUsers();
         setModalData(updatedUser);
         setTimeout(() => {
           setModalType(null);
           setResponse(null);
           setModalData(null);
-        }, 2000);
+        }, 1800);
       } else {
         const error = await response.text();
         setResponse(`Error: ${error}`);
