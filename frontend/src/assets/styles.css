@@ -296,6 +296,35 @@ select {
   cursor: pointer;
   box-shadow: 0 12px 24px rgba(0, 171, 228, 0.24);
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.form-button:disabled {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+.btn-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.button-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .form-button.secondary {
@@ -327,6 +356,111 @@ select {
 
 .otp-actions .form-button + .form-button {
   margin-left: 0;
+}
+
+.otp-verification-card {
+  width: min(560px, 100%);
+  background: rgba(255,255,255,0.98);
+  border-radius: 24px;
+  padding: 32px 28px;
+  box-shadow: 0 24px 50px rgba(15, 23, 42, 0.18);
+  color: #0f172a;
+}
+
+.otp-card-header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.otp-helper-text {
+  margin: 8px 0 0;
+  color: #475569;
+}
+
+.otp-email-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #e8f7ff;
+  color: #0078a0;
+  font-weight: 700;
+}
+
+.otp-countdown-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.otp-countdown-label.expired {
+  color: #dc2626;
+}
+
+.otp-countdown-value {
+  color: #00ABE4;
+}
+
+.otp-input-row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(42px, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
+.otp-input-box {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1.5px solid #89dbff;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.otp-input-box:focus {
+  border-color: #0078a0;
+  box-shadow: 0 0 0 4px rgba(0,171,228,0.18);
+  outline: none;
+}
+
+.otp-expired-message {
+  text-align: center;
+  color: #dc2626;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.otp-success-state {
+  text-align: center;
+  padding: 12px 0;
+}
+
+.otp-success-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.otp-success-subtext {
+  color: #64748b;
 }
 
 /* Footer */
@@ -469,13 +603,13 @@ select {
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #22c55e;
+  background: linear-gradient(135deg, #16a34a, #15803d);
   color: white;
   padding: 14px 28px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 1rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
   z-index: 9999;
   animation: slideDown 0.3s ease-out;
 }

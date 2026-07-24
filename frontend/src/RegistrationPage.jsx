@@ -4,6 +4,7 @@ import './assets/styles.css';
 import { useNavigate, Link } from 'react-router-dom';
 import { Toast } from './Toast';
 import Logo from './Logo';
+import LoadingButton from './components/LoadingButton';
 
 export default function RegistrationPage() {
   const navigate = useNavigate();
@@ -15,31 +16,35 @@ export default function RegistrationPage() {
   const [error, setError] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSignUp = async (e) => {
     e.preventDefault();
-    setError(null); // Clear previous errors
+    if (isSubmitting) return;
+
+    setError(null);
+    setIsSubmitting(true);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ username, email, password, role, address }),
       });
-      
-      const data = await response.json();
+
+      const data = await response.json().catch(() => ({}));
 
       if (response.ok) {
         setShowToast(true);
         navigate('/verify-otp', { state: { email, role }, replace: true });
       } else {
-        throw new Error(data.error || 'Registration failed');
+        throw new Error(data.error || data.message || 'Registration failed');
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -136,7 +141,9 @@ export default function RegistrationPage() {
                 </select>
               </div>
 
-              <button type="submit" className="form-button">Sign Up</button>
+              <LoadingButton type="submit" isLoading={isSubmitting} loadingText="Signing Up..." className="form-button">
+                Sign Up
+              </LoadingButton>
             </form>
 
             <div className="registration-links-block">

@@ -4,6 +4,7 @@ import "./assets/styles.css";
 import { Toast } from "./Toast";
 import Logo from "./Logo";
 import { setAuthSession } from "./auth";
+import LoadingButton from "./components/LoadingButton";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
@@ -11,14 +12,19 @@ export default function AdminLogin() {
   const [error, setError] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const navigate = useNavigate();
 
   const handleSignIn = async (e) => {
     e.preventDefault();
+    if (isSigningIn) return;
+
     setError(null);
+    setIsSigningIn(true);
 
     if (!username.trim() || !password.trim()) {
       setError("Username and password are required");
+      setIsSigningIn(false);
       return;
     }
 
@@ -30,23 +36,23 @@ export default function AdminLogin() {
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
-      if (response.ok) {
-        if (data.role !== "ADMIN") {
-          throw new Error("Only admin can log in from this page.");
-        }
-
-        setAuthSession(data.token || null, { username: data.username || username, role: 'ADMIN' });
-        setShowToast(true);
-        setTimeout(() => {
-          navigate("/admindashboard", { state: { username: data.username || username }, replace: true });
-        }, 1500);
-      } else {
-        throw new Error(data.error || "Login failed");
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Login failed");
       }
+
+      if (data.role !== "ADMIN") {
+        throw new Error("Only admin can log in from this page.");
+      }
+
+      setAuthSession(data.token || null, { username: data.username || username, role: 'ADMIN' });
+      setShowToast(true);
+      navigate("/admindashboard", { state: { username: data.username || username }, replace: true });
     } catch (err) {
       setError(err.message || "Unexpected error");
+    } finally {
+      setIsSigningIn(false);
     }
   };
 
@@ -100,9 +106,9 @@ export default function AdminLogin() {
                 </span>
               </div>
             </div>
-            <button type="submit" className="form-button">
+            <LoadingButton type="submit" isLoading={isSigningIn} loadingText="Signing In..." className="form-button">
               Enter As Admin
-            </button>
+            </LoadingButton>
           </form>
           <div className="form-footer">
             <Link to="/forgot-password" state={{ returnTo: "/admin" }} className="form-link">

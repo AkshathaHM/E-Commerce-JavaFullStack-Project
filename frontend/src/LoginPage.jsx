@@ -4,6 +4,7 @@ import "./assets/styles.css";
 import { Toast } from "./Toast";
 import Logo from "./Logo";
 import { getDashboardPath, setAuthSession } from "./auth";
+import LoadingButton from "./components/LoadingButton";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -11,57 +12,45 @@ export default function LoginPage() {
   const [error, setError] = useState(null);
   const [showToast, setShowToast] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const navigate = useNavigate();
 
   const handleSignIn = async (e) => {
     e.preventDefault();
+    if (isSigningIn) return;
+
     setError(null);
+    setIsSigningIn(true);
 
     if (!username.trim() || !password.trim()) {
       setError("Username and password are required");
+      setIsSigningIn(false);
       return;
     }
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`,{
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
-      if (response.ok) {
-        const role = data.role || "CUSTOMER";
-        const username = data.username || "";
-        setAuthSession(data.token || null, { username, role });
-        // Login sets auth cookie; fetch profile to get username/role
-        try {
-          const meRes = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-          });
-          const meData = await meRes.json();
-          const resolvedRole = meData.role || role;
-          const resolvedUsername = meData.username || username;
-          setAuthSession(data.token || null, { username: resolvedUsername, role: resolvedRole });
-          setShowToast(true);
-          navigate(getDashboardPath(resolvedRole), { replace: true });
-        } catch (e) {
-          setShowToast(true);
-          navigate(getDashboardPath(role), { replace: true });
-        }
-      } else {
-        const errorMessage =
-          data.error || "Something went wrong. Please try again.";
-        throw new Error(errorMessage);
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Incorrect password or username.");
       }
+
+      const role = data.role || "CUSTOMER";
+      const resolvedUsername = data.username || username;
+      setAuthSession(data.token || null, { username: resolvedUsername, role });
+      setShowToast(true);
+      navigate(getDashboardPath(role), { replace: true });
     } catch (err) {
       setError(err.message || "Unexpected error occurred");
+    } finally {
+      setIsSigningIn(false);
     }
   };
 
@@ -115,9 +104,9 @@ export default function LoginPage() {
                 </span>
               </div>
             </div>
-            <button type="submit" className="form-button">
+            <LoadingButton type="submit" isLoading={isSigningIn} loadingText="Signing In..." className="form-button">
               Sign In
-            </button>
+            </LoadingButton>
           </form>
           <div className="form-footer">
             <Link to="/forgot-password" state={{ returnTo: "/" }} className="form-link">
