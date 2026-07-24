@@ -4,6 +4,8 @@ import com.kodnest.app.entities.OrderItem;
 import com.kodnest.app.entities.User;
 import com.kodnest.app.userservices.PaymentServiceContract;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,8 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = {"http://localhost:5174", "http://localhost:5173", "http://127.0.0.1:5174", "http://127.0.0.1:5173", "https://e-commerce-java-full-stack-project-five.vercel.app", "https://e-commerce-java-full-stack-project-seven.vercel.app", "https://e-commerce-javafullstack-project-2.onrender.com"}, allowCredentials = "true")
 @RequestMapping("/api/payment")
 public class PaymentController {
+
+    private static final Logger log = LoggerFactory.getLogger(PaymentController.class);
 
     @Autowired
     private PaymentServiceContract paymentService;
@@ -78,10 +82,9 @@ public class PaymentController {
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            System.err.println("Error in createPaymentOrder: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Payment order creation failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error creating payment order: " + e.getMessage()));
+                    .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "Error creating payment order"));
         }
     }
     @PostMapping("/verify")
@@ -139,9 +142,9 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(verificationResult);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Payment verification failed", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("success", false, "error", "Verification error: " + e.getMessage()));
+                    .body(Map.of("success", false, "error", e.getMessage() != null ? e.getMessage() : "Payment verification failed"));
         }
     }
 }

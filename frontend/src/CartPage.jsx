@@ -522,7 +522,7 @@ const CartPage = () => {
             {checkoutLoading && (
               <div className="payment-progress-state" role="status" aria-live="polite">
                 <div className="payment-progress-spinner" />
-                <span>{paymentState === "creating-order" ? "Creating secure payment order..." : paymentState === "opening-checkout" ? "Opening Razorpay checkout..." : "Processing Payment..."}</span>
+                <span>{paymentState === "creating-order" ? "Creating secure payment order..." : paymentState === "opening-checkout" ? "Opening Razorpay checkout..." : paymentState === "verifying-payment" ? "Verifying payment..." : "Processing Payment..."}</span>
               </div>
             )}
 
