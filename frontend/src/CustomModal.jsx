@@ -7,7 +7,7 @@ const toSafeString = (value) => String(value ?? "").trim();
 const toSafeLower = (value) => toSafeString(value).toLowerCase();
 const isTruthy = (value) => value === true || value === "true" || value === "TRUE";
 
-const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loading, onUpdateProduct, onDeleteProduct, onRefreshProducts, onCreateProduct, productManagementView }) => {
+const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loading, onUpdateProduct, onDeleteProduct, onRefreshProducts, onCreateProduct, productManagementView, busyAction }) => {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className={`modal-content ${modalType === "manageProducts" ? "product-management-modal" : modalType === "addProduct" ? "product-form-modal" : ""}`} onClick={(e) => e.stopPropagation()}>
@@ -35,6 +35,7 @@ const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loadin
             onRefreshProducts={onRefreshProducts}
             onCreateProduct={onCreateProduct}
             initialAction={productManagementView}
+            busyAction={busyAction}
           />
         )}
 
@@ -102,7 +103,7 @@ const createEmptyProductForm = () => ({
   imageUrls: [],
 });
 
-const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdateProduct, onDeleteProduct, onRefreshProducts, onCreateProduct, initialAction = "list" }) => {
+const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdateProduct, onDeleteProduct, onRefreshProducts, onCreateProduct, initialAction = "list", busyAction }) => {
   const [isFormOpen, setIsFormOpen] = useState(initialAction === "add");
   const [editingProduct, setEditingProduct] = useState(null);
   const [formData, setFormData] = useState(createEmptyProductForm());
@@ -112,6 +113,7 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
   const [viewingProduct, setViewingProduct] = useState(null);
   const [confirmDeleteProduct, setConfirmDeleteProduct] = useState(null);
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+  const actionMessage = busyAction === "adding" ? "Adding Product..." : busyAction === "updating" ? "Updating Product..." : busyAction === "deleting" ? "Deleting Product..." : "";
 
   useEffect(() => {
     if (initialAction === "add") {
@@ -176,7 +178,7 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
     setFormData((prev) => ({ ...prev, imageUrls: prev.imageUrls.filter((_, itemIndex) => itemIndex !== index) }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const payload = {
       name: formData.name,
@@ -189,20 +191,25 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
       status: formData.status,
     };
 
+    let success = false;
     if (editingProduct) {
       payload.productId = Number(editingProduct.product_id || editingProduct.productId);
-      onUpdateProduct(payload);
+      success = await onUpdateProduct(payload);
     } else {
-      onCreateProduct(payload);
+      success = await onCreateProduct(payload);
     }
 
-    closeForm();
+    if (success) {
+      closeForm();
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!confirmDeleteProduct) return;
-    onDeleteProduct({ productId: Number(confirmDeleteProduct.product_id || confirmDeleteProduct.productId) });
-    setConfirmDeleteProduct(null);
+    const success = await onDeleteProduct({ productId: Number(confirmDeleteProduct.product_id || confirmDeleteProduct.productId) });
+    if (success) {
+      setConfirmDeleteProduct(null);
+    }
   };
 
   const products = Array.isArray(modalData) ? modalData : [];
@@ -238,7 +245,7 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
       <div className="manage-products-header">
         <div>
           <p className="section-eyebrow">Product management</p>
-          <h2>Modern product workspace</h2>
+          <h2>Product Management</h2>
         </div>
         <div className="manage-products-header__actions">
           <button type="button" className="secondary-action-btn" onClick={onRefreshProducts} disabled={loading}>
@@ -249,6 +256,15 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
           </button>
         </div>
       </div>
+
+      {loading && actionMessage && (
+        <div className="loading-overlay">
+          <div className="loading-overlay__card">
+            <div className="loading-overlay__spinner" />
+            <div>{actionMessage}</div>
+          </div>
+        </div>
+      )}
 
       {!isFormOpen ? (
         <>
@@ -325,10 +341,7 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
       ) : (
         <form onSubmit={handleSubmit} className="modern-product-form">
           <div className="modern-product-form__header">
-            <div>
-              <p className="section-eyebrow">Product details</p>
-              <h3>{editingProduct ? "Update product" : "Add new product"}</h3>
-            </div>
+            <h3>{editingProduct ? "Update Product" : "Add Product"}</h3>
             <button type="button" className="secondary-action-btn" onClick={closeForm}>Close</button>
           </div>
 
@@ -393,7 +406,7 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
           <div className="modern-product-form__footer">
             <button type="button" className="secondary-action-btn" onClick={closeForm}>Cancel</button>
             <button type="submit" className="primary-action-btn" disabled={loading}>
-              {loading ? <span className="btn-loading">Saving...</span> : editingProduct ? "Save Changes" : "Save Product"}
+              {loading ? <span className="btn-loading">{editingProduct ? "Updating..." : "Saving..."}</span> : editingProduct ? "Save Product" : "Save Product"}
             </button>
           </div>
         </form>

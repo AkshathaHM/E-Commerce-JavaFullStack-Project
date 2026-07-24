@@ -15,17 +15,25 @@ const AdminDashboard = () => {
   const [modalData, setModalData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [productManagementView, setProductManagementView] = useState("list");
+  const [busyAction, setBusyAction] = useState(null);
 
   const cardData = [
-    { type: "productManagement", title: "Product Management", description: "Manage all products in one place.", team: "Product Management", modalType: "manageProducts" },
-    { title: "View All Users", description: "List all customers", team: "User Management", modalType: "viewAllUsers" },
-    { title: "Modify User", description: "Update user details", team: "User Management", modalType: "modifyUser" },
-    { title: "View User Details", description: "Fetch user info", team: "User Management", modalType: "viewUser" },
-    { title: "Overall Revenue", description: "Total business revenue", team: "Analytics", modalType: "overallRevenue" },
-    { title: "Daily Sales", description: "Daily revenue report", team: "Analytics", modalType: "dailySales" },
-    { title: "Monthly Sales", description: "Monthly revenue report", team: "Analytics", modalType: "monthlySales" },
-    { title: "Yearly Sales", description: "Yearly revenue report", team: "Analytics", modalType: "yearlySales" },
-    { title: "Order Management", description: "View all orders", team: "Order Management", modalType: "orders" },
+    {
+      type: "orderManagement",
+      title: "Order & Product Management",
+      description: "Manage orders and products.",
+      team: "Operations",
+      modalType: "orders",
+      icon: "🛍️",
+    },
+    { title: "View All Users", description: "List all customers", team: "User Management", modalType: "viewAllUsers", icon: "👥" },
+    { title: "Modify User", description: "Update user details", team: "User Management", modalType: "modifyUser", icon: "🛠️" },
+    { title: "View User Details", description: "Fetch user info", team: "User Management", modalType: "viewUser", icon: "👤" },
+    { title: "Overall Revenue", description: "Total business revenue", team: "Analytics", modalType: "overallRevenue", icon: "📈" },
+    { title: "Daily Sales", description: "Daily revenue report", team: "Analytics", modalType: "dailySales", icon: "📅" },
+    { title: "Monthly Sales", description: "Monthly revenue report", team: "Analytics", modalType: "monthlySales", icon: "🗓️" },
+    { title: "Yearly Sales", description: "Yearly revenue report", team: "Analytics", modalType: "yearlySales", icon: "🏆" },
+    { title: "Order Management", description: "View all orders", team: "Order Management", modalType: "orders", icon: "📦" },
   ];
 
   const navigate = useNavigate();
@@ -65,6 +73,7 @@ const AdminDashboard = () => {
   // Handlers
   const handleAddProductSubmit = async (productData) => {
     setLoading(true);
+    setBusyAction("adding");
     setResponse(null);
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/products/add`, {
@@ -77,19 +86,25 @@ const AdminDashboard = () => {
       if (response.ok) {
         setResponse("✅ Product Added Successfully");
         await handleManageProducts(true);
-      } else {
-        const error = await response.text();
-        setResponse(`❌ Error Adding Product: ${error}`);
+        setProductManagementView("list");
+        return true;
       }
+
+      const error = await response.text();
+      setResponse(`❌ Failed to save product: ${error}`);
+      return false;
     } catch (error) {
-      setResponse(`❌ Error Adding Product: ${error.message}`);
+      setResponse(`❌ Failed to save product: ${error.message}`);
+      return false;
     } finally {
       setLoading(false);
+      setBusyAction(null);
     }
   };
 
   const handleDeleteProductSubmit = async (data) => {
     setLoading(true);
+    setBusyAction("deleting");
     try {
       let response = await fetch(`${import.meta.env.VITE_API_URL}/admin/products/delete`, {
         method: "DELETE",
@@ -109,17 +124,19 @@ const AdminDashboard = () => {
 
       if (response.ok) {
         setResponse("✅ Product Deleted Successfully");
-        if (modalType === "manageProducts") {
-          await handleManageProducts(true);
-        }
-      } else {
-        const error = await response.text();
-        setResponse(`❌ Error Deleting Product: ${error}`);
+        setModalData((prev) => (Array.isArray(prev) ? prev.filter((product) => String(product.product_id || product.productId) !== String(data.productId)) : prev));
+        return true;
       }
+
+      const error = await response.text();
+      setResponse(`❌ Failed to delete product: ${error}`);
+      return false;
     } catch (error) {
-      setResponse(`❌ Error Deleting Product: ${error.message}`);
+      setResponse(`❌ Failed to delete product: ${error.message}`);
+      return false;
     } finally {
       setLoading(false);
+      setBusyAction(null);
     }
   };
 
@@ -169,6 +186,7 @@ const AdminDashboard = () => {
 
   const handleUpdateProductSubmit = async (data) => {
     setLoading(true);
+    setBusyAction("updating");
     setResponse(null);
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/products/update`, {
@@ -181,14 +199,18 @@ const AdminDashboard = () => {
       if (response.ok) {
         setResponse("✅ Product Updated Successfully");
         await handleManageProducts(true);
-      } else {
-        const error = await response.text();
-        setResponse(`❌ Error Updating Product: ${error}`);
+        return true;
       }
+
+      const error = await response.text();
+      setResponse(`❌ Failed to update product: ${error}`);
+      return false;
     } catch (error) {
-      setResponse(`❌ Error Updating Product: ${error.message}`);
+      setResponse(`❌ Failed to update product: ${error.message}`);
+      return false;
     } finally {
       setLoading(false);
+      setBusyAction(null);
     }
   };
 
@@ -486,22 +508,28 @@ const AdminDashboard = () => {
         </section>
         <div className="cards-grid">
           {cardData.map((card, index) => (
-            card.type === "productManagement" ? (
-              <div key={index} className="card product-management-card">
+            card.type === "orderManagement" ? (
+              <div key={index} className="card order-management-card" onClick={() => openModal(card.modalType)}>
                 <div className="card-content">
-                  <h3 className="card-title">{card.title}</h3>
+                  <div className="card-header-row">
+                    <span className="card-icon" aria-hidden="true">{card.icon}</span>
+                    <h3 className="card-title">{card.title}</h3>
+                  </div>
                   <p className="card-description">{card.description}</p>
                   <span className="card-team">Team: {card.team}</span>
                 </div>
-                <div className="product-management-actions">
-                  <button type="button" className="product-management-action" onClick={() => openModal(card.modalType, "list")}>View Products</button>
-                  <button type="button" className="product-management-action secondary" onClick={() => openModal(card.modalType, "add")}>Add Product</button>
+                <div className="order-management-actions">
+                  <button type="button" className="product-management-action" onClick={(e) => { e.stopPropagation(); openModal("manageProducts", "list"); }}>View Products</button>
+                  <button type="button" className="product-management-action secondary" onClick={(e) => { e.stopPropagation(); openModal("manageProducts", "add"); }}>Add Product</button>
                 </div>
               </div>
             ) : (
               <div key={index} className="card" onClick={() => openModal(card.modalType)}>
                 <div className="card-content">
-                  <h3 className="card-title">{card.title}</h3>
+                  <div className="card-header-row">
+                    <span className="card-icon" aria-hidden="true">{card.icon}</span>
+                    <h3 className="card-title">{card.title}</h3>
+                  </div>
                   <p className="card-description">{card.description}</p>
                   <span className="card-team">Team: {card.team}</span>
                 </div>
@@ -555,6 +583,7 @@ const AdminDashboard = () => {
           onRefreshProducts={handleManageProducts}
           onCreateProduct={handleAddProductSubmit}
           productManagementView={productManagementView}
+          busyAction={busyAction}
         />
       )}
     </div>
