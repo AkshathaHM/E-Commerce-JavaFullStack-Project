@@ -1,11 +1,11 @@
 export const ORDER_STATUS_SEQUENCE = [
-  { key: 'placed', label: 'Order Placed' },
-  { key: 'confirmed', label: 'Confirmed' },
-  { key: 'packed', label: 'Packed' },
-  { key: 'shipped', label: 'Shipped' },
-  { key: 'out_for_delivery', label: 'Out For Delivery' },
-  { key: 'delivered', label: 'Delivered' },
-  { key: 'cancelled', label: 'Cancelled' },
+  { key: 'placed', label: 'Order Placed', detail: 'Your order has been received and is being prepared.' },
+  { key: 'confirmed', label: 'Confirmed', detail: 'The merchant confirmed your order and prepared the shipment.' },
+  { key: 'packed', label: 'Packed', detail: 'Items were packed securely and are ready for dispatch.' },
+  { key: 'shipped', label: 'Shipped', detail: 'The courier collected your package for delivery.' },
+  { key: 'out_for_delivery', label: 'Out For Delivery', detail: 'The courier is on the way with your delivery.' },
+  { key: 'delivered', label: 'Delivered', detail: 'The package reached you successfully.' },
+  { key: 'cancelled', label: 'Cancelled', detail: 'The order was cancelled before it was dispatched.' },
 ];
 
 const normalizeStatusText = (status) => {
@@ -42,23 +42,25 @@ export function getExpectedDelivery(createdAt) {
     return new Date();
   }
 
-  return new Date(createdTime);
+  const delivery = new Date(createdTime);
+  delivery.setDate(delivery.getDate() + 4);
+  return delivery;
 }
 
 export function getCountdownLabel(createdAt, status) {
   const normalized = normalizeStatusText(status);
   if (normalized === 'cancelled') return 'Cancelled';
   if (normalized === 'delivered') return 'Delivered';
-  return 'Backend status received';
+  return 'Estimated delivery in 4 days';
 }
 
 export function getOrderHistoryEntries(orderId) {
   return [
-    { key: 'placed', label: 'Order Placed', detail: `Order ${orderId} received successfully` },
-    { key: 'confirmed', label: 'Confirmed', detail: 'Seller confirmed your order' },
-    { key: 'packed', label: 'Packed', detail: 'Items packed and ready to ship' },
-    { key: 'shipped', label: 'Shipped', detail: 'Courier picked up your package' },
-    { key: 'out_for_delivery', label: 'Out For Delivery', detail: 'Courier is on the way' },
-    { key: 'delivered', label: 'Delivered', detail: 'Package delivered successfully' },
+    { key: 'placed', label: 'Order Placed', detail: `Order ${orderId} was received successfully.` },
+    { key: 'confirmed', label: 'Confirmed', detail: 'The seller confirmed your order and inventory.' },
+    { key: 'packed', label: 'Packed', detail: 'Items were packed and sealed for dispatch.' },
+    { key: 'shipped', label: 'Shipped', detail: 'The courier picked up your package.' },
+    { key: 'out_for_delivery', label: 'Out For Delivery', detail: 'The courier is on the way to your address.' },
+    { key: 'delivered', label: 'Delivered', detail: 'The package was delivered successfully.' },
   ];
 }

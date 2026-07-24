@@ -5,6 +5,7 @@ import { Toast } from "./Toast";
 import { useNavigate } from "react-router-dom";
 import { CartItemSkeleton } from "./components/Skeleton";
 import { getPaymentErrorDetails } from "./utils/paymentFlow";
+import { getDerivedOrderStatus, getStatusLabel } from "./utils/orderStatus";
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -21,6 +22,7 @@ const CartPage = () => {
   const [paymentState, setPaymentState] = useState("idle");
   const [sdkReady, setSdkReady] = useState(false);
   const [sdkError, setSdkError] = useState(null);
+  const [latestOrderStatus, setLatestOrderStatus] = useState(null);
   const checkoutAttemptRef = useRef(0);
   const razorpayScriptRef = useRef(null);
   const navigate = useNavigate();
@@ -69,6 +71,23 @@ const CartPage = () => {
   };
 
   const authTokenExists = () => !!localStorage.getItem("authToken");
+
+  useEffect(() => {
+    try {
+      const savedOrder = localStorage.getItem('lastOrder');
+      if (savedOrder) {
+        const parsedOrder = JSON.parse(savedOrder);
+        const derivedStatus = getDerivedOrderStatus(parsedOrder?.orderDate || parsedOrder?.createdAt, parsedOrder?.status || 'Order Placed');
+        setLatestOrderStatus({
+          orderId: parsedOrder?.orderId || 'N/A',
+          status: derivedStatus,
+          label: getStatusLabel(derivedStatus),
+        });
+      }
+    } catch (error) {
+      console.error('Unable to read latest order status:', error);
+    }
+  }, []);
 
   // Fetch cart items
   useEffect(() => {
@@ -454,6 +473,14 @@ const CartPage = () => {
             <h2>Shopping Cart</h2>
             <p>{cartItems.length} item{cartItems.length !== 1 ? "s" : ""}</p>
           </div>
+
+          {latestOrderStatus && (
+            <div className="latest-order-status-banner" onClick={() => navigate(`/orders/${encodeURIComponent(latestOrderStatus.orderId)}/tracking`, { state: { order: { orderId: latestOrderStatus.orderId, status: latestOrderStatus.label } } })}>
+              <span>Latest order</span>
+              <strong>{latestOrderStatus.label}</strong>
+              <small>Track #{latestOrderStatus.orderId}</small>
+            </div>
+          )}
 
           <div className="cart-items">
             {cartItems.map((item) => (

@@ -1,13 +1,13 @@
 import React from 'react';
 
 const defaultSteps = [
-  { key: 'placed', label: 'Order Placed' },
-  { key: 'confirmed', label: 'Confirmed' },
-  { key: 'packed', label: 'Packed' },
-  { key: 'shipped', label: 'Shipped' },
-  { key: 'out_for_delivery', label: 'Out For Delivery' },
-  { key: 'delivered', label: 'Delivered' },
-  { key: 'cancelled', label: 'Cancelled' },
+  { key: 'placed', label: 'Order Placed', detail: 'We have received your order.' },
+  { key: 'confirmed', label: 'Confirmed', detail: 'Your order is approved and being prepared.' },
+  { key: 'packed', label: 'Packed', detail: 'The items are packed and secured.' },
+  { key: 'shipped', label: 'Shipped', detail: 'The courier has picked up your parcel.' },
+  { key: 'out_for_delivery', label: 'Out For Delivery', detail: 'The courier is heading your way.' },
+  { key: 'delivered', label: 'Delivered', detail: 'Your order has reached its destination.' },
+  { key: 'cancelled', label: 'Cancelled', detail: 'The order was cancelled successfully.' },
 ];
 
 const normalizeStatus = (status) => {
@@ -35,13 +35,15 @@ export default function TrackingTimeline({ currentStatus, steps = defaultSteps }
         const isCancelled = normalized === 'cancelled' && step.key === 'cancelled';
 
         return (
-          <div key={step.key} className="timeline-step-wrapper">
-            {index > 0 && <div className={`timeline-line ${isCompleted ? 'timeline-line--active' : ''}`} />}
+          <div key={step.key} className={`timeline-step-wrapper ${isCompleted ? 'timeline-step-wrapper--complete' : ''}`}>
             <div className={`timeline-step ${isCompleted ? 'timeline-step--complete' : ''} ${isActive ? 'timeline-step--active' : ''} ${isCancelled ? 'timeline-step--cancelled' : ''}`}>
               <div className="timeline-icon">
                 {isCompleted ? '✓' : isCancelled ? '✕' : index + 1}
               </div>
+            </div>
+            <div className="timeline-content">
               <div className="timeline-label">{step.label}</div>
+              <div className="timeline-detail">{step.detail}</div>
             </div>
           </div>
         );

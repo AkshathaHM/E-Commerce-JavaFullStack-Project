@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getAuthHeaders } from '../auth';
-import { getDerivedOrderStatus, getOrderHistoryEntries, getStatusLabel, ORDER_STATUS_SEQUENCE } from '../utils/orderStatus';
+import { getDerivedOrderStatus, getExpectedDelivery, getOrderHistoryEntries, getStatusLabel, ORDER_STATUS_SEQUENCE } from '../utils/orderStatus';
 import StatusBadge from './StatusBadge';
 import TrackingTimeline from './TrackingTimeline';
 
 const FALLBACK_IMAGE = '/images/no-image.png';
+const DEMO_SEQUENCE = ['placed', 'confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered'];
 
 const readSafeValue = (value, fallback = 'N/A') => {
   if (value === null || value === undefined || value === '') return fallback;
@@ -42,6 +43,8 @@ export default function OrderTracking() {
   const [error, setError] = useState(null);
   const [displayOrder, setDisplayOrder] = useState(buildDisplayOrder(location.state?.order, orderId));
   const [status, setStatus] = useState(getDerivedOrderStatus(location.state?.order?.orderDate || location.state?.order?.createdAt || location.state?.order?.created_at, location.state?.order?.status || location.state?.order?.orderStatus));
+
+  const demoMode = new URLSearchParams(location.search).get('demo') === '1' || Boolean(location.state?.demoMode);
 
   useEffect(() => {
     const initialOrder = location.state?.order;
@@ -93,9 +96,27 @@ export default function OrderTracking() {
     fetchTrackingDetails();
   }, [location.state?.order, orderId]);
 
+  useEffect(() => {
+    if (!demoMode || loading || error || status === 'cancelled' || status === 'delivered') {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setStatus((current) => {
+        const currentIndex = DEMO_SEQUENCE.indexOf(current);
+        if (currentIndex < 0) return current;
+        const nextIndex = Math.min(currentIndex + 1, DEMO_SEQUENCE.length - 1);
+        return DEMO_SEQUENCE[nextIndex];
+      });
+    }, 2600);
+
+    return () => window.clearTimeout(timer);
+  }, [demoMode, loading, error, status]);
+
   const orderHistory = useMemo(() => getOrderHistoryEntries(displayOrder.orderId), [displayOrder.orderId]);
   const currentStepLabel = getStatusLabel(status);
   const isCancelled = status === 'cancelled';
+  const estimatedDelivery = useMemo(() => getExpectedDelivery(displayOrder.createdAt), [displayOrder.createdAt]);
 
   if (loading) {
     return (
@@ -127,59 +148,86 @@ export default function OrderTracking() {
   return (
     <div className="order-tracking-shell">
       <div className="order-tracking-card">
-        <div className="order-tracking-card__top">
-          <div>
-            <p className="order-tracking-card__eyebrow">Order tracking</p>
+        <div className="tracking-hero">
+          <div className="tracking-hero__content">
+            <p className="order-tracking-card__eyebrow">Delivery progress</p>
             <h2>{isCancelled ? 'Cancelled' : currentStepLabel}</h2>
+            <p className="tracking-hero__copy">
+              {isCancelled
+                ? 'The order was cancelled before it reached the courier.'
+                : `Your order is moving through the delivery pipeline. ${currentStepLabel} is the latest milestone.`}
+            </p>
           </div>
-          <StatusBadge status={isCancelled ? 'Cancelled' : currentStepLabel} />
-        </div>
-
-        {isCancelled ? (
-          <div className="cancelled-banner">
-            <strong>Cancelled</strong>
-            <p>Your order has been cancelled successfully.</p>
-          </div>
-        ) : (
-          <>
-            <div className="tracking-status-banner">
-              <div>
-                <span>Order Status</span>
-                <strong>{currentStepLabel}</strong>
-              </div>
-              <div>
-                <span>Created At</span>
-                <strong>{new Date(displayOrder.createdAt).toLocaleString('en-IN')}</strong>
-              </div>
+          <div className="tracking-hero__metrics">
+            <div className="tracking-pill">
+              <span>Order ID</span>
+              <strong>{displayOrder.orderId}</strong>
             </div>
-            <TrackingTimeline currentStatus={status} steps={ORDER_STATUS_SEQUENCE} />
-          </>
-        )}
-
-        <div className="order-tracking-details-grid">
-          <div><span>Order Number</span><strong>{displayOrder.orderId}</strong></div>
-          <div><span>Customer Name</span><strong>{displayOrder.customerName}</strong></div>
-          <div><span>Address</span><strong>{displayOrder.address}</strong></div>
-          <div><span>Phone</span><strong>{displayOrder.phone}</strong></div>
-          <div><span>Payment Method</span><strong>{displayOrder.paymentMethod}</strong></div>
-          <div><span>Payment Status</span><strong>{displayOrder.paymentStatus}</strong></div>
-          <div><span>Created At</span><strong>{new Date(displayOrder.createdAt).toLocaleString('en-IN')}</strong></div>
-          <div><span>Tracking State</span><strong>{currentStepLabel}</strong></div>
+            <div className="tracking-pill">
+              <span>Est. delivery</span>
+              <strong>{estimatedDelivery.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</strong>
+            </div>
+          </div>
         </div>
 
-        {!isCancelled && (
-          <div className="tracking-history-card">
-            <h3>Order History</h3>
-            <ul className="tracking-history-list">
-              {orderHistory.map((entry) => (
-                <li key={entry.label}>
-                  <span>{entry.label}</span>
-                  <strong>{entry.detail}</strong>
-                </li>
-              ))}
-            </ul>
+        <div className="tracking-layout">
+          <div className="tracking-panel">
+            <div className="tracking-panel__header">
+              <h3>Delivery timeline</h3>
+              {demoMode && <span className="tracking-demo-banner">● Demo progress</span>}
+            </div>
+            <StatusBadge status={isCancelled ? 'Cancelled' : currentStepLabel} />
+
+            {isCancelled ? (
+              <div className="cancelled-banner">
+                <strong>Cancelled</strong>
+                <p>Your order has been cancelled successfully.</p>
+              </div>
+            ) : (
+              <>
+                <div className="tracking-status-banner">
+                  <div>
+                    <span>Status</span>
+                    <strong>{currentStepLabel}</strong>
+                  </div>
+                  <div>
+                    <span>Placed on</span>
+                    <strong>{new Date(displayOrder.createdAt).toLocaleString('en-IN')}</strong>
+                  </div>
+                </div>
+                <TrackingTimeline currentStatus={status} steps={ORDER_STATUS_SEQUENCE} />
+              </>
+            )}
           </div>
-        )}
+
+          <div className="tracking-panel">
+            <div className="tracking-panel__header">
+              <h3>Order details</h3>
+            </div>
+            <div className="order-tracking-details-grid">
+              <div><span>Customer</span><strong>{displayOrder.customerName}</strong></div>
+              <div><span>Address</span><strong>{displayOrder.address}</strong></div>
+              <div><span>Phone</span><strong>{displayOrder.phone}</strong></div>
+              <div><span>Payment</span><strong>{displayOrder.paymentStatus}</strong></div>
+              <div><span>Method</span><strong>{displayOrder.paymentMethod}</strong></div>
+              <div><span>Tracking state</span><strong>{currentStepLabel}</strong></div>
+            </div>
+
+            {!isCancelled && (
+              <div className="tracking-history-card">
+                <h3>Track history</h3>
+                <ul className="tracking-history-list">
+                  {orderHistory.map((entry) => (
+                    <li key={entry.label}>
+                      <span>{entry.label}</span>
+                      <strong>{entry.detail}</strong>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="order-tracking-actions">
           <button className="order-card-action" type="button" onClick={() => navigate('/orders')}>Back to Orders</button>

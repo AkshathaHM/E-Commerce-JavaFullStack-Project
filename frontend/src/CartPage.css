@@ -18,6 +18,36 @@
   }
 }
 
+.latest-order-status-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #dbeafe;
+  background: linear-gradient(135deg, #f8fbff, #eef6ff);
+  color: #0f172a;
+  margin-bottom: 18px;
+  cursor: pointer;
+}
+
+.latest-order-status-banner span {
+  color: #64748b;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.latest-order-status-banner strong {
+  font-size: 0.95rem;
+}
+
+.latest-order-status-banner small {
+  color: #2563eb;
+  font-weight: 600;
+}
+
 .cart-page {
   max-width: 1200px;
   padding: 24px;
@@ -397,6 +427,11 @@
   .checkout-section {
     position: static;
     padding: 20px;
+  }
+
+  .latest-order-status-banner {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .cart-item {

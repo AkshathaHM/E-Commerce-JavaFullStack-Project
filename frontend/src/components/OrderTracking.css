@@ -8,12 +8,28 @@
   align-items: center;
 }
 
-.order-tracking-card__top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
+.order-tracking-card {
+  width: min(100%, 1120px);
+  background: #ffffff;
+  border-radius: 28px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+  padding: 32px;
+  animation: fadeInUp 0.45s ease;
+}
+
+.order-tracking-card__eyebrow {
+  margin: 0 0 8px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.order-tracking-card h2 {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
 }
 
 .order-tracking-actions {
@@ -25,7 +41,7 @@
 
 .cancelled-banner {
   margin-top: 16px;
-  padding: 16px;
+  padding: 16px 18px;
   border-radius: 16px;
   background: #fef2f2;
   border: 1px solid #fecaca;
@@ -79,78 +95,92 @@
   gap: 14px;
 }
 
-.order-success-card,
-.order-tracking-card {
-  width: min(100%, 980px);
-  background: #ffffff;
-  border-radius: 24px;
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
-  padding: 32px;
-  animation: fadeInUp 0.5s ease;
+.tracking-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 22px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 100%);
+  margin-bottom: 20px;
 }
 
-.order-success-icon {
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #1f9d7f, #25bf8e);
-  display: grid;
-  place-items: center;
-  color: white;
-  font-size: 32px;
-  font-weight: 700;
-  margin-bottom: 16px;
-  animation: pulse 1.8s infinite ease-in-out;
+.tracking-hero__content {
+  max-width: 600px;
 }
 
-.order-success-card h1,
-.order-tracking-card h2 {
-  margin: 0 0 8px;
-  color: #0f172a;
+.tracking-hero__copy {
+  margin: 0;
+  color: #475569;
+  line-height: 1.6;
 }
 
-.order-success-copy,
-.order-tracking-card__eyebrow {
-  color: #64748b;
-}
-
-.order-success-grid,
-.order-tracking-details-grid {
+.tracking-hero__metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  margin-top: 20px;
+  gap: 10px;
+  min-width: min(100%, 260px);
 }
 
-.order-success-grid > div,
-.order-tracking-details-grid > div {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+.tracking-pill {
+  background: #ffffff;
+  border: 1px solid #dbeafe;
   border-radius: 14px;
-  padding: 14px;
+  padding: 12px 14px;
 }
 
-.order-success-grid span,
-.order-tracking-details-grid span {
+.tracking-pill span {
   display: block;
   color: #64748b;
-  font-size: 0.82rem;
-  margin-bottom: 6px;
+  font-size: 0.74rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
 }
 
-.order-success-grid strong,
-.order-tracking-details-grid strong {
+.tracking-pill strong {
   color: #0f172a;
+  font-size: 0.95rem;
 }
 
-.order-success-actions,
-.order-tracking-admin-actions {
+.tracking-layout {
+  display: grid;
+  grid-template-columns: 1.3fr 0.9fr;
+  gap: 20px;
+}
+
+.tracking-panel {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.tracking-panel__header {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
-  margin-top: 24px;
+  margin-bottom: 8px;
+}
+
+.tracking-panel__header h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.tracking-demo-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #ecfeff;
+  color: #0f766e;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .tracking-status-banner {
@@ -160,21 +190,19 @@
   margin-top: 18px;
 }
 
-.tracking-status-banner > div,
-.tracking-history-card {
-  background: #f8fafc;
+.tracking-status-banner > div {
+  background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 14px;
+  border-radius: 14px;
+  padding: 12px 14px;
 }
 
-.tracking-status-banner span,
-.tracking-history-card h3 {
+.tracking-status-banner span {
   display: block;
   color: #64748b;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   margin-bottom: 6px;
 }
 
@@ -182,8 +210,40 @@
   color: #0f172a;
 }
 
+.order-tracking-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.order-tracking-details-grid > div {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.order-tracking-details-grid span {
+  display: block;
+  color: #64748b;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.order-tracking-details-grid strong {
+  color: #0f172a;
+}
+
 .tracking-history-card {
   margin-top: 20px;
+}
+
+.tracking-history-card h3 {
+  margin: 0 0 12px;
+  color: #0f172a;
 }
 
 .tracking-history-list {
@@ -216,8 +276,6 @@
   text-align: right;
 }
 
-.order-success-btn,
-.order-tracking-admin-actions button,
 .order-card-action {
   border: none;
   border-radius: 999px;
@@ -227,39 +285,14 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.order-success-btn:hover,
-.order-tracking-admin-actions button:hover,
 .order-card-action:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(59, 130, 246, 0.18);
 }
 
-.order-success-btn--primary,
-.order-tracking-admin-actions button {
-  background: linear-gradient(135deg, #2563eb, #4f46e5);
-  color: white;
-}
-
-.order-success-btn--secondary {
-  background: #ecfdf5;
-  color: #047857;
-}
-
-.order-success-btn--ghost {
+.order-card-action--ghost {
   background: #f8fafc;
   color: #334155;
-}
-
-.order-success-badge-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 18px;
-  gap: 16px;
-}
-
-.order-success-loading {
-  color: #64748b;
 }
 
 .status-badge {
@@ -278,175 +311,75 @@
 
 .tracking-timeline {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 28px 0 18px;
-  position: relative;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0 8px;
 }
 
 .timeline-step-wrapper {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 14px;
+  align-items: flex-start;
   position: relative;
-  flex: 1;
-  display: flex;
-  justify-content: center;
 }
 
-.timeline-line {
+.timeline-step-wrapper:not(:last-child)::after {
+  content: '';
   position: absolute;
-  top: 18px;
-  left: 50%;
-  width: 100%;
-  height: 4px;
+  left: 21px;
+  top: 44px;
+  bottom: -14px;
+  width: 2px;
   background: #e2e8f0;
-  z-index: 0;
 }
 
-.timeline-line--active {
-  background: linear-gradient(90deg, #22c55e, #2563eb);
+.timeline-step-wrapper--complete:not(:last-child)::after {
+  background: linear-gradient(180deg, #22c55e, #2563eb);
 }
 
 .timeline-step {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.timeline-icon {
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background: #e2e8f0;
   color: #64748b;
   display: grid;
   place-items: center;
   font-weight: 700;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
-.timeline-step--complete .timeline-icon,
-.timeline-step--delivered .timeline-icon {
+.timeline-step--complete {
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: white;
 }
 
-.timeline-step--active .timeline-icon {
+.timeline-step--active {
   animation: pulse 1.2s infinite ease-in-out;
   background: linear-gradient(135deg, #2563eb, #4f46e5);
   color: white;
 }
 
-.timeline-step--cancelled .timeline-icon {
+.timeline-step--cancelled {
   background: linear-gradient(135deg, #ef4444, #dc2626);
   color: white;
 }
 
+.timeline-content {
+  padding-top: 10px;
+}
+
 .timeline-label {
+  font-size: 0.95rem;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.timeline-detail {
+  margin-top: 4px;
+  color: #64748b;
   font-size: 0.9rem;
-  color: #334155;
-  font-weight: 600;
-  text-align: center;
-}
-
-.order-details-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  display: grid;
-  place-items: center;
-  padding: 20px;
-  z-index: 1000;
-}
-
-.order-details-modal {
-  width: min(100%, 620px);
-  background: white;
-  border-radius: 22px;
-  padding: 24px;
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.2);
-}
-
-.order-details-modal__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.order-details-modal__eyebrow {
-  margin: 0;
-  color: #64748b;
-  text-transform: uppercase;
-  font-size: 0.8rem;
-}
-
-.order-details-modal__close {
-  border: none;
-  background: #f1f5f9;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.order-details-modal__product {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  padding: 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  background: #f8fafc;
-}
-
-.order-details-modal__product img {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
-  border-radius: 12px;
-}
-
-.order-details-modal__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.order-details-modal__grid > div,
-.order-details-modal__meta {
-  background: #f8fafc;
-  border-radius: 12px;
-  padding: 12px;
-}
-
-.order-details-modal__grid span {
-  display: block;
-  color: #64748b;
-  font-size: 0.82rem;
-  margin-bottom: 4px;
-  text-transform: uppercase;
-}
-
-.order-card {
-  background: white;
-  border-radius: 18px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
-  padding: 18px;
-}
-
-.order-card-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 14px;
-}
-
-.order-card-action--secondary {
-  background: #f8fafc;
-  color: #334155;
 }
 
 @keyframes fadeInUp {
@@ -459,32 +392,29 @@
   50% { transform: scale(1.06); }
 }
 
-@media (max-width: 768px) {
-  .order-success-grid,
-  .order-tracking-details-grid,
-  .order-details-modal__grid,
-  .tracking-status-banner,
-  .order-details {
+@media (max-width: 920px) {
+  .tracking-layout {
     grid-template-columns: 1fr;
   }
+}
 
-  .order-success-card,
+@media (max-width: 768px) {
   .order-tracking-card {
     padding: 22px;
   }
 
-  .tracking-timeline {
+  .tracking-hero {
     flex-direction: column;
-    gap: 14px;
+  }
+
+  .tracking-hero__metrics,
+  .order-tracking-details-grid,
+  .tracking-status-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .tracking-history-list li {
+    flex-direction: column;
     align-items: flex-start;
-  }
-
-  .timeline-line {
-    display: none;
-  }
-
-  .timeline-step-wrapper {
-    justify-content: flex-start;
-    width: 100%;
   }
 }
