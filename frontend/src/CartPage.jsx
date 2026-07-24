@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import "./CartPage.css";
-import { Header } from "./Header";
-import { Footer } from "./Footer";
+import { CustomerLayout } from "./CustomerLayout";
 import { Toast } from "./Toast";
 import { useNavigate } from "react-router-dom";
 import { CartItemSkeleton } from "./components/Skeleton";
@@ -375,8 +374,7 @@ const CartPage = () => {
 
   if (loading) {
     return (
-      <div className="cart-page loading-shell">
-        <Header cartCount="0" username={username || 'Guest'} />
+      <CustomerLayout cartCount="0" username={username || 'Guest'}>
         <div className="cart-container">
           <div className="cart-page">
             <div className="cart-header">
@@ -398,44 +396,42 @@ const CartPage = () => {
             </div>
           </div>
         </div>
-        <Footer />
-      </div>
+      </CustomerLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="cart-page empty">
-        <Header cartCount="0" username={username || 'Guest'} />
-        <h2>{error}</h2>
-        <p>Please log in to access your cart items.</p>
-        <button onClick={() => navigate("/")}>Go to Login</button>
-      </div>
+      <CustomerLayout cartCount="0" username={username || 'Guest'}>
+        <div className="cart-page empty">
+          <h2>{error}</h2>
+          <p>Please log in to access your cart items.</p>
+          <button onClick={() => navigate("/")}>Go to Login</button>
+        </div>
+      </CustomerLayout>
     );
   }
 
   if (cartItems.length === 0) {
     return (
-      <div className="cart-page empty">
-        <Header cartCount="0" username={username || 'Guest'} />
-        <h2>Your Cart is Empty</h2>
-        <p>Start adding some awesome products!</p>
-        <button onClick={() => navigate("/customerhome")}>Continue Shopping</button>
-      </div>
+      <CustomerLayout cartCount="0" username={username || 'Guest'}>
+        <div className="cart-page empty">
+          <h2>Your Cart is Empty</h2>
+          <p>Start adding some awesome products!</p>
+          <button onClick={() => navigate("/customerhome")}>Continue Shopping</button>
+        </div>
+      </CustomerLayout>
     );
   }
 
   return (
-    <div style={{ width: "100vw", minHeight: "100vh" }}>
+    <CustomerLayout cartCount={totalItems} username={username}>
       <Toast
         message={toastMessage || "Payment successful!"}
         show={showPaymentToast}
         type={toastType}
         onClose={() => setShowPaymentToast(false)}
       />
-      <Header cartCount={totalItems} username={username} />
-
-
       {paymentError && (
         <div className="payment-error-banner">
           <p>{paymentError}</p>
@@ -534,8 +530,7 @@ const CartPage = () => {
         </div>
       </div>
 
-      <Footer />
-    </div>
+    </CustomerLayout>
   );
 };
 

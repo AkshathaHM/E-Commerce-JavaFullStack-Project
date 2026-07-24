@@ -2,8 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import Logo from "./Logo";
-import { ProfileDropdown } from "./ProfileDropdown";
+import { AdminHeader } from "./AdminHeader";
 import "./assets/styles.css";
 import CustomModal from "./CustomModal";
 import { clearAuthSession, getAuthHeaders } from "./auth";
@@ -478,12 +477,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-dashboard">
-      <header className="dashboard-header">
-        <Logo />
-        <div className="user-info">
-          <ProfileDropdown username={adminUsername || "Admin"} showOrders={false} showCart={false} logoutRedirect="/admin" />
-        </div>
-      </header>
+      <AdminHeader username={adminUsername || "Admin"} />
 
       <main className="dashboard-content">
         <section className="dashboard-hero">

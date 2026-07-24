@@ -1,27 +1,26 @@
 /* Modal overlay */
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    inset: 0;
+    background: rgba(15, 23, 42, 0.72);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    padding: 20px;
   }
   
   /* Modal content container */
   .modal-content {
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 600px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+    padding: 24px;
+    border-radius: 22px;
+    width: min(90%, 720px);
+    max-width: 720px;
+    box-shadow: 0 26px 70px rgba(15, 23, 42, 0.24);
     animation: fadeIn 0.3s ease-in-out;
     position: relative;
+    border: 1px solid rgba(0, 171, 228, 0.14);
   }
 
   /* Close button */
@@ -77,11 +76,13 @@
   .modal-form input,
   .modal-form textarea,
   .modal-form select {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    padding: 12px 14px;
+    border: 1.5px solid #89dbff;
+    border-radius: 12px;
     font-size: 14px;
     font-family: inherit;
+    background: #ffffff;
+    color: #0f172a;
   }
 
   .modal-form input:focus,
@@ -106,9 +107,18 @@
   }
 
   .modal-form-buttons button {
-    padding: 10px 20px;
+    padding: 10px 16px;
     font-size: 14px;
     margin-top: 0;
+    border: none;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .modal-form-buttons button:hover:not(:disabled) {
+    transform: translateY(-1px);
   }
 
   .modal-form-buttons button[type="submit"] {

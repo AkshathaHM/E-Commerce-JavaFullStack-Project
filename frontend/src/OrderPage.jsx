@@ -1,7 +1,6 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Header } from './Header';
-import { Footer } from './Footer';
+import { CustomerLayout } from './CustomerLayout';
 import { OrderCardSkeleton } from './components/Skeleton';
 import { getCountdownLabel, getDerivedOrderStatus, getExpectedDelivery, getStatusLabel } from './utils/orderStatus';
 import './assets/styles.css';
@@ -214,14 +213,12 @@ export default function OrderPage() {
   };
 
   return (
-    <div className="maindiv">
-      <div className="customer-homepage">
-        <Header
-          cartCount={isCartLoading ? '...' : cartError ? 'Error' : cartCount}
-          username={username}
-        />
-        <main className="main-content">
-          <section className="orders-hero">
+    <CustomerLayout
+      cartCount={isCartLoading ? '...' : cartError ? 'Error' : cartCount}
+      username={username}
+    >
+      <div className="main-content">
+        <section className="orders-hero">
             <div>
               <p className="section-eyebrow">Your account</p>
               <h1 className="form-title">Your Orders</h1>
@@ -283,9 +280,7 @@ export default function OrderPage() {
               </div>
             </div>
           )}
-        </main>
-        <Footer />
       </div>
-    </div>
+    </CustomerLayout>
   );
 }

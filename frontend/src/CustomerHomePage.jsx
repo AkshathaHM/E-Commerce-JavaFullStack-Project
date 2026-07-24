@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Header } from './Header';
-import { Footer } from './Footer';
+import { CustomerLayout } from './CustomerLayout';
 import { CategoryNavigation } from './CategoryNavigation';
 import { ProductList } from './ProductList';
 import { ProductCardSkeleton } from './components/Skeleton';
@@ -101,12 +100,11 @@ export default function CustomerHomePage() {
   const showSkeletons = loading && products.length === 0;
 
   return (
-    <div className="customer-homepage">
-      <Header cartCount={cartCount} username={username} />
+    <CustomerLayout cartCount={cartCount} username={username}>
       <nav className="navigation">
         <CategoryNavigation selectedCategory={selectedCategory} onCategoryClick={setSelectedCategory} />
       </nav>
-      <main className="main-content">
+      <div className="main-content">
         <section className="home-hero">
           <div className="home-hero-content">
             <div>
@@ -131,8 +129,7 @@ export default function CustomerHomePage() {
         ) : (
           <ProductList products={products} onAddToCart={handleAddToCart} />
         )}
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </CustomerLayout>
   );
 }

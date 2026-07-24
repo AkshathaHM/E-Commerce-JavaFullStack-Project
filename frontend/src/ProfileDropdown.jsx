@@ -236,28 +236,33 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
       >
         <img src={useravatar} alt="User" className="user-avatar" />
         <span className="username">{username || 'Guest'}</span>
+        <span className="profile-button__chevron">▾</span>
       </button>
 
       <div className={`dropdown-menu ${isOpen ? 'visible' : ''}`}>
         <div className="dropdown-top">
           {showProfile && (
             <button type="button" className="dropdown-link" onClick={handleViewProfile}>
-              View Profile
+              <span className="dropdown-link__icon">👤</span>
+              <span>View Profile</span>
             </button>
           )}
           {showOrders && (
             <button type="button" className="dropdown-link" onClick={handleViewOrders}>
-              Orders
+              <span className="dropdown-link__icon">📦</span>
+              <span>Orders</span>
             </button>
           )}
           {showCart && (
             <button type="button" className="dropdown-link" onClick={() => navigate('/UserCartPage')}>
-              Cart
+              <span className="dropdown-link__icon">🛒</span>
+              <span>Cart</span>
             </button>
           )}
           {showLogout && (
             <button type="button" className="dropdown-link dropdown-logout" onClick={handleLogout}>
-              Logout
+              <span className="dropdown-link__icon">🚪</span>
+              <span>Logout</span>
             </button>
           )}
         </div>
