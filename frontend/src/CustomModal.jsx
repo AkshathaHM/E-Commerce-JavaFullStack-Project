@@ -1,15 +1,16 @@
 // CustomModal.jsx
 import React, { useState, useEffect } from "react";
+import { Toast } from "./Toast";
 import "./assets/modalStyles.css";
 
 const toSafeString = (value) => String(value ?? "").trim();
 const toSafeLower = (value) => toSafeString(value).toLowerCase();
 const isTruthy = (value) => value === true || value === "true" || value === "TRUE";
 
-const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loading, onUpdateProduct, onDeleteProduct, onRefreshProducts }) => {
+const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loading, onUpdateProduct, onDeleteProduct, onRefreshProducts, onCreateProduct, productManagementView }) => {
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className={`modal-content ${modalType === "manageProducts" ? "product-management-modal" : modalType === "addProduct" ? "product-form-modal" : ""}`} onClick={(e) => e.stopPropagation()}>
         <button className="modal-close-btn" onClick={onClose}>&times;</button>
 
         {/* Add Product Form */}
@@ -32,6 +33,8 @@ const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loadin
             onUpdateProduct={onUpdateProduct}
             onDeleteProduct={onDeleteProduct}
             onRefreshProducts={onRefreshProducts}
+            onCreateProduct={onCreateProduct}
+            initialAction={productManagementView}
           />
         )}
 
@@ -80,34 +83,79 @@ const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loadin
 };
 
 // Manage Products Form Component
-const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdateProduct, onDeleteProduct, onRefreshProducts }) => {
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [formData, setFormData] = useState({
-    productId: "",
-    name: "",
-    description: "",
-    price: "",
-    stock: "",
-    categoryId: "",
-    imageUrl: "",
-  });
+const CATEGORY_OPTIONS = [
+  { label: "Shirts", value: 1 },
+  { label: "Pants", value: 2 },
+  { label: "Accessories", value: 3 },
+  { label: "Mobiles", value: 4 },
+  { label: "Mobile Accessories", value: 5 },
+];
 
-  React.useEffect(() => {
-    if (selectedProduct) {
-      setFormData({
-        productId: selectedProduct.product_id || selectedProduct.productId || "",
-        name: selectedProduct.name || "",
-        description: selectedProduct.description || "",
-        price: selectedProduct.price || "",
-        stock: selectedProduct.stock || "",
-        categoryId: selectedProduct.categoryId || selectedProduct.category_id || "",
-        imageUrl: selectedProduct.imageUrl || selectedProduct.image_url || "",
-      });
+const createEmptyProductForm = () => ({
+  name: "",
+  description: "",
+  price: "",
+  stock: "",
+  categoryId: "",
+  brand: "",
+  status: "Active",
+  imageUrls: [],
+});
+
+const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdateProduct, onDeleteProduct, onRefreshProducts, onCreateProduct, initialAction = "list" }) => {
+  const [isFormOpen, setIsFormOpen] = useState(initialAction === "add");
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [formData, setFormData] = useState(createEmptyProductForm());
+  const [searchTerm, setSearchTerm] = useState("");
+  const [stockFilter, setStockFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
+  const [viewingProduct, setViewingProduct] = useState(null);
+  const [confirmDeleteProduct, setConfirmDeleteProduct] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+
+  useEffect(() => {
+    if (initialAction === "add") {
+      setIsFormOpen(true);
+      setEditingProduct(null);
+      setFormData(createEmptyProductForm());
     }
-  }, [selectedProduct]);
+  }, [initialAction]);
 
-  const handleSelectProduct = (product) => {
-    setSelectedProduct(product);
+  useEffect(() => {
+    if (!response) return;
+    setToast({ show: true, message: response, type: response.toLowerCase().includes("error") ? "error" : "success" });
+  }, [response]);
+
+  const openAddForm = () => {
+    setViewingProduct(null);
+    setConfirmDeleteProduct(null);
+    setEditingProduct(null);
+    setFormData(createEmptyProductForm());
+    setIsFormOpen(true);
+  };
+
+  const openEditForm = (product) => {
+    setViewingProduct(null);
+    setConfirmDeleteProduct(null);
+    setEditingProduct(product);
+    const categoryMatch = CATEGORY_OPTIONS.find((option) => option.label.toLowerCase() === String(product.category || "").toLowerCase());
+    setFormData({
+      name: product.name || "",
+      description: product.description || "",
+      price: product.price ?? "",
+      stock: product.stock ?? "",
+      categoryId: product.categoryId || product.category_id || (categoryMatch ? categoryMatch.value : ""),
+      brand: product.brand || "",
+      status: product.status || "Active",
+      imageUrls: Array.isArray(product.images) && product.images.length > 0 ? product.images : [],
+    });
+    setIsFormOpen(true);
+  };
+
+  const closeForm = () => {
+    setIsFormOpen(false);
+    setEditingProduct(null);
+    setFormData(createEmptyProductForm());
   };
 
   const handleChange = (e) => {
@@ -115,93 +163,278 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleImageUrlsChange = (e) => {
+    const value = e.target.value;
+    const urls = value
+      .split(/\n|,/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+    setFormData((prev) => ({ ...prev, imageUrls: urls }));
+  };
+
+  const handleRemoveImage = (index) => {
+    setFormData((prev) => ({ ...prev, imageUrls: prev.imageUrls.filter((_, itemIndex) => itemIndex !== index) }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!selectedProduct) return;
-    onUpdateProduct({
-      productId: parseInt(formData.productId),
+    const payload = {
       name: formData.name,
       description: formData.description,
       price: parseFloat(formData.price),
-      stock: parseInt(formData.stock),
-      categoryId: parseInt(formData.categoryId),
-      imageUrl: formData.imageUrl,
-    });
+      stock: parseInt(formData.stock, 10),
+      categoryId: Number(formData.categoryId),
+      imageUrl: formData.imageUrls[0] || "",
+      brand: formData.brand,
+      status: formData.status,
+    };
+
+    if (editingProduct) {
+      payload.productId = Number(editingProduct.product_id || editingProduct.productId);
+      onUpdateProduct(payload);
+    } else {
+      onCreateProduct(payload);
+    }
+
+    closeForm();
   };
 
   const handleDelete = () => {
-    if (!selectedProduct) return;
-    onDeleteProduct({ productId: parseInt(selectedProduct.product_id || selectedProduct.productId) });
+    if (!confirmDeleteProduct) return;
+    onDeleteProduct({ productId: Number(confirmDeleteProduct.product_id || confirmDeleteProduct.productId) });
+    setConfirmDeleteProduct(null);
+  };
+
+  const products = Array.isArray(modalData) ? modalData : [];
+  const filteredProducts = products
+    .filter((product) => {
+      const productName = `${product.name || ""}`.toLowerCase();
+      const productId = `${product.product_id || product.productId || ""}`.toLowerCase();
+      const categoryName = `${product.category || ""}`.toLowerCase();
+      const search = searchTerm.trim().toLowerCase();
+      const matchesSearch = !search || productName.includes(search) || productId.includes(search) || categoryName.includes(search);
+      const stockValue = Number(product.stock || 0);
+      const matchesFilter = stockFilter === "all" || (stockFilter === "inStock" && stockValue > 0) || (stockFilter === "outOfStock" && stockValue <= 0);
+      return matchesSearch && matchesFilter;
+    })
+    .sort((a, b) => {
+      const idA = Number(a.product_id || a.productId || 0);
+      const idB = Number(b.product_id || b.productId || 0);
+      if (sortBy === "oldest") return idA - idB;
+      if (sortBy === "priceLow") return Number(a.price || 0) - Number(b.price || 0);
+      if (sortBy === "priceHigh") return Number(b.price || 0) - Number(a.price || 0);
+      return idB - idA;
+    });
+
+  const getPreviewImage = (product) => {
+    const images = Array.isArray(product.images) ? product.images.filter(Boolean) : [];
+    return images[0] || "/images/no-image.png";
   };
 
   return (
-    <div className="manage-products">
-      <h2>Manage Products</h2>
-      <div className="modal-form-buttons">
-        <button type="button" onClick={onRefreshProducts} disabled={loading}>
-          {loading ? "Loading..." : "Refresh Products"}
-        </button>
+    <div className="manage-products-shell">
+      <Toast show={toast.show} message={toast.message} type={toast.type} duration={2800} onClose={() => setToast({ show: false, message: "", type: "success" })} />
+
+      <div className="manage-products-header">
+        <div>
+          <p className="section-eyebrow">Product management</p>
+          <h2>Modern product workspace</h2>
+        </div>
+        <div className="manage-products-header__actions">
+          <button type="button" className="secondary-action-btn" onClick={onRefreshProducts} disabled={loading}>
+            {loading ? "Loading..." : "Refresh"}
+          </button>
+          <button type="button" className="primary-action-btn" onClick={openAddForm}>
+            Add Product
+          </button>
+        </div>
       </div>
 
-      {Array.isArray(modalData) && modalData.length > 0 ? (
-        <div className="products-list">
-          {modalData.map((product) => (
-            <div key={product.product_id || product.productId} className="card product-card">
-              <div className="product-card-content">
-                <h4>{product.name}</h4>
-                <p>ID: {product.product_id || product.productId}</p>
-                <p>Price: {product.price}</p>
-                <p>Stock: {product.stock}</p>
-                <button type="button" onClick={() => handleSelectProduct(product)}>
-                  Edit
-                </button>
-              </div>
+      {!isFormOpen ? (
+        <>
+          <div className="product-toolbar">
+            <label className="product-search">
+              <span>🔎</span>
+              <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search by name, ID, or category" />
+            </label>
+            <div className="product-toolbar__controls">
+              <select value={stockFilter} onChange={(e) => setStockFilter(e.target.value)}>
+                <option value="all">All</option>
+                <option value="inStock">In Stock</option>
+                <option value="outOfStock">Out of Stock</option>
+              </select>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="priceLow">Price Low → High</option>
+                <option value="priceHigh">Price High → Low</option>
+              </select>
             </div>
-          ))}
-        </div>
-      ) : (
-        <p>No products loaded yet. Click Refresh Products to load products.</p>
-      )}
+          </div>
 
-      {selectedProduct && (
-        <form onSubmit={handleSubmit} className="modal-form">
-          <h3>Edit Product</h3>
-          <div className="modal-form-item">
-            <label htmlFor="productId">Product ID:</label>
-            <input type="text" id="productId" name="productId" value={formData.productId} readOnly />
+          {loading && !products.length ? (
+            <div className="product-grid product-grid--skeleton">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="skeleton-card">
+                  <div className="skeleton-image skeleton-block" />
+                  <div className="skeleton-stack">
+                    <div className="skeleton-line skeleton-block" />
+                    <div className="skeleton-line short skeleton-block" />
+                    <div className="skeleton-line tiny skeleton-block" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredProducts.length > 0 ? (
+            <div className="product-grid">
+              {filteredProducts.map((product) => (
+                <div key={product.product_id || product.productId} className="product-card">
+                  <div className="product-image-wrap">
+                    <img src={getPreviewImage(product)} alt={product.name} className="product-image" loading="lazy" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/images/no-image.png"; }} />
+                  </div>
+                  <div className="product-info">
+                    <div className="product-card-body">
+                      <h3 className="product-name">{product.name}</h3>
+                      <p className="product-description">{product.description || "Premium product ready for customers."}</p>
+                      <div className="admin-product-meta">
+                        <span><strong>ID:</strong> {product.product_id || product.productId}</span>
+                        <span><strong>Category:</strong> {product.category || "—"}</span>
+                        <span><strong>Price:</strong> ₹{Number(product.price || 0).toLocaleString()}</span>
+                        <span><strong>Stock:</strong> {product.stock || 0}</span>
+                        <span><strong>Status:</strong> {product.status || "Active"}</span>
+                        <span><strong>Brand:</strong> {product.brand || "—"}</span>
+                      </div>
+                    </div>
+                    <div className="product-card-footer admin-product-actions">
+                      <button type="button" className="product-outline-btn" onClick={() => setViewingProduct(product)}>View</button>
+                      <button type="button" className="add-to-cart-btn" onClick={() => openEditForm(product)}>Update</button>
+                      <button type="button" className="product-delete-btn" onClick={() => setConfirmDeleteProduct(product)}>Delete</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="product-empty-state">
+              <div className="product-empty-state__icon">📦</div>
+              <h3>No products match this view</h3>
+              <p>Try a different search term, update the stock filter, or add a new product.</p>
+            </div>
+          )}
+        </>
+      ) : (
+        <form onSubmit={handleSubmit} className="modern-product-form">
+          <div className="modern-product-form__header">
+            <div>
+              <p className="section-eyebrow">Product details</p>
+              <h3>{editingProduct ? "Update product" : "Add new product"}</h3>
+            </div>
+            <button type="button" className="secondary-action-btn" onClick={closeForm}>Close</button>
           </div>
-          <div className="modal-form-item">
-            <label htmlFor="name">Name:</label>
-            <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required />
+
+          <div className="modern-product-form__grid">
+            <div className="modern-product-form__column">
+              <label className="modern-form-field">
+                <span>Product Name</span>
+                <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Enter product name" required />
+              </label>
+              <label className="modern-form-field">
+                <span>Category</span>
+                <select name="categoryId" value={formData.categoryId} onChange={handleChange} required>
+                  <option value="">Select category</option>
+                  {CATEGORY_OPTIONS.map((category) => (
+                    <option key={category.value} value={category.value}>{category.label}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="modern-form-field">
+                <span>Price</span>
+                <input type="number" name="price" value={formData.price} onChange={handleChange} step="0.01" placeholder="0.00" required />
+              </label>
+              <label className="modern-form-field">
+                <span>Stock</span>
+                <input type="number" name="stock" value={formData.stock} onChange={handleChange} min="0" required />
+              </label>
+              <label className="modern-form-field">
+                <span>Brand</span>
+                <input type="text" name="brand" value={formData.brand} onChange={handleChange} placeholder="Brand name" />
+              </label>
+            </div>
+            <div className="modern-product-form__column">
+              <label className="modern-form-field">
+                <span>Description</span>
+                <textarea name="description" value={formData.description} onChange={handleChange} rows="4" placeholder="Describe the product" required />
+              </label>
+              <label className="modern-form-field">
+                <span>Product Status</span>
+                <select name="status" value={formData.status} onChange={handleChange}>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </label>
+              <label className="modern-form-field">
+                <span>Images</span>
+                <textarea value={formData.imageUrls.join("\n")} onChange={handleImageUrlsChange} rows="4" placeholder="Paste one image URL per line" />
+              </label>
+              {formData.imageUrls.length > 0 && (
+                <div className="image-preview-list">
+                  {formData.imageUrls.map((imageUrl, index) => (
+                    <div key={`${imageUrl}-${index}`} className="image-preview-item">
+                      <img src={imageUrl} alt={`Preview ${index + 1}`} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/images/no-image.png"; }} />
+                      <span>{imageUrl}</span>
+                      <button type="button" className="image-remove-btn" onClick={() => handleRemoveImage(index)}>Remove</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="modal-form-item">
-            <label htmlFor="description">Description:</label>
-            <textarea id="description" name="description" value={formData.description} onChange={handleChange} rows="3" required />
-          </div>
-          <div className="modal-form-item">
-            <label htmlFor="price">Price:</label>
-            <input type="number" id="price" name="price" value={formData.price} onChange={handleChange} step="0.01" required />
-          </div>
-          <div className="modal-form-item">
-            <label htmlFor="stock">Stock:</label>
-            <input type="number" id="stock" name="stock" value={formData.stock} onChange={handleChange} required />
-          </div>
-          <div className="modal-form-item">
-            <label htmlFor="categoryId">Category ID:</label>
-            <input type="number" id="categoryId" name="categoryId" value={formData.categoryId} onChange={handleChange} required />
-          </div>
-          <div className="modal-form-item">
-            <label htmlFor="imageUrl">Image URL:</label>
-            <input type="url" id="imageUrl" name="imageUrl" value={formData.imageUrl} onChange={handleChange} />
-          </div>
-          {response && <div className={`response-message ${response.includes("Error") ? "error" : "success"}`}>{response}</div>}
-          <div className="modal-form-buttons">
-            <button type="submit" disabled={loading}>{loading ? "Updating..." : "Update Product"}</button>
-            <button type="button" onClick={handleDelete} disabled={loading}>{loading ? "Deleting..." : "Delete Product"}</button>
-            <button type="button" onClick={() => setSelectedProduct(null)}>Clear</button>
-            <button type="button" onClick={onClose}>Cancel</button>
+
+          <div className="modern-product-form__footer">
+            <button type="button" className="secondary-action-btn" onClick={closeForm}>Cancel</button>
+            <button type="submit" className="primary-action-btn" disabled={loading}>
+              {loading ? <span className="btn-loading">Saving...</span> : editingProduct ? "Save Changes" : "Save Product"}
+            </button>
           </div>
         </form>
+      )}
+
+      {viewingProduct && (
+        <div className="modal-overlay modal-overlay--nested" onClick={() => setViewingProduct(null)}>
+          <div className="product-detail-modal" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="modal-close-btn" onClick={() => setViewingProduct(null)}>&times;</button>
+            <div className="product-detail-modal__gallery">
+              <img src={getPreviewImage(viewingProduct)} alt={viewingProduct.name} />
+            </div>
+            <div className="product-detail-modal__content">
+              <p className="section-eyebrow">Product overview</p>
+              <h3>{viewingProduct.name}</h3>
+              <p>{viewingProduct.description || "No description available."}</p>
+              <div className="product-detail-grid">
+                <span><strong>Category:</strong> {viewingProduct.category || "—"}</span>
+                <span><strong>Brand:</strong> {viewingProduct.brand || "—"}</span>
+                <span><strong>Price:</strong> ₹{Number(viewingProduct.price || 0).toLocaleString()}</span>
+                <span><strong>Stock:</strong> {viewingProduct.stock || 0}</span>
+                <span><strong>Status:</strong> {viewingProduct.status || "Active"}</span>
+                <span><strong>Created:</strong> {viewingProduct.createdAt || "—"}</span>
+                <span><strong>Updated:</strong> {viewingProduct.updatedAt || "—"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDeleteProduct && (
+        <div className="modal-overlay modal-overlay--nested" onClick={() => setConfirmDeleteProduct(null)}>
+          <div className="delete-confirm-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Delete Product?</h3>
+            <p>Are you sure want to delete? This action cannot be undone.</p>
+            <div className="modern-product-form__footer">
+              <button type="button" className="secondary-action-btn" onClick={() => setConfirmDeleteProduct(null)}>Cancel</button>
+              <button type="button" className="product-delete-btn" onClick={handleDelete}>Delete</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

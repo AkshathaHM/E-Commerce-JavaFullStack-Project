@@ -14,10 +14,10 @@ const AdminDashboard = () => {
   const [response, setResponse] = useState(null);
   const [modalData, setModalData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [productManagementView, setProductManagementView] = useState("list");
 
   const cardData = [
-    { title: "Add Product", description: "Create new product", team: "Product Management", modalType: "addProduct" },
-    { title: "Delete Product", description: "Delete product by ID", team: "Product Management", modalType: "deleteProduct" },
+    { type: "productManagement", title: "Product Management", description: "Manage all products in one place.", team: "Product Management", modalType: "manageProducts" },
     { title: "View All Users", description: "List all customers", team: "User Management", modalType: "viewAllUsers" },
     { title: "Modify User", description: "Update user details", team: "User Management", modalType: "modifyUser" },
     { title: "View User Details", description: "Fetch user info", team: "User Management", modalType: "viewUser" },
@@ -66,7 +66,6 @@ const AdminDashboard = () => {
   const handleAddProductSubmit = async (productData) => {
     setLoading(true);
     setResponse(null);
-    setModalData(null);
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/products/add`, {
         method: "POST",
@@ -76,16 +75,14 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        setResponse("Product added successfully!");
-        setModalType(null);
-        setResponse(null);
-        setModalData(null);
+        setResponse("✅ Product Added Successfully");
+        await handleManageProducts(true);
       } else {
         const error = await response.text();
-        setResponse(`Error: ${error}`);
+        setResponse(`❌ Error Adding Product: ${error}`);
       }
     } catch (error) {
-      setResponse(`Error: ${error.message}`);
+      setResponse(`❌ Error Adding Product: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -111,26 +108,26 @@ const AdminDashboard = () => {
       }
 
       if (response.ok) {
-        setResponse("Product deleted successfully!");
+        setResponse("✅ Product Deleted Successfully");
         if (modalType === "manageProducts") {
-          handleManageProducts();
+          await handleManageProducts(true);
         }
-        setModalType(null);
-        setResponse(null);
       } else {
         const error = await response.text();
-        setResponse(`Error: ${error}`);
+        setResponse(`❌ Error Deleting Product: ${error}`);
       }
     } catch (error) {
-      setResponse(`Error: ${error.message}`);
+      setResponse(`❌ Error Deleting Product: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleManageProducts = async () => {
+  const handleManageProducts = async (preserveResponse = false) => {
     setLoading(true);
-    setResponse(null);
+    if (!preserveResponse) {
+      setResponse(null);
+    }
     setModalData(null);
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/products/all`, {
@@ -153,8 +150,9 @@ const AdminDashboard = () => {
     }
   };
 
-  const openModal = async (type) => {
+  const openModal = async (type, view = "list") => {
     setModalType(type);
+    setProductManagementView(view);
 
     if (type === "manageProducts") {
       await handleManageProducts();
@@ -181,15 +179,14 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        setResponse("Product updated successfully!");
-        handleManageProducts();
-        setResponse(null);
+        setResponse("✅ Product Updated Successfully");
+        await handleManageProducts(true);
       } else {
         const error = await response.text();
-        setResponse(`Error: ${error}`);
+        setResponse(`❌ Error Updating Product: ${error}`);
       }
     } catch (error) {
-      setResponse(`Error: ${error.message}`);
+      setResponse(`❌ Error Updating Product: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -489,13 +486,27 @@ const AdminDashboard = () => {
         </section>
         <div className="cards-grid">
           {cardData.map((card, index) => (
-            <div key={index} className="card" onClick={() => openModal(card.modalType)}>
-              <div className="card-content">
-                <h3 className="card-title">{card.title}</h3>
-                <p className="card-description">{card.description}</p>
-                <span className="card-team">Team: {card.team}</span>
+            card.type === "productManagement" ? (
+              <div key={index} className="card product-management-card">
+                <div className="card-content">
+                  <h3 className="card-title">{card.title}</h3>
+                  <p className="card-description">{card.description}</p>
+                  <span className="card-team">Team: {card.team}</span>
+                </div>
+                <div className="product-management-actions">
+                  <button type="button" className="product-management-action" onClick={() => openModal(card.modalType, "list")}>View Products</button>
+                  <button type="button" className="product-management-action secondary" onClick={() => openModal(card.modalType, "add")}>Add Product</button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div key={index} className="card" onClick={() => openModal(card.modalType)}>
+                <div className="card-content">
+                  <h3 className="card-title">{card.title}</h3>
+                  <p className="card-description">{card.description}</p>
+                  <span className="card-team">Team: {card.team}</span>
+                </div>
+              </div>
+            )
           ))}
         </div>
       </main>
@@ -503,7 +514,7 @@ const AdminDashboard = () => {
       {modalType && (
         <CustomModal
           modalType={modalType}
-          onClose={() => { setModalType(null); setResponse(null); setModalData(null); }}
+          onClose={() => { setModalType(null); setResponse(null); setModalData(null); setProductManagementView("list"); }}
           onSubmit={(data) => {
             switch (modalType) {
               case "addProduct": handleAddProductSubmit(data); break;
@@ -542,6 +553,8 @@ const AdminDashboard = () => {
           onUpdateProduct={handleUpdateProductSubmit}
           onDeleteProduct={handleDeleteProductSubmit}
           onRefreshProducts={handleManageProducts}
+          onCreateProduct={handleAddProductSubmit}
+          productManagementView={productManagementView}
         />
       )}
     </div>

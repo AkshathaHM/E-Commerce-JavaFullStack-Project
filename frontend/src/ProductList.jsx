@@ -49,8 +49,6 @@ const ProductCard = React.memo(({ product, onAddToCart }) => {
     ? product.images[0]
     : "/images/no-image.png";
 
-  const stockLabel = product.stock > 0 ? 'In Stock' : 'Out of Stock';
-
   return (
     <div className="product-card">
       <div className="product-image-wrap">
@@ -66,29 +64,19 @@ const ProductCard = React.memo(({ product, onAddToCart }) => {
         />
       </div>
       <div className="product-info">
-        <div className="product-card-meta">
-          <span className="product-chip">{product.category || 'General'}</span>
-          <span className={`product-chip secondary ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}`}>{stockLabel}</span>
-        </div>
         <div className="product-card-body">
           <h3 className="product-name">{product.name}</h3>
           <p className="product-description">{product.description}</p>
           <div className="product-card-footer">
-            <div>
-              <p className="product-price">₹{product.price}</p>
-              <p className="product-rating">⭐ 4.5</p>
-            </div>
-            <div className="product-card-actions">
-              <button type="button" className="product-outline-btn">View Details</button>
-              <button
-                type="button"
-                className="add-to-cart-btn"
-                onClick={() => onAddToCart(product.product_id)}
-                aria-label={`Add ${product.name} to cart`}
-              >
-                Add to Cart
-              </button>
-            </div>
+            <p className="product-price">₹{product.price}</p>
+            <button
+              type="button"
+              className="add-to-cart-btn"
+              onClick={() => onAddToCart(product.product_id)}
+              aria-label={`Add ${product.name} to cart`}
+            >
+              Add to Cart
+            </button>
           </div>
         </div>
       </div>
