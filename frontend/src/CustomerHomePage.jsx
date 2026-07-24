@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { CustomerLayout } from './CustomerLayout';
-import { CategoryNavigation } from './CategoryNavigation';
 import { ProductList } from './ProductList';
 import { ProductCardSkeleton } from './components/Skeleton';
 import './assets/styles.css';
@@ -10,7 +9,6 @@ export default function CustomerHomePage() {
   const [products, setProducts] = useState([]);
   const [cartCount, setCartCount] = useState(0);
   const [username, setUsername] = useState('Guest');
-  const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -78,15 +76,21 @@ export default function CustomerHomePage() {
 
   const filteredProducts = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
-    const normalizedCategory = selectedCategory === 'All' ? '' : selectedCategory.trim().toLowerCase();
 
     return allProducts.filter((product) => {
-      const matchesCategory = !normalizedCategory || product.category?.trim().toLowerCase() === normalizedCategory;
-      const searchableText = `${product.name || ''} ${product.description || ''} ${product.category || ''}`.toLowerCase();
-      const matchesSearch = !normalizedSearch || searchableText.includes(normalizedSearch);
-      return matchesCategory && matchesSearch;
+      const searchableText = [
+        product.name,
+        product.description,
+        product.category,
+        product.brand,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return !normalizedSearch || searchableText.includes(normalizedSearch);
     });
-  }, [allProducts, searchTerm, selectedCategory]);
+  }, [allProducts, searchTerm]);
 
   useEffect(() => {
     setProducts(filteredProducts);
@@ -124,9 +128,6 @@ export default function CustomerHomePage() {
 
   return (
     <CustomerLayout cartCount={cartCount} username={username}>
-      <nav className="navigation">
-        <CategoryNavigation selectedCategory={selectedCategory} onCategoryClick={setSelectedCategory} />
-      </nav>
       <div className="main-content">
         <section className="home-hero">
           <div className="home-hero-content">

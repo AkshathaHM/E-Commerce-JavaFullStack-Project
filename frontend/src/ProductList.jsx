@@ -34,8 +34,8 @@ export const ProductList = React.memo(({ products, onAddToCart, error }) => {
         </div>
       </div>
       <div className="product-grid">
-        {products.map((product, index) => (
-          <ProductCard key={product.product_id} product={product} index={index} onAddToCart={onAddToCart} />
+        {products.map((product) => (
+          <ProductCard key={product.product_id} product={product} onAddToCart={onAddToCart} />
         ))}
       </div>
     </div>
@@ -44,10 +44,12 @@ export const ProductList = React.memo(({ products, onAddToCart, error }) => {
 
 ProductList.displayName = 'ProductList';
 
-const ProductCard = React.memo(({ product, index, onAddToCart }) => {
-  const imageUrl = product.images?.[0] && (product.images[0].startsWith("http") || product.images[0].startsWith("data:image/")) 
-    ? product.images[0] 
+const ProductCard = React.memo(({ product, onAddToCart }) => {
+  const imageUrl = product.images?.[0] && (product.images[0].startsWith("http") || product.images[0].startsWith("data:image/"))
+    ? product.images[0]
     : "/images/no-image.png";
+
+  const stockLabel = product.stock > 0 ? 'In Stock' : 'Out of Stock';
 
   return (
     <div className="product-card">
@@ -65,19 +67,30 @@ const ProductCard = React.memo(({ product, index, onAddToCart }) => {
       </div>
       <div className="product-info">
         <div className="product-card-meta">
-          <span className="product-chip">{index % 2 === 0 ? 'Popular' : 'Trending'}</span>
-          <span className="product-chip secondary">In stock</span>
+          <span className="product-chip">{product.category || 'General'}</span>
+          <span className={`product-chip secondary ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}`}>{stockLabel}</span>
         </div>
-        <h3 className="product-name">{product.name}</h3>
-        <p className="product-description">{product.description}</p>
-        <p className="product-price">₹{product.price}</p>
-        <button
-          className="add-to-cart-btn"
-          onClick={() => onAddToCart(product.product_id)}
-          aria-label={`Add ${product.name} to cart`}
-        >
-          Add to Cart
-        </button>
+        <div className="product-card-body">
+          <h3 className="product-name">{product.name}</h3>
+          <p className="product-description">{product.description}</p>
+          <div className="product-card-footer">
+            <div>
+              <p className="product-price">₹{product.price}</p>
+              <p className="product-rating">⭐ 4.5</p>
+            </div>
+            <div className="product-card-actions">
+              <button type="button" className="product-outline-btn">View Details</button>
+              <button
+                type="button"
+                className="add-to-cart-btn"
+                onClick={() => onAddToCart(product.product_id)}
+                aria-label={`Add ${product.name} to cart`}
+              >
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
