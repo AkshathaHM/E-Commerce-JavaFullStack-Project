@@ -7,6 +7,28 @@ import OrderDetailsModal from './components/OrderDetailsModal';
 import { OrderCardSkeleton } from './components/Skeleton';
 import './assets/styles.css';
 
+const formatCurrency = (value) => {
+  const numericValue = Number(value ?? 0);
+  if (Number.isNaN(numericValue)) return '₹0.00';
+  return `₹${numericValue.toFixed(2)}`;
+};
+
+const normalizeOrderPayload = (order) => ({
+  orderId: order?.order_id || order?.orderId || order?.id || 'N/A',
+  customerName: order?.customerName || order?.customer_name || 'Customer',
+  orderDate: order?.createdAt || order?.created_at || order?.orderDate || new Date().toISOString(),
+  paymentMethod: order?.paymentMethod || order?.payment_method || 'Razorpay',
+  name: order?.name || order?.productName || 'Product',
+  description: order?.description || 'No description available',
+  quantity: Number(order?.quantity ?? 1),
+  price: Number(order?.price_per_unit ?? order?.price ?? 0),
+  totalPrice: Number(order?.total_price ?? order?.totalAmount ?? order?.amount ?? 0),
+  imageUrl: order?.image_url || order?.imageUrl || 'https://via.placeholder.com/120',
+  address: order?.address || order?.deliveryAddress || 'Delivery address on file',
+  phone: order?.phone || order?.mobile || 'N/A',
+  status: order?.status || 'Order Placed',
+});
+
 export default function OrderPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,8 +73,9 @@ export default function OrderPage() {
       });
       if (!response.ok) throw new Error('Failed to fetch orders');
       const data = await response.json();
-      setOrders(data.products || []);
-      setUsername(data.username || 'Guest');
+      const productList = Array.isArray(data?.products) ? data.products : [];
+      setOrders(productList.map(normalizeOrderPayload));
+      setUsername(data?.username || 'Guest');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -111,13 +134,13 @@ export default function OrderPage() {
           {!loading && !error && orders.length > 0 && (
             <div className="orders-list">
               {orders.map((order, index) => (
-                <div key={index} className="order-card">
+                <div key={`${order.orderId}-${index}`} className="order-card">
                   <div className="order-card-header">
-                    <h3>Order Id : {order.order_id}</h3>
+                    <h3>Order Id : {order.orderId}</h3>
                   </div>
                   <div className="order-card-body">
                     <img
-                      src={order.image_url}
+                      src={order.imageUrl}
                       alt={order.name}
                       className="order-product-image"
                     />
@@ -125,13 +148,13 @@ export default function OrderPage() {
                       <h3 className="product-name">ProductName : {order.name}</h3>
                       <h3>Description : {order.description}</h3>
                       <h3>Quantity : {order.quantity}</h3>
-                      <h3>Price per Unit : ₹{order.price_per_unit.toFixed(2)}</h3>
-                      <h3>Total Price : ₹{order.total_price.toFixed(2)}</h3>
+                      <h3>Price per Unit : {formatCurrency(order.price)}</h3>
+                      <h3>Total Price : {formatCurrency(order.totalPrice)}</h3>
                     </div>
                   </div>
                   <div className="order-card-actions">
-                    <button className="order-card-action" onClick={() => navigate('/order-tracking', { state: { order: { ...order, orderId: order.order_id, customerName: username || 'Customer', paymentMethod: 'Razorpay' } } })}>Track Delivery</button>
-                    <button className="order-card-action order-card-action--secondary" onClick={() => setSelectedOrder({ ...order, orderId: order.order_id, customerName: username || 'Customer', paymentMethod: 'Razorpay' })}>View Details</button>
+                    <button className="order-card-action" onClick={() => navigate('/order-tracking', { state: { order: { ...order, customerName: username || 'Customer' } } })}>Track Delivery</button>
+                    <button className="order-card-action order-card-action--secondary" onClick={() => setSelectedOrder({ ...order, customerName: username || 'Customer' })}>View Details</button>
                   </div>
                 </div>
               ))}

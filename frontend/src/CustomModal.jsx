@@ -2,6 +2,10 @@
 import React, { useState, useEffect } from "react";
 import "./assets/modalStyles.css";
 
+const toSafeString = (value) => String(value ?? "").trim();
+const toSafeLower = (value) => toSafeString(value).toLowerCase();
+const isTruthy = (value) => value === true || value === "true" || value === "TRUE";
+
 const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loading, onUpdateProduct, onDeleteProduct, onRefreshProducts }) => {
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -372,8 +376,12 @@ const ViewUserForm = ({ onSubmit, onClose, response, modalData, loading }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({ userId });
+    const trimmedUserId = toSafeString(userId);
+    onSubmit({ userId: trimmedUserId });
   };
+
+  const userDetails = modalData || {};
+  const statusLabel = isTruthy(userDetails.verified) ? "Verified" : isTruthy(userDetails.enabled) ? "Enabled" : "Inactive";
 
   return (
     <form onSubmit={handleSubmit} className="modal-form">
@@ -387,6 +395,7 @@ const ViewUserForm = ({ onSubmit, onClose, response, modalData, loading }) => {
           name="userId"
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
+          placeholder="Enter user ID"
           required
         />
       </div>
@@ -399,10 +408,16 @@ const ViewUserForm = ({ onSubmit, onClose, response, modalData, loading }) => {
         <div className="card-list">
           <div className="card small-card">
             <h3>User Details</h3>
-            <p><strong>ID:</strong> {modalData.userId}</p>
-            <p><strong>Username:</strong> {modalData.username}</p>
-            <p><strong>Email:</strong> {modalData.email}</p>
-            <p><strong>Role:</strong> {modalData.role}</p>
+            <p><strong>User ID:</strong> {toSafeString(userDetails.userId || userDetails.id || "Not available")}</p>
+            <p><strong>Name:</strong> {toSafeString(userDetails.name || userDetails.username || "Not available")}</p>
+            <p><strong>Email:</strong> {toSafeString(userDetails.email || "Not available")}</p>
+            <p><strong>Phone:</strong> {toSafeString(userDetails.phone || "Not provided")}</p>
+            <p><strong>Role:</strong> {toSafeString(userDetails.role || "Not available")}</p>
+            <p><strong>Status:</strong> {statusLabel}</p>
+            <p><strong>Registration Date:</strong> {toSafeString(userDetails.createdAt || userDetails.registeredAt || "Not available")}</p>
+            <p><strong>Orders Count:</strong> {toSafeString(userDetails.ordersCount || userDetails.orderCount || "Not available")}</p>
+            <p><strong>Address:</strong> {toSafeString(userDetails.address || "Not provided")}</p>
+            <p><strong>Profile Image:</strong> {toSafeString(userDetails.profileImage || userDetails.profile_image || "Not provided")}</p>
           </div>
         </div>
       )}
@@ -424,19 +439,28 @@ const ModifyUserForm = ({ onSubmit, onClose, response, modalData, loading }) => 
   const [formData, setFormData] = useState({
     userId: "",
     username: "",
+    name: "",
     email: "",
+    phone: "",
     role: "",
+    status: "",
+    address: "",
     otp: "",
   });
   const [originalEmail, setOriginalEmail] = useState("");
 
   React.useEffect(() => {
     if (modalData && modalData.userId) {
+      const statusValue = isTruthy(modalData.verified) ? "Verified" : isTruthy(modalData.enabled) ? "Enabled" : "Inactive";
       setFormData({
         userId: modalData.userId,
         username: modalData.username || "",
+        name: modalData.name || modalData.username || "",
         email: modalData.email || "",
+        phone: modalData.phone || "",
         role: modalData.role || "",
+        status: statusValue,
+        address: modalData.address || "",
         otp: "",
       });
       setOriginalEmail(modalData.email || "");
@@ -446,7 +470,8 @@ const ModifyUserForm = ({ onSubmit, onClose, response, modalData, loading }) => 
 
   const handleFetchUser = (e) => {
     e.preventDefault();
-    onSubmit({ userId, action: "fetch" });
+    const trimmedUserId = toSafeString(userId);
+    onSubmit({ userId: trimmedUserId, action: "fetch" });
   };
 
   const handleModifyUser = (e) => {
@@ -481,6 +506,7 @@ const ModifyUserForm = ({ onSubmit, onClose, response, modalData, loading }) => 
             name="userId"
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
+            placeholder="Enter user ID"
             required
           />
         </div>
@@ -517,6 +543,18 @@ const ModifyUserForm = ({ onSubmit, onClose, response, modalData, loading }) => 
       </div>
 
       <div className="modal-form-item">
+        <label htmlFor="name">Name:</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          required
+        />
+      </div>
+
+      <div className="modal-form-item">
         <label htmlFor="username">Username:</label>
         <input
           type="text"
@@ -537,6 +575,43 @@ const ModifyUserForm = ({ onSubmit, onClose, response, modalData, loading }) => 
           value={formData.email}
           onChange={handleChange}
           required
+        />
+      </div>
+
+      <div className="modal-form-item">
+        <label htmlFor="phone">Phone:</label>
+        <input
+          type="text"
+          id="phone"
+          name="phone"
+          value={formData.phone}
+          onChange={handleChange}
+          placeholder="Phone number (if available)"
+        />
+      </div>
+
+      <div className="modal-form-item">
+        <label htmlFor="status">Status:</label>
+        <input
+          type="text"
+          id="status"
+          name="status"
+          value={formData.status}
+          onChange={handleChange}
+          placeholder="Verified / Enabled / Inactive"
+          readOnly
+        />
+      </div>
+
+      <div className="modal-form-item">
+        <label htmlFor="address">Address:</label>
+        <textarea
+          id="address"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          rows="2"
+          placeholder="Address (if available)"
         />
       </div>
 
@@ -601,11 +676,13 @@ const ViewAllUsersForm = ({ onClose, response, modalData, loading }) => {
   const users = Array.isArray(modalData) ? modalData : [];
 
   const filteredUsers = users.filter((user) => {
-    const username = (user.username || user.name || "").toLowerCase();
-    const email = (user.email || "").toLowerCase();
-    const role = (user.role || "").toLowerCase();
-    const matchesSearch = !searchTerm || username.includes(searchTerm.toLowerCase()) || email.includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === "ALL" || role === roleFilter.toLowerCase();
+    const searchValue = toSafeString(searchTerm).trim().toLowerCase();
+    const username = toSafeLower(user.username || user.name || "");
+    const email = toSafeLower(user.email || "");
+    const userId = toSafeString(user.userId || user.id || "").toLowerCase();
+    const role = toSafeLower(user.role || "");
+    const matchesSearch = !searchValue || username.includes(searchValue) || email.includes(searchValue) || userId.includes(searchValue);
+    const matchesRole = roleFilter === "ALL" || role === toSafeLower(roleFilter);
     return matchesSearch && matchesRole;
   });
 
@@ -617,14 +694,14 @@ const ViewAllUsersForm = ({ onClose, response, modalData, loading }) => {
       <div className="admin-list-toolbar">
         <input
           type="text"
-          placeholder="Search by name or email"
+          placeholder="Search by ID, name, or email"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
           <option value="ALL">All Roles</option>
-          <option value="ADMIN">Admin</option>
           <option value="CUSTOMER">Customer</option>
+          <option value="ADMIN">Admin</option>
         </select>
       </div>
 
@@ -636,10 +713,10 @@ const ViewAllUsersForm = ({ onClose, response, modalData, loading }) => {
             const idValue = user.userId || user.id;
             return (
               <div key={idValue} className="card user-card">
-                <h3>{user.username || user.name || "User"}</h3>
-                <p><strong>ID:</strong> {idValue}</p>
-                <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Role:</strong> {user.role}</p>
+                <h3>{toSafeString(user.username || user.name || "User")}</h3>
+                <p><strong>ID:</strong> {toSafeString(idValue)}</p>
+                <p><strong>Email:</strong> {toSafeString(user.email || "Not available")}</p>
+                <p><strong>Role:</strong> {toSafeString(user.role || "Not available")}</p>
               </div>
             );
           })}
@@ -902,17 +979,21 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
   const pageSize = 5;
 
   useEffect(() => {
-    const storedStatus = {};
-    for (const key of Object.keys(localStorage)) {
-      if (key.startsWith("order-status-")) {
-        storedStatus[key.replace("order-status-", "")] = localStorage.getItem(key);
+    try {
+      const storedStatus = {};
+      for (const key of Object.keys(localStorage)) {
+        if (key.startsWith("order-status-")) {
+          storedStatus[key.replace("order-status-", "")] = localStorage.getItem(key);
+        }
       }
+      setLocalStatus(storedStatus);
+    } catch {
+      setLocalStatus({});
     }
-    setLocalStatus(storedStatus);
   }, []);
 
   const updateOrderStatus = (orderId, nextStatus) => {
-    const normalized = nextStatus.toLowerCase();
+    const normalized = toSafeLower(nextStatus);
     const statusMap = {
       pending: "PENDING",
       success: "SUCCESS",
@@ -923,15 +1004,19 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
       delivered: "Delivered",
     };
 
-    const nextVisibleStatus = statusMap[normalized] || nextStatus;
+    const nextVisibleStatus = statusMap[normalized] || toSafeString(nextStatus);
     setLocalStatus((prev) => ({ ...prev, [orderId]: nextVisibleStatus }));
-    localStorage.setItem(`order-status-${orderId}`, nextVisibleStatus);
+    try {
+      localStorage.setItem(`order-status-${orderId}`, nextVisibleStatus);
+    } catch {
+      // ignore storage failures gracefully
+    }
   };
 
   const formatAmount = (value) => {
     if (value === null || value === undefined || value === "") return "N/A";
     const numericValue = typeof value === "number" ? value : Number(value);
-    if (Number.isNaN(numericValue)) return value;
+    if (Number.isNaN(numericValue)) return toSafeString(value);
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
@@ -940,22 +1025,23 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
   };
 
   const getOrderValue = (order, field) => {
-    if (field === "user") return order.user?.username || order.user?.name || order.user?.email || order.userId || order.user_email || "N/A";
-    if (field === "createdAt") return order.createdAt || order.created_at || order.date || "";
-    if (field === "status") return localStatus[order.orderId || order.id] || order.status || "N/A";
-    if (field === "total") return order.totalAmount ?? order.total_price ?? order.amount ?? 0;
-    return order[field] || "";
+    if (field === "user") return order?.user?.username || order?.user?.name || order?.user?.email || order?.userId || order?.user_email || "N/A";
+    if (field === "createdAt") return order?.createdAt || order?.created_at || order?.date || "";
+    if (field === "status") return localStatus[order?.orderId || order?.id] || order?.status || "N/A";
+    if (field === "total") return order?.totalAmount ?? order?.total_price ?? order?.amount ?? 0;
+    return order?.[field] || "";
   };
 
   const orders = Array.isArray(modalData) ? modalData : [];
 
   const filteredOrders = orders
     .filter((order) => {
-      const userMatch = (getOrderValue(order, "user") || "").toLowerCase().includes(searchTerm.toLowerCase());
-      const orderIdMatch = (order.orderId || order.id || "").toString().toLowerCase().includes(searchTerm.toLowerCase());
-      const statusValue = (getOrderValue(order, "status") || "").toLowerCase();
-      const matchesSearch = !searchTerm || userMatch || orderIdMatch;
-      const matchesStatus = statusFilter === "ALL" || statusValue.includes(statusFilter.toLowerCase());
+      const searchValue = toSafeLower(searchTerm);
+      const userMatch = toSafeLower(getOrderValue(order, "user")).includes(searchValue);
+      const orderIdMatch = toSafeLower(order?.orderId || order?.id || "").includes(searchValue);
+      const statusValue = toSafeLower(getOrderValue(order, "status"));
+      const matchesSearch = !searchValue || userMatch || orderIdMatch;
+      const matchesStatus = statusFilter === "ALL" || statusValue.includes(toSafeLower(statusFilter));
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
@@ -1045,20 +1131,20 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
                 {paginatedOrders.map((order, index) => {
                   const orderId = order.orderId || order.id;
                   const orderStatus = localStatus[orderId] || order.status || "N/A";
-                  const badgeClass = (orderStatus || "").toString().toLowerCase().replace(/\s+/g, "-");
+                  const badgeClass = toSafeLower(orderStatus).replace(/\s+/g, "-");
                   const rowNumber = (currentPage - 1) * pageSize + index + 1;
 
                   return (
                     <tr key={orderId}>
                       <td>{rowNumber}</td>
                       <td>{getOrderValue(order, "user")}</td>
-                      <td>{orderId}</td>
-                      <td><span className={`status-badge ${badgeClass}`}>{orderStatus}</span></td>
+                      <td>{toSafeString(orderId)}</td>
+                      <td><span className={`status-badge ${badgeClass}`}>{toSafeString(orderStatus)}</span></td>
                       <td>{formatAmount(getOrderValue(order, "total"))}</td>
-                      <td>{getOrderValue(order, "createdAt") || "N/A"}</td>
+                      <td>{toSafeString(getOrderValue(order, "createdAt") || "N/A")}</td>
                       <td>
                         <select
-                          value={orderStatus}
+                          value={toSafeString(orderStatus)}
                           onChange={(e) => updateOrderStatus(orderId, e.target.value)}
                           className="order-status-select"
                         >

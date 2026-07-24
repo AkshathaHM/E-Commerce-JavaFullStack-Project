@@ -7,8 +7,16 @@ const stepSequence = [
   { key: 'delivered', label: 'Delivered' },
 ];
 
+const normalizeStatus = (status) => {
+  const text = typeof status === 'string' ? status.trim().toLowerCase() : 'placed';
+  if (text.includes('delivered')) return 'delivered';
+  if (text.includes('transit')) return 'transit';
+  if (text.includes('shipped')) return 'shipped';
+  return 'placed';
+};
+
 export default function TrackingTimeline({ currentStatus }) {
-  const normalized = (currentStatus || 'placed').toLowerCase();
+  const normalized = normalizeStatus(currentStatus);
   const currentIndex = stepSequence.findIndex((step) => step.key === normalized);
 
   return (
