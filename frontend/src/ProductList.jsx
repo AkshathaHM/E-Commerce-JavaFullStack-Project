@@ -19,7 +19,6 @@ export const ProductList = React.memo(({ products, onAddToCart }) => {
           <p className="section-eyebrow">Curated picks</p>
           <h3 className="section-title">{products.length} products ready to explore</h3>
         </div>
-        <span className="section-pill">Fresh arrivals</span>
       </div>
       <div className="product-grid">
         {products.map((product, index) => (

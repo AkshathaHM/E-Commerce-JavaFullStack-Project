@@ -236,7 +236,7 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
       >
         <img src={useravatar} alt="User" className="user-avatar" />
         <span className="username">{username || 'Guest'}</span>
-        <span className="profile-button__chevron">▾</span>
+        <span className="profile-button__chevron" aria-hidden="true">▾</span>
       </button>
 
       <div className={`dropdown-menu ${isOpen ? 'visible' : ''}`}>

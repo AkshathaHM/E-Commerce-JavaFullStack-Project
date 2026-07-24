@@ -112,11 +112,6 @@ export default function CustomerHomePage() {
               <h2>Discover fresh picks for your next order</h2>
               <p>Browse curated essentials, enjoy a smoother checkout, and keep track of every delivery from one place.</p>
             </div>
-            <div className="hero-badges">
-              <span className="hero-badge">Free shipping above ₹999</span>
-              <span className="hero-badge">Secure checkout</span>
-              <span className="hero-badge">Fast delivery</span>
-            </div>
           </div>
         </section>
 

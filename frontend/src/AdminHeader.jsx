@@ -19,7 +19,6 @@ export const AdminHeader = memo(function AdminHeader({ username = 'Admin' }) {
             variant="admin"
             menuItems={[
               { id: 'dashboard', label: 'Dashboard', icon: '📊', to: '/admin' },
-              { id: 'orders', label: 'Orders', icon: '📦', to: '/admin/orders' },
               { id: 'products', label: 'Products', icon: '🧺', to: '/admin/products' },
               { id: 'customers', label: 'Customers', icon: '👥', to: '/admin/users' },
               { id: 'logout', label: 'Logout', icon: '🚪', action: 'logout' },

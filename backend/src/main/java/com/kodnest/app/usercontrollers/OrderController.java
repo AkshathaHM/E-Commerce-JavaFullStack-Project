@@ -1,11 +1,10 @@
 package com.kodnest.app.usercontrollers;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.kodnest.app.entities.User;
@@ -31,7 +30,14 @@ public class OrderController {
                 return ResponseEntity.status(401).body(Map.of("error", "User not authenticated"));
             }
 
-            Map<String, Object> response = orderService.getOrdersForUser(authenticatedUser);
+            Map<String, Object> response = new LinkedHashMap<>(orderService.getOrdersForUser(authenticatedUser));
+            Object products = response.get("products");
+            if (products instanceof java.util.List<?> list) {
+                response.put("orders", list);
+            } else {
+                response.put("orders", java.util.List.of());
+            }
+            response.remove("products");
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));

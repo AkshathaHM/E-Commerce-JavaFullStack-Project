@@ -127,11 +127,12 @@ export default function OrderPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Unable to load orders.');
+        const fallback = await response.text();
+        throw new Error(fallback || 'Unable to load orders.');
       }
 
       const data = await response.json();
-      const productList = Array.isArray(data?.products) ? data.products : [];
+      const productList = Array.isArray(data?.orders) ? data.orders : (Array.isArray(data?.products) ? data.products : []);
       const nextOrders = productList.map(normalizeOrderPayload);
       setOrders(nextOrders);
       setUsername(data?.username || 'Guest');
@@ -189,14 +190,9 @@ export default function OrderPage() {
   }, [orders, username]);
 
   const handleTrackOrder = (order) => {
-    const orderId = order.orderId || order.order_id || order.id;
-    navigate(`/orders/${orderId}/tracking`, {
-      state: {
-        order: {
-          ...order,
-          customerName: username || order.customerName || 'Customer',
-        },
-      },
+    setSelectedOrder({
+      ...order,
+      customerName: username || order.customerName || 'Customer',
     });
   };
 
@@ -241,11 +237,30 @@ export default function OrderPage() {
               <p className="section-eyebrow">Your account</p>
               <h1 className="form-title">Your Orders</h1>
             </div>
-            <span className="section-pill">Track every delivery</span>
           </section>
 
           {cancelMessage && (
             <div className="order-success-banner">{cancelMessage}</div>
+          )}
+
+          {selectedOrder && (
+            <div className="confirmation-dialog-overlay" onClick={() => setSelectedOrder(null)}>
+              <div className="confirmation-dialog" onClick={(event) => event.stopPropagation()}>
+                <h3>Order tracking</h3>
+                <p>Tracking details for {selectedOrder.orderId}</p>
+                <div className="order-detail-row">
+                  <span>Status</span>
+                  <strong>{selectedOrder.status}</strong>
+                </div>
+                <div className="order-detail-row">
+                  <span>Delivery address</span>
+                  <strong>{selectedOrder.address}</strong>
+                </div>
+                <div className="confirmation-dialog-actions">
+                  <button className="order-card-action" type="button" onClick={() => setSelectedOrder(null)}>Close</button>
+                </div>
+              </div>
+            </div>
           )}
 
           {loading && (

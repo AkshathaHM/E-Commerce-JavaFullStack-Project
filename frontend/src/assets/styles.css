@@ -1502,8 +1502,11 @@ select {
 }
 
 .profile-button__chevron {
-  font-size: 0.8rem;
-  opacity: 0.8;
+  font-size: 1.05rem;
+  opacity: 1;
+  color: #111111;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .profile-dropdown .dropdown-menu {

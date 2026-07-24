@@ -486,10 +486,6 @@ const AdminDashboard = () => {
             <h2>Welcome back, {adminUsername || 'Admin'}</h2>
             <p>Manage products, customers, and orders from one polished workspace.</p>
           </div>
-          <div className="dashboard-hero__meta">
-            <span className="dashboard-pill">Live updates</span>
-            <span className="dashboard-pill secondary">Fast actions</span>
-          </div>
         </section>
         <div className="cards-grid">
           {cardData.map((card, index) => (
