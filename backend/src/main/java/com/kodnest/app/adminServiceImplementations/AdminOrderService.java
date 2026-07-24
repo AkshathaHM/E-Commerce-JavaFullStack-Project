@@ -10,6 +10,7 @@ import com.kodnest.app.adminServices.AdminOrderServiceContract;
 import com.kodnest.app.entities.Order;
 import com.kodnest.app.entities.OrderStatus;
 import com.kodnest.app.entities.User;
+import com.kodnest.app.userserviceimplementations.OrderLifecycleStatusResolver;
 import com.kodnest.app.usersrepositaries.OrderRepository;
 import com.kodnest.app.usersrepositaries.UserRepository;
 
@@ -18,10 +19,15 @@ public class AdminOrderService implements AdminOrderServiceContract {
 
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final OrderLifecycleStatusResolver orderLifecycleStatusResolver;
 
-    public AdminOrderService(OrderRepository orderRepository, UserRepository userRepository) {
+    public AdminOrderService(
+            OrderRepository orderRepository,
+            UserRepository userRepository,
+            OrderLifecycleStatusResolver orderLifecycleStatusResolver) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
+        this.orderLifecycleStatusResolver = orderLifecycleStatusResolver;
     }
 
     @Override
@@ -35,7 +41,7 @@ public class AdminOrderService implements AdminOrderServiceContract {
             Map<String, Object> orderMap = new HashMap<>();
             orderMap.put("orderId", order.getOrderId());
             orderMap.put("userId", order.getUserId());
-            orderMap.put("status", order.getStatus());
+            orderMap.put("status", orderLifecycleStatusResolver.resolve(order));
             orderMap.put("totalAmount", order.getTotalAmount());
             orderMap.put("createdAt", order.getCreatedAt());
             orderMap.put("updatedAt", order.getUpdatedAt());
@@ -72,7 +78,9 @@ public class AdminOrderService implements AdminOrderServiceContract {
 
     @Override
     public List<Order> getOrdersByStatus(OrderStatus status) {
-        return orderRepository.findByStatus(status);
+        return orderRepository.findAll().stream()
+                .filter(order -> orderLifecycleStatusResolver.resolve(order) == status)
+                .toList();
     }
 
     @Override
@@ -83,15 +91,15 @@ public class AdminOrderService implements AdminOrderServiceContract {
         int totalOrders = allOrders.size();
 
         long successfulOrders = allOrders.stream()
-                .filter(order -> order.getStatus() == OrderStatus.SUCCESS)
+                .filter(order -> orderLifecycleStatusResolver.resolve(order) == OrderStatus.DELIVERED)
                 .count();
 
         long failedOrders = allOrders.stream()
-                .filter(order -> order.getStatus() == OrderStatus.FAILED)
+                .filter(order -> orderLifecycleStatusResolver.resolve(order) == OrderStatus.CANCELLED)
                 .count();
 
         long pendingOrders = allOrders.stream()
-                .filter(order -> order.getStatus() == OrderStatus.PENDING)
+                .filter(order -> orderLifecycleStatusResolver.resolve(order) == OrderStatus.ORDER_PLACED)
                 .count();
 
         analytics.put("totalOrders", totalOrders);

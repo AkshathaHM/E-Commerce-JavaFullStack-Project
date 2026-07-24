@@ -32,6 +32,9 @@ class OrderServiceLifecycleTest {
     @Mock
     private ProductImageRepository productImageRepository;
 
+    @Mock
+    private OrderLifecycleStatusResolver orderLifecycleStatusResolver;
+
     @InjectMocks
     private OrderService orderService;
 
@@ -65,6 +68,7 @@ class OrderServiceLifecycleTest {
         when(orderItemRepository.findSuccessfulOrderItemsByUserId(7)).thenReturn(List.of(orderItem));
         when(productRepository.findById(42)).thenReturn(Optional.of(product));
         when(productImageRepository.findByProduct_ProductId(42)).thenReturn(List.of());
+        when(orderLifecycleStatusResolver.resolve(order)).thenReturn(OrderStatus.ORDER_PLACED);
 
         Map<String, Object> response = orderService.getOrdersForUser(user);
         List<Map<String, Object>> products = (List<Map<String, Object>>) response.get("products");

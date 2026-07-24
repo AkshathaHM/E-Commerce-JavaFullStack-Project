@@ -4,6 +4,7 @@ import com.kodnest.app.entities.Order;
 import com.kodnest.app.entities.OrderStatus;
 import com.kodnest.app.entities.Role;
 import com.kodnest.app.entities.User;
+import com.kodnest.app.userserviceimplementations.OrderLifecycleStatusResolver;
 import com.kodnest.app.usersrepositaries.OrderRepository;
 import com.kodnest.app.usersrepositaries.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,8 @@ class AdminOrderServiceTest {
     void getAllOrdersForAdminIncludesCustomerDetails() {
         OrderRepository orderRepository = mock(OrderRepository.class);
         UserRepository userRepository = mock(UserRepository.class);
-        AdminOrderService service = new AdminOrderService(orderRepository, userRepository);
+        OrderLifecycleStatusResolver orderLifecycleStatusResolver = mock(OrderLifecycleStatusResolver.class);
+        AdminOrderService service = new AdminOrderService(orderRepository, userRepository, orderLifecycleStatusResolver);
 
         Order order = new Order();
         order.setOrderId("ORD-100");
@@ -46,6 +48,7 @@ class AdminOrderServiceTest {
 
         when(orderRepository.findAllWithOrderItems()).thenReturn(List.of(order));
         when(userRepository.findById(7)).thenReturn(Optional.of(user));
+        when(orderLifecycleStatusResolver.resolve(order)).thenReturn(OrderStatus.DELIVERED);
 
         List<Map<String, Object>> result = service.getAllOrdersForAdmin();
 
