@@ -4,11 +4,14 @@ import com.kodnest.app.entities.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import jakarta.mail.MessagingException;
 import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import jakarta.mail.internet.MimeMessage;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -216,16 +219,22 @@ public class EmailService {
             }
         }
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(fromAddress);
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(body);
+        MimeMessage message = mailSender.createMimeMessage();
 
         try {
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromAddress);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(body, true);
+
             mailSender.send(message);
             logger.info("OTP email sent to {}", to);
             lastEmailError = null;
+        } catch (MessagingException ex) {
+            logger.error("Failed to prepare HTML email for {}: {}", to, ex.getMessage(), ex);
+            lastEmailError = "Failed to prepare email: " + ex.getMessage();
+            throw new RuntimeException(lastEmailError, ex);
         } catch (MailException ex) {
             logger.error("Failed to send email to {}: {}", to, ex.getMessage(), ex);
 

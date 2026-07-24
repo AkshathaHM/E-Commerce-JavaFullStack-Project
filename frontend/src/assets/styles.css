@@ -765,7 +765,7 @@ select {
 }
 
 .app-header--customer {
-  background: linear-gradient(135deg, rgba(0, 171, 228, 0.96), rgba(0, 120, 160, 0.98));
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.97), rgba(30, 41, 59, 0.98));
 }
 
 .app-header--admin {
@@ -883,7 +883,7 @@ select {
 }
 
 .header {
-  background: linear-gradient(135deg, rgba(0, 171, 228, 0.96), rgba(0, 120, 160, 0.98));
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.97), rgba(30, 41, 59, 0.98));
   padding: 18px 28px;
   display: flex;
   justify-content: center;
@@ -937,9 +937,7 @@ select {
   font-size: 1.6rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  background: linear-gradient(90deg, #F8FAFC, #FFD166 85%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #ffffff;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
   transition: transform 0.2s ease, text-shadow 0.2s ease;
 }
