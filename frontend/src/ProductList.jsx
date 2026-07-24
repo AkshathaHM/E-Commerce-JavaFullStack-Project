@@ -2,12 +2,25 @@
 import React from 'react';
 import './assets/styles.css';
 
-export const ProductList = React.memo(({ products, onAddToCart }) => {
+export const ProductList = React.memo(({ products, onAddToCart, error }) => {
+  if (error) {
+    return (
+      <div className="product-empty-state product-empty-state--error">
+        <h3 className="section-title">We could not load the products</h3>
+        <p>{error}</p>
+      </div>
+    );
+  }
+
   if (products.length === 0) {
     return (
       <div className="product-empty-state">
-        <h3 className="section-title">No products available right now</h3>
-        <p>Try a different category to see more picks.</p>
+        <div className="product-empty-state__icon" aria-hidden="true">📦</div>
+        <h3 className="section-title">No products found in this category.</h3>
+        <p>Try another category or clear the search to explore more products.</p>
+        <button type="button" className="product-empty-state__button" onClick={() => window.location.reload()}>
+          Browse All Products
+        </button>
       </div>
     );
   }
