@@ -485,6 +485,17 @@ const AdminDashboard = () => {
       </header>
 
       <main className="dashboard-content">
+        <section className="dashboard-hero">
+          <div>
+            <p className="dashboard-hero__eyebrow">Operations center</p>
+            <h2>Welcome back, {adminUsername || 'Admin'}</h2>
+            <p>Manage products, customers, and orders from one polished workspace.</p>
+          </div>
+          <div className="dashboard-hero__meta">
+            <span className="dashboard-pill">Live updates</span>
+            <span className="dashboard-pill secondary">Fast actions</span>
+          </div>
+        </section>
         <div className="cards-grid">
           {cardData.map((card, index) => (
             <div key={index} className="card" onClick={() => openModal(card.modalType)}>

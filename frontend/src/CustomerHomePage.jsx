@@ -3,6 +3,7 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { CategoryNavigation } from './CategoryNavigation';
 import { ProductList } from './ProductList';
+import { ProductCardSkeleton } from './components/Skeleton';
 import './assets/styles.css';
 
 export default function CustomerHomePage() {
@@ -97,6 +98,8 @@ export default function CustomerHomePage() {
     }
   }, [cartCount, username]);
 
+  const showSkeletons = loading && products.length === 0;
+
   return (
     <div className="customer-homepage">
       <Header cartCount={cartCount} username={username} />
@@ -118,7 +121,16 @@ export default function CustomerHomePage() {
             </div>
           </div>
         </section>
-        {loading && products.length === 0 ? <div className="loading-state">Loading featured products...</div> : <ProductList products={products} onAddToCart={handleAddToCart} />}
+
+        {showSkeletons ? (
+          <div className="product-grid" aria-label="Loading featured products">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <ProductCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : (
+          <ProductList products={products} onAddToCart={handleAddToCart} />
+        )}
       </main>
       <Footer />
     </div>

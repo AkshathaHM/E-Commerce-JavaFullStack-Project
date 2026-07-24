@@ -4,6 +4,7 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import OrderTracking from './components/OrderTracking';
 import OrderDetailsModal from './components/OrderDetailsModal';
+import { OrderCardSkeleton } from './components/Skeleton';
 import './assets/styles.css';
 
 export default function OrderPage() {
@@ -85,11 +86,27 @@ export default function OrderPage() {
           username={username}
         />
         <main className="main-content">
-          <h1 className="form-title">Your Orders</h1>
-          {loading && <p>Loading orders...</p>}
-          {error && <p className="error-message">{error}</p>}
+          <section className="orders-hero">
+            <div>
+              <p className="section-eyebrow">Your account</p>
+              <h1 className="form-title">Your Orders</h1>
+            </div>
+            <span className="section-pill">Track every delivery</span>
+          </section>
+
+          {loading && (
+            <div className="orders-list" aria-label="Loading orders">
+              {Array.from({ length: 2 }).map((_, index) => (
+                <OrderCardSkeleton key={index} />
+              ))}
+            </div>
+          )}
+          {error && <div className="product-empty-state"><h3 className="section-title">We could not load your orders</h3><p>{error}</p></div>}
           {!loading && !error && orders.length === 0 && (
-            <p>No orders found. Start shopping now!</p>
+            <div className="product-empty-state">
+              <h3 className="section-title">No orders yet</h3>
+              <p>Your recent purchases will appear here once you place an order.</p>
+            </div>
           )}
           {!loading && !error && orders.length > 0 && (
             <div className="orders-list">

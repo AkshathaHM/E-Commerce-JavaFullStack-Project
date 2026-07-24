@@ -5,6 +5,7 @@ import { Footer } from "./Footer";
 import { Toast } from "./Toast";
 import { useNavigate } from "react-router-dom";
 import OrderSuccess from "./components/OrderSuccess";
+import { CartItemSkeleton } from "./components/Skeleton";
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -17,6 +18,8 @@ const CartPage = () => {
   const [paymentError, setPaymentError] = useState(null);
   const [error, setError] = useState(null);
   const [showTrackingCard, setShowTrackingCard] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("success");
   const [orderSummaryItems, setOrderSummaryItems] = useState([]);
   const navigate = useNavigate();
 
@@ -54,8 +57,7 @@ const CartPage = () => {
       return;
     }
 
-    // Don't show loading state, fetch in background
-    setLoading(false);
+    setLoading(true);
     fetchCartItems();
   }, []);
 
@@ -180,7 +182,10 @@ const CartPage = () => {
   const handleCheckout = async () => {
     if (checkoutLoading) return;
     if (Number(subtotal) <= 0) {
-      alert("Your cart is empty or total is zero.");
+      const message = "Your cart is empty or total is zero.";
+      setPaymentError(message);
+      setToastMessage(message);
+      setToastType("error");
       return;
     }
 
@@ -207,7 +212,8 @@ const CartPage = () => {
         const errText = await res.text();
         const message = `Order creation failed: ${errText || "Server error"}`;
         setPaymentError(message);
-          alert(message);
+        setToastMessage(message);
+        setToastType("error");
         return;
       }
 
@@ -251,6 +257,8 @@ const CartPage = () => {
               const trackingId = `SS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
               setShowPaymentToast(true);
+              setToastMessage("Payment successful! Your order is being prepared.");
+              setToastType("success");
               const successOrder = {
                 orderId: rzpRes.razorpay_order_id,
                 paymentId: rzpRes.razorpay_payment_id,
@@ -278,13 +286,15 @@ const CartPage = () => {
               const verifyMessage = await verifyRes.text();
               const message = `Payment verification failed: ${verifyMessage}`;
               setPaymentError(message);
-              alert(message);
+              setToastMessage(message);
+              setToastType("error");
             }
           } catch (e) {
             console.error("Payment verification error:", e);
             const message = "Payment processed but verification failed.";
             setPaymentError(message);
-            alert(message);
+            setToastMessage(message);
+            setToastType("error");
           }
         },
         prefill: {
@@ -294,7 +304,10 @@ const CartPage = () => {
         },
         modal: {
           ondismiss: () => {
-            // Do not show a cancellation message when the Razorpay modal is closed.
+            const message = "Checkout canceled. No charges were made.";
+            setPaymentError(null);
+            setToastMessage(message);
+            setToastType("info");
           },
         },
         theme: { color: "#00ABE4" },
@@ -305,7 +318,10 @@ const CartPage = () => {
       rzp.open();
     } catch (err) {
       console.error("Checkout process failed:", err);
-      alert(err.message || "Something went wrong during checkout.");
+      const message = err.message || "Something went wrong during checkout.";
+      setPaymentError(message);
+      setToastMessage(message);
+      setToastType("error");
     } finally {
       setCheckoutLoading(false);
     }
@@ -316,8 +332,33 @@ const CartPage = () => {
 
 
   if (loading) {
-    // Skip loading screen and show empty cart immediately
-    setLoading(false);
+    return (
+      <div className="cart-page loading-shell">
+        <Header cartCount="0" username={username || 'Guest'} />
+        <div className="cart-container">
+          <div className="cart-page">
+            <div className="cart-header">
+              <h2>Preparing your cart</h2>
+              <p>Fetching the latest items and totals.</p>
+            </div>
+            <div className="cart-items">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <CartItemSkeleton key={index} />
+              ))}
+            </div>
+          </div>
+          <div className="checkout-section">
+            <h2>Order Summary</h2>
+            <div className="checkout-summary">
+              <div className="summary-row"><span>Subtotal</span><span>₹0.00</span></div>
+              <div className="summary-row"><span>Shipping</span><span>₹370.00</span></div>
+              <div className="summary-row total"><span>Total</span><span>₹370.00</span></div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   if (error) {
@@ -344,7 +385,12 @@ const CartPage = () => {
 
   return (
     <div style={{ width: "100vw", minHeight: "100vh" }}>
-      <Toast message="Payment Successful!" show={showPaymentToast} />
+      <Toast
+        message={toastMessage || "Payment successful!"}
+        show={showPaymentToast}
+        type={toastType}
+        onClose={() => setShowPaymentToast(false)}
+      />
       <Header cartCount={totalItems} username={username} />
 
 
