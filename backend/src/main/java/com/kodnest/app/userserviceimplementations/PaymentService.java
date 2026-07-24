@@ -3,7 +3,6 @@ package com.kodnest.app.userserviceimplementations;
 import com.kodnest.app.entities.Order;
 import com.kodnest.app.entities.OrderItem;
 import com.kodnest.app.entities.OrderStatus;
-import com.kodnest.app.entities.User;
 import com.kodnest.app.userservices.PaymentServiceContract;
 import com.kodnest.app.usersrepositaries.UserRepository;
 import com.kodnest.app.usersrepositaries.CartRepository;
@@ -11,23 +10,31 @@ import com.kodnest.app.usersrepositaries.OrderItemRepository;
 import com.kodnest.app.usersrepositaries.OrderRepository;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
-import com.razorpay.Utils;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class PaymentService implements PaymentServiceContract {
 
-    @Value("${razorpay_key_id}")
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+
+    @Value("${RAZORPAY_KEY_ID:${razorpay_key_id:rzp_test_TAsqtBKY9SkyQb}}")
     private String razorpayKeyId;
 
-    @Value("${razorpay_key_secret}")
+    @Value("${RAZORPAY_KEY_SECRET:${razorpay_key_secret:EIUnA86y67xrJsV2Ov3UBTek}}")
     private String razorpayKeySecret;
 
     private final OrderRepository orderRepository;
@@ -76,18 +83,44 @@ public class PaymentService implements PaymentServiceContract {
 
     @Override
     @Transactional
-    public boolean verifyPayment(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature, int userId, BigDecimal totalAmount, List<OrderItem> orderItems) {
-        try {
-            JSONObject attributes = new JSONObject();
-            attributes.put("razorpay_order_id", razorpayOrderId);
-            attributes.put("razorpay_payment_id", razorpayPaymentId);
-            attributes.put("razorpay_signature", razorpaySignature);
+    public Map<String, Object> verifyPayment(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature, int userId, BigDecimal totalAmount, List<OrderItem> orderItems) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        log.info("Received payment data | orderId={}, paymentId={}, signaturePresent={}", razorpayOrderId, razorpayPaymentId, razorpaySignature != null);
 
-            boolean valid = Utils.verifyPaymentSignature(attributes, razorpayKeySecret);
-            if (!valid) return false;
+        try {
+            if (razorpayOrderId == null || razorpayOrderId.isBlank()) {
+                response.put("success", false);
+                response.put("error", "Missing Order ID");
+                return response;
+            }
+            if (razorpayPaymentId == null || razorpayPaymentId.isBlank()) {
+                response.put("success", false);
+                response.put("error", "Missing Payment ID");
+                return response;
+            }
+            if (razorpaySignature == null || razorpaySignature.isBlank()) {
+                response.put("success", false);
+                response.put("error", "Missing Razorpay Signature");
+                return response;
+            }
+            if (razorpayKeySecret == null || razorpayKeySecret.isBlank()) {
+                response.put("success", false);
+                response.put("error", "Secret Key Mismatch");
+                return response;
+            }
+
+            boolean valid = verifySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
+            log.info("Signature verification result | orderId={} | paymentId={} | valid={}", razorpayOrderId, razorpayPaymentId, valid);
+            if (!valid) {
+                response.put("success", false);
+                response.put("error", "Invalid Razorpay Signature");
+                return response;
+            }
 
             if (orderRepository.existsById(razorpayOrderId)) {
-                return false;
+                response.put("success", false);
+                response.put("error", "Order Already Exists");
+                return response;
             }
 
             LocalDateTime now = LocalDateTime.now();
@@ -96,9 +129,13 @@ public class PaymentService implements PaymentServiceContract {
             order.setUserId(userId);
             order.setTotalAmount(totalAmount != null ? totalAmount : BigDecimal.ZERO);
             order.setStatus(OrderStatus.ORDER_PLACED);
+            order.setPaymentStatus("PAID");
+            order.setPaymentId(razorpayPaymentId);
+            order.setRazorpaySignature(razorpaySignature);
             order.setCreatedAt(now);
             order.setUpdatedAt(now);
             orderRepository.save(order);
+            log.info("Order saved successfully | orderId={}", razorpayOrderId);
 
             for (OrderItem item : orderItems) {
                 item.setOrder(order);
@@ -106,15 +143,55 @@ public class PaymentService implements PaymentServiceContract {
             }
 
             cartRepository.deleteAllByUserUserId(userId);
+            log.info("Cart cleared successfully | userId={}", userId);
 
-            userRepository.findById(userId).ifPresent(user -> {
-                emailService.sendOrderConfirmationEmail(user, razorpayOrderId, totalAmount != null ? totalAmount.toPlainString() : "0");
-            });
+            userRepository.findById(userId).ifPresentOrElse(user -> {
+                try {
+                    emailService.sendOrderConfirmationEmail(user, razorpayOrderId, totalAmount != null ? totalAmount.toPlainString() : "0");
+                } catch (Exception emailException) {
+                    log.warn("Order confirmation email failed | orderId={} | error={}", razorpayOrderId, emailException.getMessage());
+                }
+            }, () -> log.warn("User not found while sending confirmation email | userId={}", userId));
 
-            return true;
+            response.put("success", true);
+            response.put("message", "Payment verified successfully");
+            response.put("orderId", razorpayOrderId);
+            response.put("paymentId", razorpayPaymentId);
+            response.put("paymentStatus", "PAID");
+            response.put("orderStatus", OrderStatus.ORDER_PLACED.name());
+            return response;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Database save failed during payment verification | orderId={} | paymentId={} | error={}", razorpayOrderId, razorpayPaymentId, e.getMessage(), e);
+            response.put("success", false);
+            response.put("error", "Database Save Failed: " + e.getMessage());
+            return response;
+        }
+    }
+
+    private boolean verifySignature(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature) throws Exception {
+        String payload = razorpayOrderId + "|" + razorpayPaymentId;
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(new SecretKeySpec(razorpayKeySecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+        byte[] bytes = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+        StringBuilder hex = new StringBuilder();
+        for (byte b : bytes) {
+            hex.append(String.format("%02x", b));
+        }
+        String expected = hex.toString();
+        return constantTimeEquals(expected, razorpaySignature.trim());
+    }
+
+    private boolean constantTimeEquals(String expected, String received) {
+        if (expected == null || received == null) {
             return false;
         }
+        if (expected.length() != received.length()) {
+            return false;
+        }
+        int result = 0;
+        for (int i = 0; i < expected.length(); i++) {
+            result |= expected.charAt(i) ^ received.charAt(i);
+        }
+        return result == 0;
     }
 }

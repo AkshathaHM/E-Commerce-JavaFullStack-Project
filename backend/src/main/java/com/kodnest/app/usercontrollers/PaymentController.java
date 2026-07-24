@@ -85,7 +85,7 @@ public class PaymentController {
         }
     }
     @PostMapping("/verify")
-    public ResponseEntity<String> verifyPayment(
+    public ResponseEntity<Map<String, Object>> verifyPayment(
             @RequestBody Map<String, Object> requestBody,
             HttpServletRequest request) {
 
@@ -93,15 +93,21 @@ public class PaymentController {
             User user = (User) request.getAttribute("authenticatedUser");
             if (user == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body("User not authenticated");
+                        .body(Map.of("success", false, "error", "User not authenticated"));
             }
 
             String orderId = (String) requestBody.get("razorpay_order_id");
             String paymentId = (String) requestBody.get("razorpay_payment_id");
             String signature = (String) requestBody.get("razorpay_signature");
 
-            if (orderId == null || paymentId == null || signature == null) {
-                return ResponseEntity.badRequest().body("Missing verification parameters");
+            if (orderId == null || orderId.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Missing Order ID"));
+            }
+            if (paymentId == null || paymentId.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Missing Payment ID"));
+            }
+            if (signature == null || signature.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Missing Razorpay Signature"));
             }
 
             Object totalAmountObj = requestBody.get("totalAmount");
@@ -121,16 +127,21 @@ public class PaymentController {
                 }).collect(Collectors.toList());
             }
 
-            boolean valid = paymentService.verifyPayment(
+            Map<String, Object> verificationResult = paymentService.verifyPayment(
                     orderId, paymentId, signature, user.getUserId(), totalAmount, orderItems
             );
 
-            return ResponseEntity.ok(valid ? "Payment verified successfully" : "Payment verification failed");
+            boolean success = Boolean.TRUE.equals(verificationResult.get("success"));
+            if (success) {
+                return ResponseEntity.ok(verificationResult);
+            }
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(verificationResult);
 
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Verification error: " + e.getMessage());
+                    .body(Map.of("success", false, "error", "Verification error: " + e.getMessage()));
         }
     }
 }

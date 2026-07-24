@@ -30,6 +30,14 @@ public class Order {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "payment_status")
+    private String paymentStatus;
+
+    @Column(name = "payment_id")
+    private String paymentId;
+
+    @Column(name = "razorpay_signature")
+    private String razorpaySignature;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
@@ -118,6 +126,30 @@ public class Order {
 
 	public void setUpdatedAt(LocalDateTime updatedAt) {
 		this.updatedAt = updatedAt;
+	}
+
+	public String getPaymentStatus() {
+		return paymentStatus;
+	}
+
+	public void setPaymentStatus(String paymentStatus) {
+		this.paymentStatus = paymentStatus;
+	}
+
+	public String getPaymentId() {
+		return paymentId;
+	}
+
+	public void setPaymentId(String paymentId) {
+		this.paymentId = paymentId;
+	}
+
+	public String getRazorpaySignature() {
+		return razorpaySignature;
+	}
+
+	public void setRazorpaySignature(String razorpaySignature) {
+		this.razorpaySignature = razorpaySignature;
 	}
 
 	public List<OrderItem> getOrderitems() {

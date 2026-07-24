@@ -278,14 +278,15 @@ const CartPage = () => {
               }),
             });
 
-            if (!verifyRes.ok) {
-              const verifyMessage = await verifyRes.text();
-              throw new Error(verifyMessage || "Payment verification failed");
+            let verifyPayload = null;
+            try {
+              verifyPayload = await verifyRes.json();
+            } catch {
+              verifyPayload = { error: await verifyRes.text() };
             }
 
-            const verifyPayload = await verifyRes.text();
-            if (!verifyPayload.includes("successfully")) {
-              throw new Error(verifyPayload || "Payment verification failed");
+            if (!verifyRes.ok || !verifyPayload?.success) {
+              throw new Error(verifyPayload?.error || verifyPayload?.message || "Payment verification failed");
             }
 
             const deliveryDate = new Date();

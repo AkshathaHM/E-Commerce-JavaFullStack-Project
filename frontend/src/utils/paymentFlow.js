@@ -1,6 +1,16 @@
 export function getPaymentErrorDetails(error, fallbackMessage = 'Your transaction could not be completed.') {
   const rawMessage = typeof error === 'string' ? error : error?.message || '';
-  const message = rawMessage.toLowerCase();
+  const trimmedMessage = rawMessage?.trim();
+  const message = trimmedMessage.toLowerCase();
+
+  if (trimmedMessage && !trimmedMessage.toLowerCase().includes('payment processed but verification failed') && !trimmedMessage.toLowerCase().includes('payment verification failed')) {
+    return {
+      title: 'Payment failed',
+      message: trimmedMessage,
+      kind: 'payment-failed',
+      canRetry: true,
+    };
+  }
 
   if (message.includes('popup') || message.includes('blocked')) {
     return {
