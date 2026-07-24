@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import "./assets/styles.css";
 import { Toast } from "./Toast";
 import Logo from "./Logo";
+import { setAuthSession } from "./auth";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
@@ -36,12 +37,10 @@ export default function AdminLogin() {
           throw new Error("Only admin can log in from this page.");
         }
 
-        if (data.token) {
-          localStorage.setItem('authToken', data.token);
-        }
+        setAuthSession(data.token || null, { username: data.username || username, role: 'ADMIN' });
         setShowToast(true);
         setTimeout(() => {
-          navigate("/admindashboard", { state: { username: data.username || username } });
+          navigate("/admindashboard", { state: { username: data.username || username }, replace: true });
         }, 1500);
       } else {
         throw new Error(data.error || "Login failed");

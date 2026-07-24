@@ -871,9 +871,25 @@ const YearlySalesForm = ({ onSubmit, onClose, response, modalData, loading }) =>
 
 // Orders Component
 const OrdersForm = ({ onSubmit, onClose, response, modalData, loading }) => {
+  const [localStatus, setLocalStatus] = useState({});
+
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit({});
+  };
+
+  const updateOrderStatus = (orderId, nextStatus) => {
+    const normalized = nextStatus.toLowerCase();
+    const statusMap = {
+      placed: 'Order Placed',
+      shipped: 'Shipped',
+      transit: 'In Transit',
+      delivered: 'Delivered',
+    };
+
+    setLocalStatus((prev) => ({ ...prev, [orderId]: statusMap[normalized] || nextStatus }));
+    localStorage.setItem(`order-status-${orderId}`, statusMap[normalized] || nextStatus);
+    window.dispatchEvent(new Event('order-status-updated'));
   };
 
   const orders = Array.isArray(modalData) ? modalData : [];
@@ -914,9 +930,15 @@ const OrdersForm = ({ onSubmit, onClose, response, modalData, loading }) => {
                 <div className="order-card-body">
                   <div className="order-details">
                     <p><strong>User:</strong> {order.user?.username || order.user?.name || order.user?.email || order.userId || order.user_email || 'N/A'}</p>
-                    <p><strong>Status:</strong> {order.status || 'N/A'}</p>
+                    <p><strong>Status:</strong> {localStatus[order.orderId || order.id] || order.status || 'N/A'}</p>
                     <p><strong>Total:</strong> {order.totalAmount ?? order.total_price ?? order.amount ?? 'N/A'}</p>
                     <p><strong>Created:</strong> {order.createdAt || order.created_at || order.date || 'N/A'}</p>
+                  </div>
+                  <div className="order-status-actions">
+                    <button type="button" onClick={() => updateOrderStatus(order.orderId || order.id, 'placed')}>Order Placed</button>
+                    <button type="button" onClick={() => updateOrderStatus(order.orderId || order.id, 'shipped')}>Shipped</button>
+                    <button type="button" onClick={() => updateOrderStatus(order.orderId || order.id, 'transit')}>In Transit</button>
+                    <button type="button" onClick={() => updateOrderStatus(order.orderId || order.id, 'delivered')}>Delivered</button>
                   </div>
                   {(order.orderitems || order.orderItems) && (
                     <div className="order-items">

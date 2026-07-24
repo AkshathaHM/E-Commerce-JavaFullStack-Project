@@ -6,6 +6,7 @@ import Logo from "./Logo";
 import { ProfileDropdown } from "./ProfileDropdown";
 import "./assets/styles.css";
 import CustomModal from "./CustomModal";
+import { clearAuthSession, getAuthHeaders } from "./auth";
 
 const AdminDashboard = () => {
   const location = useLocation();
@@ -14,11 +15,6 @@ const AdminDashboard = () => {
   const [response, setResponse] = useState(null);
   const [modalData, setModalData] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('authToken');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
 
   const cardData = [
     { title: "Add Product", description: "Create new product", team: "Product Management", modalType: "addProduct" },
@@ -464,7 +460,7 @@ const AdminDashboard = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -472,16 +468,11 @@ const AdminDashboard = () => {
           "Content-Type": "application/json",
         },
       });
-      if (response.ok) {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('username');
-        navigate('/');
-      } else {
-        console.error('Logout failed');
-      }
     } catch (error) {
       console.error('Logout error:', error);
     }
+    clearAuthSession();
+    navigate('/', { replace: true });
   };
 
   return (

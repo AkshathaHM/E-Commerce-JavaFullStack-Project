@@ -4,6 +4,7 @@ import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { Toast } from "./Toast";
 import { useNavigate } from "react-router-dom";
+import OrderSuccess from "./components/OrderSuccess";
 
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -250,14 +251,25 @@ const CartPage = () => {
               const trackingId = `SS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
               setShowPaymentToast(true);
-              setPaymentSuccessData({
+              const successOrder = {
                 orderId: rzpRes.razorpay_order_id,
                 paymentId: rzpRes.razorpay_payment_id,
                 amount: Number(subtotal).toFixed(2),
-                message: verifyMessage || "Payment verified successfully",
+                paymentStatus: 'Paid',
+                orderDate: new Date().toLocaleString('en-IN'),
                 estimatedDelivery: formattedDeliveryDate,
                 trackingCode: trackingId,
-              });
+                totalAmount: Number(subtotal).toFixed(2),
+                name: cartItems[0]?.name || 'Order Items',
+                imageUrl: cartItems[0]?.image_url || 'https://via.placeholder.com/120',
+                quantity: cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0),
+                price: Number(subtotal).toFixed(2),
+                deliveryCharges: '0.00',
+                tax: '0.00',
+              };
+              localStorage.setItem('lastOrder', JSON.stringify(successOrder));
+              setPaymentSuccessData(successOrder);
+              navigate('/order-success', { state: { order: successOrder }, replace: true });
               setOrderSummaryItems(cartItems);
               setPaymentError(null);
               setCartItems([]);
@@ -302,96 +314,6 @@ const CartPage = () => {
   const totalItems = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
   const shipping = "370.00";
 
-  if (paymentSuccessData) {
-    return (
-      <div className="cart-page success-page">
-        <Header cartCount={0} username={username || 'Guest'} />
-        <div className="payment-success-screen">
-          <div className="success-card">
-            <h1>Order Confirmed</h1>
-            <p>Your order has been confirmed and is now being prepared for shipping.</p>
-            <div className="success-details">
-              <p><strong>Order ID:</strong> {paymentSuccessData.orderId}</p>
-              <p><strong>Payment ID:</strong> {paymentSuccessData.paymentId}</p>
-              <p><strong>Amount Paid:</strong> ₹{paymentSuccessData.amount}</p>
-              <p><strong>Estimated Delivery:</strong> {paymentSuccessData.estimatedDelivery}</p>
-              <p><strong>Tracking Code:</strong> {paymentSuccessData.trackingCode}</p>
-            </div>
-            <p>{paymentSuccessData.message}</p>
-            <div className="success-actions">
-              <button className="success-button primary" onClick={() => navigate('/customerhome')}>
-                Continue Shopping
-              </button>
-              <button className="success-button secondary" onClick={() => navigate('/orders')}>
-                View Order Details
-              </button>
-              <button className="success-button tertiary" onClick={() => setShowTrackingCard(true)}>
-                Track Order
-              </button>
-            </div>
-          </div>
-        </div>
-        {showTrackingCard && (
-          <div className="tracking-overlay" onClick={() => setShowTrackingCard(false)}>
-            <div className="tracking-card" onClick={(event) => event.stopPropagation()}>
-              <button className="tracking-close" type="button" onClick={() => setShowTrackingCard(false)}>
-                ×
-              </button>
-              <h2>Track Your Order</h2>
-              <p className="tracking-subtitle">View the latest delivery status and order summary.</p>
-              <div className="tracking-summary">
-                <div>
-                  <strong>Order ID</strong>
-                  <p>{paymentSuccessData.orderId}</p>
-                </div>
-                <div>
-                  <strong>Tracking Code</strong>
-                  <p>{paymentSuccessData.trackingCode}</p>
-                </div>
-                <div>
-                  <strong>Delivery ETA</strong>
-                  <p>{paymentSuccessData.estimatedDelivery}</p>
-                </div>
-              </div>
-              <div className="tracking-progress">
-                <div className="tracking-step completed">
-                  <span>✓</span>
-                  <p>Order confirmed</p>
-                </div>
-                <div className="tracking-step completed">
-                  <span>✓</span>
-                  <p>Payment processed</p>
-                </div>
-                <div className="tracking-step active">
-                  <span>●</span>
-                  <p>Preparing for shipment</p>
-                </div>
-                <div className="tracking-step">
-                  <span>○</span>
-                  <p>Out for delivery</p>
-                </div>
-                <div className="tracking-step">
-                  <span>○</span>
-                  <p>Delivered</p>
-                </div>
-              </div>
-              {orderSummaryItems.length > 0 && (
-                <div className="tracking-items">
-                  <h3>Order Items</h3>
-                  {orderSummaryItems.map((item) => (
-                    <div key={item.product_id || item.id} className="tracking-item-row">
-                      <span>{item.name}</span>
-                      <span>Qty: {item.quantity}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
 
   if (loading) {
     // Skip loading screen and show empty cart immediately

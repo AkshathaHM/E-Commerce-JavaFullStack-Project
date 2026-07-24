@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import "./assets/styles.css";
 import { Toast } from "./Toast";
 import Logo from "./Logo";
+import { getDashboardPath, setAuthSession } from "./auth";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -12,16 +13,12 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const handleSignIn = async (e) => {
     e.preventDefault();
     setError(null);
-    setIsSubmitting(true);
 
     if (!username.trim() || !password.trim()) {
       setError("Username and password are required");
-      setIsSubmitting(false);
       return;
     }
 
@@ -38,24 +35,33 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (response.ok) {
-        if (data.token) {
-          localStorage.setItem('authToken', data.token);
-        }
-
         const role = data.role || "CUSTOMER";
-        const loggedInUsername = data.username || username;
-        localStorage.setItem('username', loggedInUsername);
-        setShowToast(true);
-        const path = role === "CUSTOMER" ? "/customerhome" : "/admindashboard";
-        navigate(path, { replace: true });
+        const username = data.username || "";
+        setAuthSession(data.token || null, { username, role });
+        // Login sets auth cookie; fetch profile to get username/role
+        try {
+          const meRes = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          const meData = await meRes.json();
+          const resolvedRole = meData.role || role;
+          const resolvedUsername = meData.username || username;
+          setAuthSession(data.token || null, { username: resolvedUsername, role: resolvedRole });
+          setShowToast(true);
+          navigate(getDashboardPath(resolvedRole), { replace: true });
+        } catch (e) {
+          setShowToast(true);
+          navigate(getDashboardPath(role), { replace: true });
+        }
       } else {
-        const errorMessage = data.error || "Something went wrong. Please try again.";
+        const errorMessage =
+          data.error || "Something went wrong. Please try again.";
         throw new Error(errorMessage);
       }
     } catch (err) {
       setError(err.message || "Unexpected error occurred");
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -109,8 +115,8 @@ export default function LoginPage() {
                 </span>
               </div>
             </div>
-            <button type="submit" className="form-button" disabled={isSubmitting}>
-              {isSubmitting ? 'Signing in…' : 'Sign In'}
+            <button type="submit" className="form-button">
+              Sign In
             </button>
           </form>
           <div className="form-footer">

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
+import OrderTracking from './components/OrderTracking';
+import OrderDetailsModal from './components/OrderDetailsModal';
 import './assets/styles.css';
 
 export default function OrderPage() {
@@ -11,6 +14,9 @@ export default function OrderPage() {
   const [username, setUsername] = useState('');
   const [cartError, setCartError] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('authToken');
@@ -23,6 +29,15 @@ export default function OrderPage() {
       fetchCartCount();
     }
   }, [username]);
+
+  useEffect(() => {
+    if (location.state?.order) {
+      setSelectedOrder(location.state.order);
+      if (location.state?.modal) {
+        setSelectedOrder(location.state.order);
+      }
+    }
+  }, [location.state]);
 
   const fetchOrders = async () => {
     try {
@@ -97,10 +112,18 @@ export default function OrderPage() {
                       <h3>Total Price : ₹{order.total_price.toFixed(2)}</h3>
                     </div>
                   </div>
+                  <div className="order-card-actions">
+                    <button className="order-card-action" onClick={() => navigate('/order-tracking', { state: { order: { ...order, orderId: order.order_id, customerName: username || 'Customer', paymentMethod: 'Razorpay' } } })}>Track Delivery</button>
+                    <button className="order-card-action order-card-action--secondary" onClick={() => setSelectedOrder({ ...order, orderId: order.order_id, customerName: username || 'Customer', paymentMethod: 'Razorpay' })}>View Details</button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
+         {selectedOrder && (
+           <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+         )}
+         {!loading && !error && orders.length > 0 && <OrderTracking order={selectedOrder || orders[0]} />}
         </main>
         <Footer />
       </div>

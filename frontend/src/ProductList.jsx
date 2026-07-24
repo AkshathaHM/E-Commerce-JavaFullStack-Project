@@ -4,13 +4,25 @@ import './assets/styles.css';
 
 export function ProductList({ products, onAddToCart }) {
   if (products.length === 0) {
-    return <p className="no-products">No products available.</p>;
+    return (
+      <div className="product-empty-state">
+        <h3 className="section-title">No products available right now</h3>
+        <p>Try a different category to see more picks.</p>
+      </div>
+    );
   }
 
   return (
     <div className="product-list">
+      <div className="product-list-header">
+        <div>
+          <p className="section-eyebrow">Curated picks</p>
+          <h3 className="section-title">{products.length} products ready to explore</h3>
+        </div>
+        <span className="section-pill">Fresh arrivals</span>
+      </div>
       <div className="product-grid">
-        {products.map((product) => (
+        {products.map((product, index) => (
           <div key={product.product_id} className="product-card">
             <div className="product-image-wrap">
               <img
@@ -24,6 +36,10 @@ export function ProductList({ products, onAddToCart }) {
               />
             </div>
             <div className="product-info">
+              <div className="product-card-meta">
+                <span className="product-chip">{index % 2 === 0 ? 'Popular' : 'Trending'}</span>
+                <span className="product-chip secondary">In stock</span>
+              </div>
               <h3 className="product-name">{product.name}</h3>
               <p className="product-description">{product.description}</p>
               <p className="product-price">₹{product.price}</p>

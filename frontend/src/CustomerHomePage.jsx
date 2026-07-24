@@ -104,7 +104,21 @@ export default function CustomerHomePage() {
         <CategoryNavigation selectedCategory={selectedCategory} onCategoryClick={setSelectedCategory} />
       </nav>
       <main className="main-content">
-        {loading && products.length === 0 ? <p>Loading products...</p> : <ProductList products={products} onAddToCart={handleAddToCart} />}
+        <section className="home-hero">
+          <div className="home-hero-content">
+            <div>
+              <p className="section-eyebrow">Smart shopping</p>
+              <h2>Discover fresh picks for your next order</h2>
+              <p>Browse curated essentials, enjoy a smoother checkout, and keep track of every delivery from one place.</p>
+            </div>
+            <div className="hero-badges">
+              <span className="hero-badge">Free shipping above ₹999</span>
+              <span className="hero-badge">Secure checkout</span>
+              <span className="hero-badge">Fast delivery</span>
+            </div>
+          </div>
+        </section>
+        {loading && products.length === 0 ? <div className="loading-state">Loading featured products...</div> : <ProductList products={products} onAddToCart={handleAddToCart} />}
       </main>
       <Footer />
     </div>

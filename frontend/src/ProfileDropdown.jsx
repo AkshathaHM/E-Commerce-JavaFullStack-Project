@@ -2,6 +2,7 @@
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import useravatar from './useravatar.png';
+import { clearAuthSession, getAuthHeaders } from './auth';
 
 export function ProfileDropdown({ username, showOrders = true, showCart = true, showProfile = true, showLogout = true, logoutRedirect = '/' }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,11 +30,6 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [isOpen]);
-
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('authToken');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
 
   const closePanel = () => {
     setActivePanel(null);
@@ -119,12 +115,16 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
       await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
       });
     } catch (logoutError) {
       console.error('Logout failed', logoutError);
     }
-    localStorage.clear();
-    navigate(logoutRedirect);
+    clearAuthSession();
+    navigate(logoutRedirect, { replace: true });
   };
 
   const loadProfile = async () => {
