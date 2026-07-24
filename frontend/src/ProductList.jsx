@@ -26,12 +26,13 @@ export function ProductList({ products, onAddToCart }) {
           <div key={product.product_id} className="product-card">
             <div className="product-image-wrap">
               <img
-                src={product.images?.[0] && (product.images[0].startsWith("http") || product.images[0].startsWith("data:image/")) ? product.images[0] : "https://via.placeholder.com/150"}
+                src={product.images?.[0] && (product.images[0].startsWith("http") || product.images[0].startsWith("data:image/")) ? product.images[0] : "/images/no-image.png"}
                 alt={product.name}
                 className="product-image"
                 loading="lazy"
                 onError={(e) => {
-                  e.target.src = "https://via.placeholder.com/150";
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = "/images/no-image.png";
                 }}
               />
             </div>

@@ -269,7 +269,7 @@ const CartPage = () => {
                 trackingCode: trackingId,
                 totalAmount: Number(subtotal).toFixed(2),
                 name: cartItems[0]?.name || 'Order Items',
-                imageUrl: cartItems[0]?.image_url || 'https://via.placeholder.com/120',
+                imageUrl: cartItems[0]?.image_url || '/images/no-image.png',
                 quantity: cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0),
                 price: Number(subtotal).toFixed(2),
                 deliveryCharges: '0.00',
@@ -415,9 +415,12 @@ const CartPage = () => {
             {cartItems.map((item) => (
               <div key={item.product_id} className="cart-item">
                 <img
-                  src={item.image_url?.startsWith("http") ? item.image_url : "https://via.placeholder.com/80?text=No+Image"}
+                  src={item.image_url?.startsWith("http") ? item.image_url : "/images/no-image.png"}
                   alt={item.name || "Product"}
-                  onError={(e) => (e.target.src = "https://via.placeholder.com/80?text=?")}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = "/images/no-image.png";
+                  }}
                 />
                 <div className="item-details">
                   <div className="item-info">

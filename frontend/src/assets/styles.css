@@ -1717,52 +1717,81 @@ span.username {
 
 .order-card {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  width: 90%;
-  max-width: 800px;
+  border-radius: 20px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  width: min(100%, 920px);
   padding: 20px;
   display: flex;
   flex-direction: column;
+  gap: 18px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.order-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
 }
 
 .order-card-header {
   display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 16px;
-    background: #D9DADA;
-    box-shadow: 0px -5px #D4F4FD;
-    border-bottom-left-radius: 40px;
-    border-bottom-right-radius: 40px;
-    font-family: 'Source Sans Pro';
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.order-card-header h3 {
+  margin: 0;
+  font-size: 1.15rem;
 }
 
 .order-card-body {
-  
   gap: 20px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  
+  justify-content: space-between;
+  flex-wrap: wrap;
 }
 
 .order-product-image {
-  width: auto;
-  max-width: 300px;
-  height: 400px;
+  width: min(100%, 240px);
+  max-width: 240px;
+  height: 220px;
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
 
 .order-details {
-  border-radius: 90px;
+  border-radius: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  background: #f8fafc;
+  width: min(100%, 520px);
+  padding: 14px;
+  justify-content: center;
+}
+
+.order-detail-row {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  background: #F0F0F0;
-  width: 400px;
-  justify-content: center;
+  gap: 4px;
+  padding: 10px 12px;
+  background: white;
+  border-radius: 12px;
+}
+
+.order-detail-row span {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  color: #64748b;
+  letter-spacing: 0.04em;
+}
+
+.order-detail-row strong {
+  color: #0f172a;
+  font-size: 0.95rem;
 }
 
 .product-name {

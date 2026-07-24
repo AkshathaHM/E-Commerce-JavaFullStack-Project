@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Header } from './Header';
 import { Footer } from './Footer';
-import OrderTracking from './components/OrderTracking';
 import OrderDetailsModal from './components/OrderDetailsModal';
 import { OrderCardSkeleton } from './components/Skeleton';
 import './assets/styles.css';
+
+const NO_IMAGE = '/images/no-image.png';
 
 const formatCurrency = (value) => {
   const numericValue = Number(value ?? 0);
@@ -13,20 +14,70 @@ const formatCurrency = (value) => {
   return `₹${numericValue.toFixed(2)}`;
 };
 
+const readSafeValue = (value, fallback = 'N/A') => {
+  if (value === null || value === undefined || value === '') return fallback;
+  const text = String(value).trim();
+  return text || fallback;
+};
+
 const normalizeOrderPayload = (order) => ({
   orderId: order?.order_id || order?.orderId || order?.id || 'N/A',
-  customerName: order?.customerName || order?.customer_name || 'Customer',
+  customerName: readSafeValue(order?.customerName || order?.customer_name, 'Customer'),
+  email: readSafeValue(order?.email || order?.customerEmail),
+  phone: readSafeValue(order?.phone || order?.mobile),
   orderDate: order?.createdAt || order?.created_at || order?.orderDate || new Date().toISOString(),
-  paymentMethod: order?.paymentMethod || order?.payment_method || 'Razorpay',
-  name: order?.name || order?.productName || 'Product',
-  description: order?.description || 'No description available',
-  quantity: Number(order?.quantity ?? 1),
+  paymentMethod: readSafeValue(order?.paymentMethod || order?.payment_method, 'Razorpay'),
+  paymentStatus: readSafeValue(order?.paymentStatus || order?.payment_status, 'Paid'),
+  status: readSafeValue(order?.status || order?.orderStatus, 'Order Placed'),
+  name: readSafeValue(order?.name || order?.productName, 'Product'),
+  description: readSafeValue(order?.description, 'No description available'),
+  quantity: Number(order?.quantity ?? order?.qty ?? 1),
   price: Number(order?.price_per_unit ?? order?.price ?? 0),
   totalPrice: Number(order?.total_price ?? order?.totalAmount ?? order?.amount ?? 0),
-  imageUrl: order?.image_url || order?.imageUrl || 'https://via.placeholder.com/120',
-  address: order?.address || order?.deliveryAddress || 'Delivery address on file',
-  phone: order?.phone || order?.mobile || 'N/A',
-  status: order?.status || 'Order Placed',
+  deliveryCharges: Number(order?.deliveryCharges || order?.delivery_charge || 0),
+  tax: Number(order?.tax || order?.totalTax || 0),
+  address: readSafeValue(order?.address || order?.deliveryAddress, 'Delivery address on file'),
+  imageUrl: order?.image_url || order?.imageUrl || order?.image || NO_IMAGE,
+  productId: order?.product_id || order?.productId || 'N/A',
+  category: order?.category || order?.productCategory || 'N/A',
+});
+
+const OrderCard = memo(function OrderCard({ order, username, onOpenDetails, onTrackOrder, onContinueShopping }) {
+  const fallbackImage = (event) => {
+    event.currentTarget.onerror = null;
+    event.currentTarget.src = NO_IMAGE;
+  };
+
+  return (
+    <article className="order-card">
+      <div className="order-card-header">
+        <p className="section-eyebrow">Order ID</p>
+        <h3>{order.orderId}</h3>
+      </div>
+      <div className="order-card-body">
+        <img
+          src={order.imageUrl?.startsWith('http') || order.imageUrl?.startsWith('data:image/') ? order.imageUrl : NO_IMAGE}
+          alt={order.name}
+          className="order-product-image"
+          loading="lazy"
+          onError={fallbackImage}
+        />
+        <div className="order-details">
+          <div className="order-detail-row"><span>Product</span><strong>{order.name}</strong></div>
+          <div className="order-detail-row"><span>Order Number</span><strong>{order.orderId}</strong></div>
+          <div className="order-detail-row"><span>Status</span><strong>{order.status}</strong></div>
+          <div className="order-detail-row"><span>Payment</span><strong>{order.paymentStatus || 'Paid'}</strong></div>
+          <div className="order-detail-row"><span>Total</span><strong>{formatCurrency(order.totalPrice)}</strong></div>
+          <div className="order-detail-row"><span>Order Date</span><strong>{new Date(order.orderDate).toLocaleString('en-IN')}</strong></div>
+        </div>
+      </div>
+      <div className="order-card-actions">
+        <button className="order-card-action" type="button" onClick={() => onTrackOrder(order)}>Track Order</button>
+        <button className="order-card-action order-card-action--secondary" type="button" onClick={() => onOpenDetails(order)}>View Details</button>
+        <button className="order-card-action order-card-action--ghost" type="button" onClick={onContinueShopping}>Continue Shopping</button>
+      </div>
+    </article>
+  );
 });
 
 export default function OrderPage() {
@@ -41,28 +92,15 @@ export default function OrderPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = useCallback(() => {
     const token = localStorage.getItem('authToken');
     return token ? { Authorization: `Bearer ${token}` } : {};
-  };
+  }, []);
 
-  useEffect(() => {
-    fetchOrders();
-    if (username) {
-      fetchCartCount();
-    }
-  }, [username]);
+  const fetchOrders = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-  useEffect(() => {
-    if (location.state?.order) {
-      setSelectedOrder(location.state.order);
-      if (location.state?.modal) {
-        setSelectedOrder(location.state.order);
-      }
-    }
-  }, [location.state]);
-
-  const fetchOrders = async () => {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
         credentials: 'include',
@@ -71,19 +109,25 @@ export default function OrderPage() {
           'Content-Type': 'application/json',
         },
       });
-      if (!response.ok) throw new Error('Failed to fetch orders');
+
+      if (!response.ok) {
+        throw new Error('Unable to load orders.');
+      }
+
       const data = await response.json();
       const productList = Array.isArray(data?.products) ? data.products : [];
-      setOrders(productList.map(normalizeOrderPayload));
+      const nextOrders = productList.map(normalizeOrderPayload);
+      setOrders(nextOrders);
       setUsername(data?.username || 'Guest');
+      setError(null);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Unable to load orders.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAuthHeaders]);
 
-  const fetchCartCount = async () => {
+  const fetchCartCount = useCallback(async () => {
     setIsCartLoading(true);
     try {
       const response = await fetch(
@@ -99,6 +143,45 @@ export default function OrderPage() {
     } finally {
       setIsCartLoading(false);
     }
+  }, [username]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  useEffect(() => {
+    if (username) {
+      fetchCartCount();
+    }
+  }, [fetchCartCount, username]);
+
+  useEffect(() => {
+    if (location.state?.order) {
+      setSelectedOrder({
+        ...location.state.order,
+        customerName: location.state.order.customerName || username || 'Customer',
+      });
+    }
+  }, [location.state, username]);
+
+  const orderCards = useMemo(() => {
+    return orders.map((order) => ({
+      ...order,
+      customerName: order.customerName || username || 'Customer',
+      paymentStatus: order.paymentStatus || 'Paid',
+    }));
+  }, [orders, username]);
+
+  const handleTrackOrder = (order) => {
+    const orderId = order.orderId || order.order_id || order.id;
+    navigate(`/orders/${orderId}/tracking`, {
+      state: {
+        order: {
+          ...order,
+          customerName: username || order.customerName || 'Customer',
+        },
+      },
+    });
   };
 
   return (
@@ -124,46 +207,41 @@ export default function OrderPage() {
               ))}
             </div>
           )}
-          {error && <div className="product-empty-state"><h3 className="section-title">We could not load your orders</h3><p>{error}</p></div>}
-          {!loading && !error && orders.length === 0 && (
+
+          {error && (
             <div className="product-empty-state">
-              <h3 className="section-title">No orders yet</h3>
+              <h3 className="section-title">Unable to load orders.</h3>
+              <p>{error}</p>
+              <button className="order-card-action" type="button" onClick={fetchOrders}>Retry</button>
+            </div>
+          )}
+
+          {!loading && !error && orderCards.length === 0 && (
+            <div className="product-empty-state">
+              <div className="empty-order-illustration">📦</div>
+              <h3 className="section-title">No Orders Found</h3>
               <p>Your recent purchases will appear here once you place an order.</p>
             </div>
           )}
-          {!loading && !error && orders.length > 0 && (
+
+          {!loading && !error && orderCards.length > 0 && (
             <div className="orders-list">
-              {orders.map((order, index) => (
-                <div key={`${order.orderId}-${index}`} className="order-card">
-                  <div className="order-card-header">
-                    <h3>Order Id : {order.orderId}</h3>
-                  </div>
-                  <div className="order-card-body">
-                    <img
-                      src={order.imageUrl}
-                      alt={order.name}
-                      className="order-product-image"
-                    />
-                    <div className="order-details">
-                      <h3 className="product-name">ProductName : {order.name}</h3>
-                      <h3>Description : {order.description}</h3>
-                      <h3>Quantity : {order.quantity}</h3>
-                      <h3>Price per Unit : {formatCurrency(order.price)}</h3>
-                      <h3>Total Price : {formatCurrency(order.totalPrice)}</h3>
-                    </div>
-                  </div>
-                  <div className="order-card-actions">
-                    <button className="order-card-action" onClick={() => navigate('/order-tracking', { state: { order: { ...order, customerName: username || 'Customer' } } })}>Track Delivery</button>
-                    <button className="order-card-action order-card-action--secondary" onClick={() => setSelectedOrder({ ...order, customerName: username || 'Customer' })}>View Details</button>
-                  </div>
-                </div>
+              {orderCards.map((order) => (
+                <OrderCard
+                  key={order.orderId}
+                  order={order}
+                  username={username}
+                  onOpenDetails={(selected) => setSelectedOrder({ ...selected, customerName: username || selected.customerName || 'Customer' })}
+                  onTrackOrder={handleTrackOrder}
+                  onContinueShopping={() => navigate('/customerhome')}
+                />
               ))}
             </div>
           )}
-         {selectedOrder && (
-           <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
-         )}
-         {!loading && !error && orders.length > 0 && <OrderTracking order={selectedOrder || orders[0]} />}
+
+          {selectedOrder && (
+            <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+          )}
         </main>
         <Footer />
       </div>

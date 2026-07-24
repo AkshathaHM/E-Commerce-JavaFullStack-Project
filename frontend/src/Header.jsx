@@ -16,7 +16,7 @@ export function Header({ cartCount, username }) {
             className="logo-image"
             onError={(event) => {
               event.target.onerror = null;
-              event.target.src = 'https://via.placeholder.com/48?text=SS';
+              event.target.src = '/images/no-image.png';
             }}
           />
           <span className="logo-text">SalesSavvy</span>

@@ -41,8 +41,9 @@ const AppRoutes = () => {
       <Route path="/customerhome" element={<ProtectedRoute element={<CustomerHomePage />} allowedRole="CUSTOMER" />} />
       <Route path="/UserCartPage" element={<ProtectedRoute element={<CartPage />} allowedRole="CUSTOMER" />} />
       <Route path="/orders" element={<ProtectedRoute element={<OrderPage />} allowedRole="CUSTOMER" />} />
+      <Route path="/orders/:orderId/tracking" element={<ProtectedRoute element={<OrderTracking />} allowedRole="CUSTOMER" />} />
       <Route path="/order-success" element={<ProtectedRoute element={<OrderSuccess />} allowedRole="CUSTOMER" />} />
-      <Route path="/order-tracking" element={<ProtectedRoute element={<OrderTracking order={{}} />} allowedRole="CUSTOMER" />} />
+      <Route path="/order-tracking" element={<ProtectedRoute element={<OrderTracking />} allowedRole="CUSTOMER" />} />
       <Route path="/admin" element={<PublicRoute element={<AdminLogin />} />} />
       <Route path="/admindashboard" element={<ProtectedRoute element={<AdminDashboard />} allowedRole="ADMIN" />} />
     </Routes>
