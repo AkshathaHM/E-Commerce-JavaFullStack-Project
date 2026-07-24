@@ -19,6 +19,7 @@ export default function VerifyOtpPage() {
   const [countdown, setCountdown] = useState(180);
   const [isExpired, setIsExpired] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [hasAutoVerified, setHasAutoVerified] = useState(false);
 
   useEffect(() => {
     if (countdown <= 0) {
@@ -33,28 +34,30 @@ export default function VerifyOtpPage() {
     return () => window.clearInterval(timer);
   }, [countdown]);
 
+  // Auto-verify OTP when 6 digits are entered
+  useEffect(() => {
+    if (otp.length === 6 && !isVerifying && !hasAutoVerified && !isExpired) {
+      setHasAutoVerified(true);
+      setError(null);
+      setMessage(null);
+      verifyOtpRequest(otp);
+    }
+  }, [otp, isVerifying, hasAutoVerified, isExpired]);
+
   const formattedCountdown = useMemo(() => {
     const minutes = String(Math.floor(countdown / 60)).padStart(2, '0');
     const seconds = String(countdown % 60).padStart(2, '0');
     return `${minutes}:${seconds}`;
   }, [countdown]);
 
-  const handleVerifyOtp = async (event) => {
-    event.preventDefault();
-    if (otp.length !== 6) {
-      setError("Please enter the 6-digit OTP.");
-      return;
-    }
-
-    setError(null);
-    setMessage(null);
+  const verifyOtpRequest = async (otpCode) => {
     setIsVerifying(true);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp }),
+        body: JSON.stringify({ email, otp: otpCode }),
       });
 
       const data = await response.json().catch(() => ({}));
@@ -70,9 +73,21 @@ export default function VerifyOtpPage() {
       }, 2000);
     } catch (err) {
       setError(err.message || "Unable to verify the OTP.");
+      setHasAutoVerified(false);
+      setOtp("");
     } finally {
       setIsVerifying(false);
     }
+  };
+
+  const handleVerifyOtp = async (event) => {
+    event.preventDefault();
+    if (otp.length !== 6) {
+      setError("Please enter the 6-digit OTP.");
+      return;
+    }
+
+    verifyOtpRequest(otp);
   };
 
   const handleResendOtp = async () => {
@@ -99,6 +114,8 @@ export default function VerifyOtpPage() {
 
       setCountdown(180);
       setIsExpired(false);
+      setOtp("");
+      setHasAutoVerified(false);
       setShowToast(true);
       setMessage(data.message || "New OTP sent successfully.");
     } catch (err) {
@@ -133,6 +150,13 @@ export default function VerifyOtpPage() {
               <label className="form-label">Enter OTP</label>
               <OtpInput value={otp} onChange={setOtp} length={6} disabled={isVerifying} />
             </div>
+
+            {isVerifying && otp.length === 6 && (
+              <div className="otp-auto-verify-state">
+                <div className="otp-spinner"></div>
+                <p className="otp-verifying-text">Verifying...</p>
+              </div>
+            )}
 
             <div className="otp-actions">
               <LoadingButton type="submit" isLoading={isVerifying} loadingText="Verifying..." className="form-button">

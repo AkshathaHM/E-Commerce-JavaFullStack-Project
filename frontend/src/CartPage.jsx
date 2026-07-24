@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import "./CartPage.css";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
@@ -26,10 +26,13 @@ const CartPage = () => {
   const razorpayScriptRef = useRef(null);
   const navigate = useNavigate();
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = useCallback(() => {
     const token = localStorage.getItem("authToken");
     return token ? { Authorization: `Bearer ${token}` } : {};
-  };
+  }, []);
+
+  const totalItems = useMemo(() => cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0), [cartItems]);
+  const shipping = "370.00";
 
   const loadRazorpayScript = async () => {
     if (window.Razorpay) {
@@ -369,10 +372,6 @@ const CartPage = () => {
       }
     }
   };
-
-  const totalItems = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
-  const shipping = "370.00";
-
 
   if (loading) {
     return (
