@@ -22,8 +22,8 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
 	@Transactional
 	void deleteAllByProductId(Integer productId);
 
-	// Find successful order items for a given user id (orders with status = SUCCESS)
-	@Query("SELECT oi FROM OrderItem oi JOIN FETCH oi.order o WHERE o.userId = :userId AND o.status = 'SUCCESS'")
+	// Fetch the order items for a user so the lifecycle status can be resolved on the backend.
+	@Query("SELECT oi FROM OrderItem oi JOIN FETCH oi.order o WHERE o.userId = :userId")
 	List<OrderItem> findSuccessfulOrderItemsByUserId(@Param("userId") Integer userId);
 
 }

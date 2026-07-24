@@ -5,6 +5,8 @@ import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.kodnest.app.entities.User;
@@ -41,6 +43,26 @@ public class OrderController {
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "An unexpected error occurred"));
+        }
+    }
+
+    @PatchMapping("/{orderId}/cancel")
+    public ResponseEntity<Map<String, Object>> cancelOrder(@PathVariable String orderId, HttpServletRequest request) {
+        try {
+            User authenticatedUser = (User) request.getAttribute("authenticatedUser");
+            if (authenticatedUser == null) {
+                return ResponseEntity.status(401).body(Map.of("error", "User not authenticated"));
+            }
+
+            boolean cancelled = orderService.cancelOrder(orderId, authenticatedUser.getUserId());
+            if (!cancelled) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Order cannot be cancelled at this stage"));
+            }
+
+            return ResponseEntity.ok(Map.of("message", "Order cancelled successfully"));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of("error", "An unexpected error occurred"));

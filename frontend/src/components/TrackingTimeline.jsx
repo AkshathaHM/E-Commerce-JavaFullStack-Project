@@ -14,10 +14,11 @@ const normalizeStatus = (status) => {
   const text = typeof status === 'string' ? status.trim().toLowerCase() : 'placed';
   if (text.includes('cancel')) return 'cancelled';
   if (text.includes('delivered')) return 'delivered';
-  if (text.includes('out for delivery') || text.includes('out_for_delivery') || text.includes('delivery')) return 'out_for_delivery';
+  if (text.includes('out for delivery') || text.includes('out_for_delivery') || text.includes('out for') || text.includes('delivery')) return 'out_for_delivery';
   if (text.includes('packed')) return 'packed';
   if (text.includes('confirmed')) return 'confirmed';
   if (text.includes('shipped')) return 'shipped';
+  if (text.includes('order_placed') || text.includes('placed')) return 'placed';
   return 'placed';
 };
 

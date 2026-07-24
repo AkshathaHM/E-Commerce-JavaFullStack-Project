@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getAuthHeaders } from '../auth';
-import { getCountdownLabel, getDerivedOrderStatus, getExpectedDelivery, getOrderHistoryEntries, getStatusLabel, ORDER_STATUS_SEQUENCE } from '../utils/orderStatus';
+import { getDerivedOrderStatus, getOrderHistoryEntries, getStatusLabel, ORDER_STATUS_SEQUENCE } from '../utils/orderStatus';
 import StatusBadge from './StatusBadge';
 import TrackingTimeline from './TrackingTimeline';
 
@@ -95,8 +95,6 @@ export default function OrderTracking() {
 
   const orderHistory = useMemo(() => getOrderHistoryEntries(displayOrder.orderId), [displayOrder.orderId]);
   const currentStepLabel = getStatusLabel(status);
-  const expectedDelivery = getExpectedDelivery(displayOrder.createdAt);
-  const countdown = getCountdownLabel(displayOrder.createdAt, status);
   const isCancelled = status === 'cancelled';
 
   if (loading) {
@@ -146,12 +144,12 @@ export default function OrderTracking() {
           <>
             <div className="tracking-status-banner">
               <div>
-                <span>Expected Delivery</span>
-                <strong>{expectedDelivery.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: 'numeric' })}</strong>
+                <span>Order Status</span>
+                <strong>{currentStepLabel}</strong>
               </div>
               <div>
-                <span>Tracking Status</span>
-                <strong>{currentStepLabel}</strong>
+                <span>Created At</span>
+                <strong>{new Date(displayOrder.createdAt).toLocaleString('en-IN')}</strong>
               </div>
             </div>
             <TrackingTimeline currentStatus={status} steps={ORDER_STATUS_SEQUENCE} />
@@ -165,8 +163,8 @@ export default function OrderTracking() {
           <div><span>Phone</span><strong>{displayOrder.phone}</strong></div>
           <div><span>Payment Method</span><strong>{displayOrder.paymentMethod}</strong></div>
           <div><span>Payment Status</span><strong>{displayOrder.paymentStatus}</strong></div>
-          <div><span>Expected Delivery</span><strong>{expectedDelivery.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: 'numeric' })}</strong></div>
-          <div><span>Countdown</span><strong>{countdown}</strong></div>
+          <div><span>Created At</span><strong>{new Date(displayOrder.createdAt).toLocaleString('en-IN')}</strong></div>
+          <div><span>Tracking State</span><strong>{currentStepLabel}</strong></div>
         </div>
 
         {!isCancelled && (

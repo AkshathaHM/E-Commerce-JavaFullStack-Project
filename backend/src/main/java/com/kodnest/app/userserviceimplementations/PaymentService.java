@@ -90,13 +90,14 @@ public class PaymentService implements PaymentServiceContract {
                 return false;
             }
 
+            LocalDateTime now = LocalDateTime.now();
             Order order = new Order();
             order.setOrderId(razorpayOrderId);
             order.setUserId(userId);
             order.setTotalAmount(totalAmount != null ? totalAmount : BigDecimal.ZERO);
-            order.setStatus(OrderStatus.SUCCESS);
-            order.setCreatedAt(LocalDateTime.now());
-            order.setUpdatedAt(LocalDateTime.now());
+            order.setStatus(OrderStatus.ORDER_PLACED);
+            order.setCreatedAt(now);
+            order.setUpdatedAt(now);
             orderRepository.save(order);
 
             for (OrderItem item : orderItems) {

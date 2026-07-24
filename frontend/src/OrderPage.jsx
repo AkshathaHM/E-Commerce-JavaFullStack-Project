@@ -2,7 +2,7 @@ import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CustomerLayout } from './CustomerLayout';
 import { OrderCardSkeleton } from './components/Skeleton';
-import { getCountdownLabel, getDerivedOrderStatus, getExpectedDelivery, getStatusLabel } from './utils/orderStatus';
+import { getDerivedOrderStatus, getStatusLabel } from './utils/orderStatus';
 import './assets/styles.css';
 
 const NO_IMAGE = '/images/no-image.png';
@@ -49,9 +49,7 @@ const OrderCard = memo(function OrderCard({ order, onTrackOrder, onCancelOrder, 
 
   const derivedStatus = getDerivedOrderStatus(order.orderDate, order.status);
   const statusLabel = getStatusLabel(derivedStatus);
-  const expectedDelivery = getExpectedDelivery(order.orderDate);
-  const countdown = getCountdownLabel(order.orderDate, derivedStatus);
-  const showCancel = ['placed', 'confirmed', 'packed'].includes(derivedStatus);
+  const showCancel = ['placed', 'confirmed', 'packed', 'shipped'].includes(derivedStatus);
   const isCancelled = derivedStatus === 'cancelled';
   const isDelivered = derivedStatus === 'delivered';
 
@@ -76,8 +74,7 @@ const OrderCard = memo(function OrderCard({ order, onTrackOrder, onCancelOrder, 
           <div className="order-detail-row"><span>Total</span><strong>{formatCurrency(order.totalPrice)}</strong></div>
           <div className="order-detail-row"><span>Payment</span><strong>{order.paymentStatus || 'Paid'}</strong></div>
           <div className="order-detail-row"><span>Order Date</span><strong>{new Date(order.orderDate).toLocaleString('en-IN')}</strong></div>
-          <div className="order-detail-row"><span>Expected Delivery</span><strong>{expectedDelivery.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: 'numeric' })}</strong></div>
-          <div className="order-detail-row"><span>Countdown</span><strong>{countdown}</strong></div>
+          <div className="order-detail-row"><span>Backend Status</span><strong>{statusLabel}</strong></div>
         </div>
       </div>
       <div className="order-card-footer">

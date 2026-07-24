@@ -1,10 +1,13 @@
 package com.kodnest.app.userserviceimplementations;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +31,21 @@ public class OrderService implements OrderServiceContract {
     private final ProductRepository productRepository;
     private final ProductImageRepository productImageRepository;
 
+    @Value("${order.lifecycle.confirmed.delay-minutes:10}")
+    private int confirmedDelayMinutes = 10;
+
+    @Value("${order.lifecycle.packed.delay-minutes:20}")
+    private int packedDelayMinutes = 20;
+
+    @Value("${order.lifecycle.shipped.delay-minutes:30}")
+    private int shippedDelayMinutes = 30;
+
+    @Value("${order.lifecycle.out-for-delivery.delay-minutes:40}")
+    private int outForDeliveryDelayMinutes = 40;
+
+    @Value("${order.lifecycle.delivered.delay-minutes:50}")
+    private int deliveredDelayMinutes = 50;
+
     public OrderService(
             OrderItemRepository orderItemRepository,
             OrderRepository orderRepository,
@@ -41,7 +59,6 @@ public class OrderService implements OrderServiceContract {
 
     @Override
     public Map<String, Object> getOrdersForUser(User user) {
-        // Assuming this method exists in your repository (from earlier @Query)
         List<OrderItem> orderItems = orderItemRepository.findSuccessfulOrderItemsByUserId(user.getUserId());
 
         Map<String, Object> response = new HashMap<>();
@@ -59,6 +76,7 @@ public class OrderService implements OrderServiceContract {
 
             List<ProductImage> images = productImageRepository.findByProduct_ProductId(product.getProductId());
             String imageUrl = images.isEmpty() ? null : images.get(0).getImageUrl();
+            OrderStatus resolvedStatus = resolveOrderLifecycleStatus(order);
 
             Map<String, Object> productDetails = new HashMap<>();
             productDetails.put("order_id", order.getOrderId());
@@ -69,7 +87,7 @@ public class OrderService implements OrderServiceContract {
             productDetails.put("name", product.getName());
             productDetails.put("description", product.getDescription());
             productDetails.put("price_per_unit", item.getPricePerUnit());
-            productDetails.put("status", order.getStatus() != null ? order.getStatus().name() : "SUCCESS");
+            productDetails.put("status", resolvedStatus.name());
             productDetails.put("created_at", order.getCreatedAt());
             productDetails.put("payment_method", "Razorpay");
             productDetails.put("payment_status", "Paid");
@@ -83,6 +101,35 @@ public class OrderService implements OrderServiceContract {
         return response;
     }
 
+    private OrderStatus resolveOrderLifecycleStatus(Order order) {
+        if (order == null || order.getCreatedAt() == null) {
+            return OrderStatus.ORDER_PLACED;
+        }
+
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            return OrderStatus.CANCELLED;
+        }
+
+        long elapsedMinutes = ChronoUnit.MINUTES.between(order.getCreatedAt(), LocalDateTime.now());
+
+        if (elapsedMinutes >= deliveredDelayMinutes) {
+            return OrderStatus.DELIVERED;
+        }
+        if (elapsedMinutes >= outForDeliveryDelayMinutes) {
+            return OrderStatus.OUT_FOR_DELIVERY;
+        }
+        if (elapsedMinutes >= shippedDelayMinutes) {
+            return OrderStatus.SHIPPED;
+        }
+        if (elapsedMinutes >= packedDelayMinutes) {
+            return OrderStatus.PACKED;
+        }
+        if (elapsedMinutes >= confirmedDelayMinutes) {
+            return OrderStatus.CONFIRMED;
+        }
+        return OrderStatus.ORDER_PLACED;
+    }
+
     @Override
     @Transactional
     public boolean cancelOrder(String orderId, int userId) {
@@ -90,11 +137,18 @@ public class OrderService implements OrderServiceContract {
         if (order == null || order.getUserId() != userId) {
             return false;
         }
+
         if (order.getStatus() == OrderStatus.CANCELLED) {
             return true;
         }
+
+        OrderStatus resolvedStatus = resolveOrderLifecycleStatus(order);
+        if (resolvedStatus == OrderStatus.OUT_FOR_DELIVERY || resolvedStatus == OrderStatus.DELIVERED) {
+            return false;
+        }
+
         order.setStatus(OrderStatus.CANCELLED);
-        order.setUpdatedAt(java.time.LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
         return true;
     }
