@@ -17,6 +17,44 @@
   animation: fadeInUp 0.45s ease;
 }
 
+.tracking-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1400;
+}
+
+.tracking-modal-card {
+  width: min(100%, 1120px);
+  max-height: 92vh;
+  overflow-y: auto;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 30px 80px rgba(2, 6, 23, 0.24);
+  position: relative;
+}
+
+.tracking-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 1.35rem;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
 .order-tracking-card__eyebrow {
   margin: 0 0 8px;
   color: #64748b;
@@ -401,6 +439,16 @@
 @media (max-width: 768px) {
   .order-tracking-card {
     padding: 22px;
+  }
+
+  .tracking-modal-card {
+    padding: 18px;
+    max-height: 96vh;
+  }
+
+  .tracking-modal-close {
+    top: 12px;
+    right: 12px;
   }
 
   .tracking-hero {

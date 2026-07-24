@@ -8,14 +8,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,6 +55,7 @@ class OrderServiceTest {
         user.setUserId(7);
         user.setUsername("alice");
         user.setRole(Role.CUSTOMER);
+        user.setAddress("123 Main Street");
 
         Order order = new Order();
         order.setOrderId("order-123");
@@ -70,15 +77,26 @@ class OrderServiceTest {
         product.setName("Wireless Mouse");
         product.setDescription("Ergonomic mouse");
 
-        when(orderItemRepository.findSuccessfulOrderItemsByUserId(7)).thenReturn(List.of(orderItem));
-        when(productRepository.findById(42)).thenReturn(Optional.of(product));
-        when(productImageRepository.findByProduct_ProductId(42)).thenReturn(List.of());
+        ProductImage image = new ProductImage();
+        image.setImageUrl("https://cdn.example.com/mouse.png");
+        image.setProduct(product);
+
+        Page<OrderItem> page = new PageImpl<>(List.of(orderItem), PageRequest.of(0, 5), 1);
+
+        when(orderItemRepository.findOrderItemsByUserId(eq(7), any(Pageable.class))).thenReturn(page);
+        when(productRepository.findAllById(List.of(42))).thenReturn(List.of(product));
+        when(productImageRepository.findByProduct_ProductIdIn(List.of(42))).thenReturn(List.of(image));
         when(orderLifecycleStatusResolver.resolve(order)).thenReturn(OrderStatus.ORDER_PLACED);
 
-        Map<String, Object> response = orderService.getOrdersForUser(user);
-        List<Map<String, Object>> products = (List<Map<String, Object>>) response.get("products");
+        Map<String, Object> response = orderService.getOrdersForUser(user, 0, 5);
+        List<Map<String, Object>> orders = (List<Map<String, Object>>) response.get("orders");
 
-        assertEquals(1, products.size());
-        assertEquals("ORDER_PLACED", products.get(0).get("status"));
+        assertEquals(1, orders.size());
+        assertEquals("ORDER_PLACED", orders.get(0).get("status"));
+        assertEquals("https://cdn.example.com/mouse.png", orders.get(0).get("image_url"));
+        assertEquals(1L, response.get("totalElements"));
+
+        verify(productRepository).findAllById(List.of(42));
+        verify(productImageRepository).findByProduct_ProductIdIn(List.of(42));
     }
 }

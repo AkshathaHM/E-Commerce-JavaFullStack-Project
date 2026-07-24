@@ -2,7 +2,9 @@ import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CustomerLayout } from './CustomerLayout';
 import { OrderCardSkeleton } from './components/Skeleton';
-import { getDerivedOrderStatus, getStatusLabel } from './utils/orderStatus';
+import { getDerivedOrderStatus, getExpectedDelivery, getOrderHistoryEntries, getStatusLabel, ORDER_STATUS_SEQUENCE } from './utils/orderStatus';
+import StatusBadge from './components/StatusBadge';
+import TrackingTimeline from './components/TrackingTimeline';
 import './assets/styles.css';
 
 const NO_IMAGE = '/images/no-image.png';
@@ -40,6 +42,23 @@ const normalizeOrderPayload = (order) => ({
   productId: order?.product_id || order?.productId || 'N/A',
   category: order?.category || order?.productCategory || 'N/A',
 });
+
+const formatDisplayDate = (value, fallback = 'Not available') => {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return fallback;
+  }
+
+  return parsed.toLocaleString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+};
+
+const DEMO_SEQUENCE = ['placed', 'confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered'];
 
 const OrderCard = memo(function OrderCard({ order, onTrackOrder, onCancelOrder, onContinueShopping }) {
   const fallbackImage = (event) => {
@@ -100,8 +119,12 @@ export default function OrderPage() {
   const [cartError, setCartError] = useState(false);
   const [isCartLoading, setIsCartLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [trackingStatus, setTrackingStatus] = useState('placed');
   const [cancelMessage, setCancelMessage] = useState('');
   const [pendingCancelOrder, setPendingCancelOrder] = useState(null);
+  const [page, setPage] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -110,12 +133,16 @@ export default function OrderPage() {
     return token ? { Authorization: `Bearer ${token}` } : {};
   }, []);
 
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const fetchOrders = useCallback(async (nextPage = 0, append = false) => {
+    if (!append) {
+      setLoading(true);
+      setError(null);
+    } else {
+      setIsLoadingMore(true);
+    }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders?page=${nextPage}&size=5`, {
         credentials: 'include',
         headers: {
           ...getAuthHeaders(),
@@ -131,13 +158,16 @@ export default function OrderPage() {
       const data = await response.json();
       const productList = Array.isArray(data?.orders) ? data.orders : (Array.isArray(data?.products) ? data.products : []);
       const nextOrders = productList.map(normalizeOrderPayload);
-      setOrders(nextOrders);
+      setOrders((currentOrders) => append ? [...currentOrders, ...nextOrders] : nextOrders);
+      setHasNextPage(Boolean(data?.hasNext));
+      setPage(nextPage);
       setUsername(data?.username || 'Guest');
       setError(null);
     } catch (err) {
       setError(err.message || 'Unable to load orders.');
     } finally {
       setLoading(false);
+      setIsLoadingMore(false);
     }
   }, [getAuthHeaders]);
 
@@ -160,7 +190,7 @@ export default function OrderPage() {
   }, [username]);
 
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(0, false);
   }, [fetchOrders]);
 
   useEffect(() => {
@@ -178,6 +208,28 @@ export default function OrderPage() {
     }
   }, [location.state, username]);
 
+  useEffect(() => {
+    if (!selectedOrder) return undefined;
+
+    const initialStatus = getDerivedOrderStatus(selectedOrder.orderDate, selectedOrder.status);
+    setTrackingStatus(initialStatus);
+
+    if (initialStatus === 'delivered' || initialStatus === 'cancelled') {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setTrackingStatus((currentStatus) => {
+        const currentIndex = DEMO_SEQUENCE.indexOf(currentStatus);
+        if (currentIndex < 0) return currentStatus;
+        const nextIndex = Math.min(currentIndex + 1, DEMO_SEQUENCE.length - 1);
+        return DEMO_SEQUENCE[nextIndex];
+      });
+    }, 60000);
+
+    return () => window.clearTimeout(timer);
+  }, [selectedOrder?.orderId, selectedOrder?.orderDate, selectedOrder?.status]);
+
   const orderCards = useMemo(() => {
     return orders.map((order) => ({
       ...order,
@@ -186,12 +238,21 @@ export default function OrderPage() {
     }));
   }, [orders, username]);
 
+  const handleLoadMore = useCallback(() => {
+    if (!hasNextPage || isLoadingMore) return;
+    fetchOrders(page + 1, true);
+  }, [fetchOrders, hasNextPage, isLoadingMore, page]);
+
   const handleTrackOrder = (order) => {
     setSelectedOrder({
       ...order,
       customerName: username || order.customerName || 'Customer',
     });
   };
+
+  const activeTrackingLabel = useMemo(() => getStatusLabel(trackingStatus), [trackingStatus]);
+  const expectedDelivery = useMemo(() => getExpectedDelivery(selectedOrder?.orderDate || new Date().toISOString()), [selectedOrder?.orderDate]);
+  const orderHistory = useMemo(() => getOrderHistoryEntries(selectedOrder?.orderId || 'N/A'), [selectedOrder?.orderId]);
 
   const handleCancelOrder = (order) => {
     setPendingCancelOrder(order);
@@ -241,20 +302,81 @@ export default function OrderPage() {
           )}
 
           {selectedOrder && (
-            <div className="confirmation-dialog-overlay" onClick={() => setSelectedOrder(null)}>
-              <div className="confirmation-dialog" onClick={(event) => event.stopPropagation()}>
-                <h3>Order tracking</h3>
-                <p>Tracking details for {selectedOrder.orderId}</p>
-                <div className="order-detail-row">
-                  <span>Status</span>
-                  <strong>{selectedOrder.status}</strong>
+            <div className="tracking-modal-overlay" onClick={() => setSelectedOrder(null)}>
+              <div className="tracking-modal-card" onClick={(event) => event.stopPropagation()}>
+                <button className="tracking-modal-close" type="button" onClick={() => setSelectedOrder(null)} aria-label="Close tracking panel">×</button>
+
+                <div className="tracking-hero">
+                  <div className="tracking-hero__content">
+                    <p className="order-tracking-card__eyebrow">Order tracking</p>
+                    <h2>{activeTrackingLabel}</h2>
+                    <p className="tracking-hero__copy">Your order is moving through the delivery pipeline and the latest milestone is {activeTrackingLabel.toLowerCase()}.</p>
+                  </div>
+                  <div className="tracking-hero__metrics">
+                    <div className="tracking-pill">
+                      <span>Order ID</span>
+                      <strong>{selectedOrder.orderId}</strong>
+                    </div>
+                    <div className="tracking-pill">
+                      <span>Expected delivery</span>
+                      <strong>{expectedDelivery.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</strong>
+                    </div>
+                  </div>
                 </div>
-                <div className="order-detail-row">
-                  <span>Delivery address</span>
-                  <strong>{selectedOrder.address}</strong>
+
+                <div className="tracking-layout">
+                  <div className="tracking-panel">
+                    <div className="tracking-panel__header">
+                      <h3>Delivery timeline</h3>
+                      <span className="tracking-demo-banner">● Demo progress</span>
+                    </div>
+                    <StatusBadge status={activeTrackingLabel} />
+                    <div className="tracking-status-banner">
+                      <div>
+                        <span>Status</span>
+                        <strong>{activeTrackingLabel}</strong>
+                      </div>
+                      <div>
+                        <span>Placed on</span>
+                        <strong>{formatDisplayDate(selectedOrder.orderDate)}</strong>
+                      </div>
+                    </div>
+                    <TrackingTimeline currentStatus={trackingStatus} />
+                  </div>
+
+                  <div className="tracking-panel">
+                    <div className="tracking-panel__header">
+                      <h3>Order details</h3>
+                    </div>
+                    <div className="order-tracking-details-grid">
+                      <div><span>Order number</span><strong>{selectedOrder.orderId}</strong></div>
+                      <div><span>Status</span><strong>{activeTrackingLabel}</strong></div>
+                      <div><span>Created at</span><strong>{formatDisplayDate(selectedOrder.orderDate)}</strong></div>
+                      <div><span>Customer name</span><strong>{selectedOrder.customerName}</strong></div>
+                      <div><span>Delivery address</span><strong>{selectedOrder.address}</strong></div>
+                      <div><span>Phone</span><strong>{selectedOrder.phone || 'Not provided'}</strong></div>
+                      <div><span>Payment method</span><strong>{selectedOrder.paymentMethod || 'Razorpay'}</strong></div>
+                      <div><span>Payment status</span><strong>{selectedOrder.paymentStatus || 'Paid'}</strong></div>
+                    </div>
+
+                    <div className="tracking-history-card">
+                      <h3>Order history</h3>
+                      <ul className="tracking-history-list">
+                        {orderHistory.map((entry) => (
+                          <li key={entry.label}>
+                            <span>{entry.label}</span>
+                            <strong>{entry.detail}</strong>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
                 </div>
-                <div className="confirmation-dialog-actions">
-                  <button className="order-card-action" type="button" onClick={() => setSelectedOrder(null)}>Close</button>
+
+                <div className="order-tracking-actions">
+                  <button className="order-card-action order-card-action--ghost" type="button" onClick={() => setSelectedOrder(null)}>Close</button>
+                  <button className="order-card-action" type="button" onClick={() => navigate('/orders')}>Back to Orders</button>
+                  <button className="order-card-action order-card-action--ghost" type="button" onClick={() => navigate('/customerhome')}>Continue Shopping</button>
                 </div>
               </div>
             </div>
@@ -285,17 +407,26 @@ export default function OrderPage() {
           )}
 
           {!loading && !error && orderCards.length > 0 && (
-            <div className="orders-list">
-              {orderCards.map((order) => (
-                <OrderCard
-                  key={order.orderId}
-                  order={order}
-                  onTrackOrder={handleTrackOrder}
-                  onCancelOrder={handleCancelOrder}
-                  onContinueShopping={() => navigate('/customerhome')}
-                />
-              ))}
-            </div>
+            <>
+              <div className="orders-list">
+                {orderCards.map((order) => (
+                  <OrderCard
+                    key={order.orderId}
+                    order={order}
+                    onTrackOrder={handleTrackOrder}
+                    onCancelOrder={handleCancelOrder}
+                    onContinueShopping={() => navigate('/customerhome')}
+                  />
+                ))}
+              </div>
+              {hasNextPage && (
+                <div className="orders-load-more">
+                  <button className="order-card-action" type="button" onClick={handleLoadMore} disabled={isLoadingMore}>
+                    {isLoadingMore ? 'Loading...' : 'Load more orders'}
+                  </button>
+                </div>
+              )}
+            </>
           )}
 
           {pendingCancelOrder && (

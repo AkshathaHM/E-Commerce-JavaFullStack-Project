@@ -2129,6 +2129,17 @@ span.username {
   margin: 20px 0;
 }
 
+.orders-load-more {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 24px;
+}
+
+.orders-load-more .order-card-action:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
 .order-card {
   background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
   border: 1px solid rgba(226, 232, 240, 0.95);

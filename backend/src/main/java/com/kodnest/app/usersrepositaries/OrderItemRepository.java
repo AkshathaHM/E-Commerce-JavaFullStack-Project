@@ -1,5 +1,7 @@
 package com.kodnest.app.usersrepositaries;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -9,7 +11,6 @@ import org.springframework.stereotype.Repository;
 
 import com.kodnest.app.entities.OrderItem;
 import java.util.List;
-import com.kodnest.app.entities.OrderStatus;
 
 @Repository
 public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
@@ -22,8 +23,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
 	@Transactional
 	void deleteAllByProductId(Integer productId);
 
-	// Fetch the order items for a user so the lifecycle status can be resolved on the backend.
 	@Query("SELECT oi FROM OrderItem oi JOIN FETCH oi.order o WHERE o.userId = :userId")
-	List<OrderItem> findSuccessfulOrderItemsByUserId(@Param("userId") Integer userId);
+	Page<OrderItem> findOrderItemsByUserId(@Param("userId") Integer userId, Pageable pageable);
 
 }
