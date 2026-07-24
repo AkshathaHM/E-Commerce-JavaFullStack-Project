@@ -41,7 +41,6 @@ public class OrderService implements OrderServiceContract {
 
     @Override
     public Map<String, Object> getOrdersForUser(User user) {
-        // Assuming this method exists in your repository (from earlier @Query)
         List<OrderItem> orderItems = orderItemRepository.findSuccessfulOrderItemsByUserId(user.getUserId());
 
         Map<String, Object> response = new HashMap<>();

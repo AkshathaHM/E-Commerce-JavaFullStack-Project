@@ -14,7 +14,7 @@ import com.kodnest.app.entities.OrderStatus;
 @Repository
 public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
 	// Find all order items for a given order id (service calls findByOrderId(...))
-	@Query("SELECT oi FROM OrderItem oi JOIN oi.order o WHERE o.orderId = :orderId")
+	@Query("SELECT oi FROM OrderItem oi JOIN FETCH oi.order o WHERE o.orderId = :orderId")
 	List<OrderItem> findByOrderId(@Param("orderId") String orderId);
 
 	// Delete all order items for a given product id
@@ -23,7 +23,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
 	void deleteAllByProductId(Integer productId);
 
 	// Find successful order items for a given user id (orders with status = SUCCESS)
-	@Query("SELECT oi FROM OrderItem oi JOIN oi.order o WHERE o.userId = :userId AND o.status = 'SUCCESS'")
+	@Query("SELECT oi FROM OrderItem oi JOIN FETCH oi.order o WHERE o.userId = :userId AND o.status = 'SUCCESS'")
 	List<OrderItem> findSuccessfulOrderItemsByUserId(@Param("userId") Integer userId);
 
 }

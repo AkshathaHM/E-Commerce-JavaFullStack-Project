@@ -204,12 +204,30 @@ export default function OrderPage() {
     setPendingCancelOrder(order);
   };
 
-  const confirmCancelOrder = () => {
+  const confirmCancelOrder = async () => {
     if (!pendingCancelOrder) return;
 
-    setOrders((currentOrders) => currentOrders.map((entry) => entry.orderId === pendingCancelOrder.orderId ? { ...entry, status: 'Cancelled' } : entry));
-    setCancelMessage('Your order has been cancelled successfully.');
-    setPendingCancelOrder(null);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${encodeURIComponent(pendingCancelOrder.orderId)}/cancel`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Unable to cancel this order right now.');
+      }
+
+      setOrders((currentOrders) => currentOrders.map((entry) => entry.orderId === pendingCancelOrder.orderId ? { ...entry, status: 'Cancelled' } : entry));
+      setCancelMessage('Your order has been cancelled successfully.');
+      setPendingCancelOrder(null);
+    } catch (err) {
+      setCancelMessage(err.message || 'Unable to cancel this order right now.');
+      setPendingCancelOrder(null);
+    }
   };
 
   return (

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -16,6 +17,10 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     // Custom query methods can be added here if needed
 	@Query("SELECT o FROM Order o WHERE MONTH(o.createdAt) = :month AND YEAR(o.createdAt) = :year AND o.status = 'SUCCESS'")
 	List<Order> findSuccessfulOrdersByMonthAndYear(int month, int year);
+
+	@EntityGraph(attributePaths = "orderitems")
+	@Query("SELECT o FROM Order o")
+	List<Order> findAllWithOrderItems();
 
 	@Query("SELECT o FROM Order o WHERE DATE(o.createdAt) = :date AND o.status = 'SUCCESS'")
 	List<Order> findSuccessfulOrdersByDate(LocalDate date);

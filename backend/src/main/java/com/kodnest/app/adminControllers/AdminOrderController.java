@@ -27,11 +27,14 @@ public class AdminOrderController {
     public ResponseEntity<?> getAllOrders() {
         try {
             List<Map<String, Object>> orders = adminOrderService.getAllOrdersForAdmin();
+            if (orders.isEmpty()) {
+                return ResponseEntity.ok(List.of(Map.of("message", "No orders found.")));
+            }
             return ResponseEntity.status(HttpStatus.OK).body(orders);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to fetch orders: " + e.getMessage());
+                    .body(Map.of("message", "Unable to load orders. Please try again."));
         }
     }
 
@@ -43,11 +46,11 @@ public class AdminOrderController {
                     .body(adminOrderService.getOrdersByStatus(orderStatus));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("Invalid order status: " + status);
+                    .body(Map.of("message", "Invalid order status supplied."));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to fetch orders: " + e.getMessage());
+                    .body(Map.of("message", "Unable to load orders. Please try again."));
         }
     }
 

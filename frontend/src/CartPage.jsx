@@ -206,7 +206,7 @@ const CartPage = () => {
     if (checkoutLoading) return;
     if (Number(subtotal) <= 0) {
       const message = "Your cart is empty or total is zero.";
-      setPaymentError(message);
+      setPaymentError({ title: 'Checkout blocked', message, kind: 'empty-cart', canRetry: false });
       setToastMessage(message);
       setToastType("error");
       return;
@@ -252,7 +252,7 @@ const CartPage = () => {
       if (attemptId !== checkoutAttemptRef.current) return;
 
       const options = {
-        key: "rzp_test_TAsqtBKY9SkyQb",
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_TAsqtBKY9SkyQb",
         amount: amountPaise,
         currency: "INR",
         name: "SalesSavvy",
@@ -281,6 +281,11 @@ const CartPage = () => {
             if (!verifyRes.ok) {
               const verifyMessage = await verifyRes.text();
               throw new Error(verifyMessage || "Payment verification failed");
+            }
+
+            const verifyPayload = await verifyRes.text();
+            if (!verifyPayload.includes("successfully")) {
+              throw new Error(verifyPayload || "Payment verification failed");
             }
 
             const deliveryDate = new Date();
@@ -322,7 +327,7 @@ const CartPage = () => {
           } catch (e) {
             console.error("Payment verification error:", e);
             const details = getPaymentErrorDetails(e, "Payment processed but verification failed.");
-            setPaymentError(details.message);
+            setPaymentError(details);
             setToastMessage(details.message);
             setToastType("error");
             setPaymentState("failed");
@@ -361,7 +366,7 @@ const CartPage = () => {
     } catch (err) {
       console.error("Checkout process failed:", err);
       const details = getPaymentErrorDetails(err, err.message || "Something went wrong during checkout.");
-      setPaymentError(details.message);
+      setPaymentError(details);
       setToastMessage(details.message);
       setToastType("error");
       setPaymentState("failed");
@@ -434,7 +439,7 @@ const CartPage = () => {
       />
       {paymentError && (
         <div className="payment-error-banner">
-          <p>{paymentError}</p>
+          <p>{typeof paymentError === 'string' ? paymentError : paymentError.message}</p>
         </div>
       )}
 
