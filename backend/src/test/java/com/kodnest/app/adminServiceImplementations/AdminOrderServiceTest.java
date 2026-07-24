@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AdminOrderServiceTest {
@@ -43,7 +44,7 @@ class AdminOrderServiceTest {
         user.setAddress("3, Main Street");
         user.setRole(Role.CUSTOMER);
 
-        when(orderRepository.findAll()).thenReturn(List.of(order));
+        when(orderRepository.findAllWithOrderItems()).thenReturn(List.of(order));
         when(userRepository.findById(7)).thenReturn(Optional.of(user));
 
         List<Map<String, Object>> result = service.getAllOrdersForAdmin();
@@ -52,5 +53,6 @@ class AdminOrderServiceTest {
         assertEquals("Jane Doe", result.get(0).get("customerName"));
         assertEquals("jane@example.com", result.get(0).get("customerEmail"));
         assertEquals("9876543210", result.get(0).get("customerMobile"));
+        verify(orderRepository).findAllWithOrderItems();
     }
 }

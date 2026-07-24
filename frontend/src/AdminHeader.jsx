@@ -17,6 +17,8 @@ export const AdminHeader = memo(function AdminHeader({ username = 'Admin' }) {
           <ProfileDropdown
             username={username}
             variant="admin"
+            showOrders={false}
+            showCart={false}
             menuItems={[
               { id: 'dashboard', label: 'Dashboard', icon: '📊', to: '/admin' },
               { id: 'products', label: 'Products', icon: '🧺', to: '/admin/products' },

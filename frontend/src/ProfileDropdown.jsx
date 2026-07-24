@@ -233,8 +233,10 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
         className="profile-button"
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
+        aria-label="Open profile menu"
+        title=""
       >
-        <img src={useravatar} alt="User" className="user-avatar" />
+        <img src={useravatar} alt="" className="user-avatar" title="" />
         <span className="username">{username || 'Guest'}</span>
         <span className="profile-button__chevron" aria-hidden="true">▾</span>
       </button>

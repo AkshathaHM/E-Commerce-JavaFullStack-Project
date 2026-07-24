@@ -31,7 +31,7 @@ public class AdminOrderService implements AdminOrderServiceContract {
 
     @Override
     public List<Map<String, Object>> getAllOrdersForAdmin() {
-        return orderRepository.findAll().stream().map(order -> {
+        return orderRepository.findAllWithOrderItems().stream().map(order -> {
             Map<String, Object> orderMap = new HashMap<>();
             orderMap.put("orderId", order.getOrderId());
             orderMap.put("userId", order.getUserId());

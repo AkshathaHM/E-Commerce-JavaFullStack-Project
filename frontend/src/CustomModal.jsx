@@ -1001,7 +1001,11 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
     return order?.[field] || "";
   };
 
-  const orders = Array.isArray(modalData) ? modalData : [];
+  const orders = Array.isArray(modalData)
+    ? modalData
+    : Array.isArray(modalData?.orders)
+      ? modalData.orders
+      : [];
 
   const filteredOrders = orders
     .filter((order) => {
