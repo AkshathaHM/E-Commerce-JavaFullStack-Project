@@ -4,6 +4,7 @@ import { CustomerLayout } from './CustomerLayout';
 import { OrderCardSkeleton } from './components/Skeleton';
 import { getDerivedOrderStatus, getExpectedDelivery, getOrderHistoryEntries, getStatusLabel, ORDER_STATUS_SEQUENCE } from './utils/orderStatus';
 import { cachedFetch } from './utils/apiClient';
+import { setCache } from './utils/cache';
 import StatusBadge from './components/StatusBadge';
 import TrackingTimeline from './components/TrackingTimeline';
 import './assets/styles.css';
@@ -61,7 +62,7 @@ const formatDisplayDate = (value, fallback = 'Not available') => {
 
 const DEMO_SEQUENCE = ['placed', 'confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered'];
 
-const OrderCard = memo(function OrderCard({ order, onTrackOrder, onCancelOrder, onContinueShopping }) {
+const OrderCard = memo(function OrderCard({ order, onTrackOrder, onCancelOrder }) {
   const fallbackImage = (event) => {
     event.currentTarget.onerror = null;
     event.currentTarget.src = NO_IMAGE;
@@ -116,7 +117,6 @@ const OrderCard = memo(function OrderCard({ order, onTrackOrder, onCancelOrder, 
         <div className="order-card-actions">
           {!isCancelled && <button className="order-card-action" type="button" onClick={() => onTrackOrder(order)}>Track Order</button>}
           {showCancel && <button className="order-card-action order-card-action--danger" type="button" onClick={() => onCancelOrder(order)}>Cancel Order</button>}
-          <button className="order-card-action order-card-action--ghost" type="button" onClick={onContinueShopping}>Continue Shopping</button>
         </div>
       </div>
     </article>
@@ -180,14 +180,16 @@ export default function OrderPage() {
   }, [getAuthHeaders]);
 
   const fetchCartCount = useCallback(async () => {
+    if (!username) return;
     setIsCartLoading(true);
     try {
-      const response = await fetch(
+      const count = await cachedFetch(
+        `cart_count_${username}`,
         `${import.meta.env.VITE_API_URL}/api/cart/items/count?username=${username}`,
-        { credentials: 'include' }
+        { credentials: 'include' },
+        30000
       );
-      const count = await response.json();
-      setCartCount(count);
+      setCartCount(Number(count) || 0);
       setCartError(false);
     } catch (error) {
       console.error('Error fetching cart count:', error);
@@ -298,6 +300,11 @@ export default function OrderPage() {
       username={username}
     >
       <div className="main-content">
+        <div className="cart-page-actions">
+          <button className="back-button" type="button" onClick={() => navigate('/customerhome')}>
+            ← Continue Shopping
+          </button>
+        </div>
         <section className="orders-hero">
             <div>
               <p className="section-eyebrow">Your account</p>
@@ -384,7 +391,6 @@ export default function OrderPage() {
                 <div className="order-tracking-actions">
                   <button className="order-card-action order-card-action--ghost" type="button" onClick={() => setSelectedOrder(null)}>Close</button>
                   <button className="order-card-action" type="button" onClick={() => navigate('/orders')}>Back to Orders</button>
-                  <button className="order-card-action order-card-action--ghost" type="button" onClick={() => navigate('/customerhome')}>Continue Shopping</button>
                 </div>
               </div>
             </div>
@@ -423,7 +429,6 @@ export default function OrderPage() {
                     order={order}
                     onTrackOrder={handleTrackOrder}
                     onCancelOrder={handleCancelOrder}
-                    onContinueShopping={() => navigate('/customerhome')}
                   />
                 ))}
               </div>

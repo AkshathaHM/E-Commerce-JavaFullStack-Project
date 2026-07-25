@@ -6,6 +6,7 @@ import { AdminHeader } from "./AdminHeader";
 import "./assets/styles.css";
 import CustomModal from "./CustomModal";
 import { clearAuthSession, getAuthHeaders } from "./auth";
+import { getCache, setCache } from "./utils/cache";
 
 const AdminDashboard = () => {
   const location = useLocation();
@@ -126,7 +127,11 @@ const AdminDashboard = () => {
 
       if (response.ok) {
         setResponse("✅ Product Deleted Successfully");
-        setModalData((prev) => (Array.isArray(prev) ? prev.filter((product) => String(product.product_id || product.productId) !== String(data.productId)) : prev));
+        setModalData((prev) => {
+          const next = Array.isArray(prev) ? prev.filter((product) => String(product.product_id || product.productId) !== String(data.productId)) : prev;
+          try { setCache('admin_products', next, 30000); } catch {}
+          return next;
+        });
         return true;
       }
 
@@ -143,7 +148,8 @@ const AdminDashboard = () => {
   };
 
   const handleManageProducts = async (preserveResponse = false) => {
-    const cached = modalCacheRef.current.products;
+    const cacheKey = 'admin_products';
+    const cached = getCache(cacheKey) || modalCacheRef.current.products;
     if (cached && !preserveResponse) {
       setModalData(cached);
       return cached;
@@ -164,6 +170,7 @@ const AdminDashboard = () => {
       if (response.ok) {
         const products = await response.json();
         modalCacheRef.current.products = products;
+        setCache(cacheKey, products, 30000);
         setModalData(products);
         return products;
       } else {
@@ -178,9 +185,17 @@ const AdminDashboard = () => {
   };
 
   const handleViewProfile = async () => {
+    const cacheKey = 'admin_profile';
+    const cached = getCache(cacheKey);
+    if (cached) {
+      setModalData(cached);
+    }
+
     setLoading(true);
     setResponse(null);
-    setModalData(null);
+    if (!cached) {
+      setModalData(null);
+    }
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
         method: "GET",
@@ -190,6 +205,7 @@ const AdminDashboard = () => {
 
       if (response.ok) {
         const profile = await response.json();
+        setCache(cacheKey, profile, 30000);
         setModalData(profile);
         return profile;
       }
@@ -366,7 +382,8 @@ const AdminDashboard = () => {
   };
 
   const handleViewAllUsers = async (data) => {
-    const cached = modalCacheRef.current.users;
+    const cacheKey = 'admin_users';
+    const cached = getCache(cacheKey) || modalCacheRef.current.users;
     if (cached && !data?.forceRefresh) {
       setModalData(cached);
       return cached;
@@ -385,6 +402,7 @@ const AdminDashboard = () => {
       if (response.ok) {
         const users = await response.json();
         modalCacheRef.current.users = users;
+        setCache(cacheKey, users, 30000);
         setModalData(users);
         return users;
       } else {
@@ -504,7 +522,8 @@ const AdminDashboard = () => {
   };
 
   const handleViewOrders = async (data) => {
-    const cached = modalCacheRef.current.orders;
+    const cacheKey = 'admin_orders';
+    const cached = getCache(cacheKey) || modalCacheRef.current.orders;
     if (cached && !data?.forceRefresh) {
       setModalData(cached);
       return cached;
@@ -523,6 +542,7 @@ const AdminDashboard = () => {
       if (response.ok) {
         const orders = await response.json();
         modalCacheRef.current.orders = orders;
+        setCache(cacheKey, orders, 30000);
         setModalData(orders);
         return orders;
       } else {

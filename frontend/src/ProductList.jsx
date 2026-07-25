@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useContext, useState, useCallback } from 'react';
+import { ThemeContext } from './ThemeContext';
 import './assets/styles.css';
 
 export const ProductList = React.memo(({ products, onAddToCart, error }) => {
@@ -49,6 +50,19 @@ const ProductCard = React.memo(({ product, onAddToCart }) => {
     ? product.images[0]
     : (product.imageUrl || product.image || "/images/no-image.png");
 
+  const { theme } = useContext(ThemeContext);
+  const [active, setActive] = useState(false);
+
+  const getId = (p) => p.product_id || p.id || p.productId;
+
+  const handleClick = useCallback(() => {
+    const id = getId(product);
+    if (!id) return;
+    onAddToCart && onAddToCart(id);
+    setActive(true);
+    window.setTimeout(() => setActive(false), 700);
+  }, [product, onAddToCart]);
+
   return (
     <div className="product-card">
       <div className="product-image-wrap">
@@ -71,11 +85,11 @@ const ProductCard = React.memo(({ product, onAddToCart }) => {
             <p className="product-price">₹{product.price}</p>
             <button
               type="button"
-              className="add-to-cart-btn"
-              onClick={() => onAddToCart(product.product_id || product.id || product.productId)}
+              className={`add-to-cart-btn ${active ? 'add-to-cart-btn--active' : ''}`}
+              onClick={handleClick}
               aria-label={`Add ${product.name} to cart`}
             >
-              Add to Cart
+              {active ? 'Added' : 'Add to Cart'}
             </button>
           </div>
         </div>

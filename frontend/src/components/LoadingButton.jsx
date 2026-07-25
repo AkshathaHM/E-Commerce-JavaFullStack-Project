@@ -4,7 +4,7 @@ const LoadingButton = ({
   children,
   isLoading = false,
   loadingText,
-  className = 'form-button',
+  className = 'button',
   disabled,
   type = 'button',
   ...props

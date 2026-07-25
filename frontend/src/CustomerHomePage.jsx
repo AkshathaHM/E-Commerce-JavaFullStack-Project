@@ -3,66 +3,81 @@ import { CustomerLayout } from './CustomerLayout';
 import { ProductList } from './ProductList';
 import { ProductCardSkeleton } from './components/Skeleton';
 import CustomModal from './CustomModal';
+import { cachedFetch } from './utils/apiClient';
+import { getCache, setCache } from './utils/cache';
 import './assets/styles.css';
 
 export default function CustomerHomePage() {
-  const [allProducts, setAllProducts] = useState([]);
-  const [cartCount, setCartCount] = useState(0);
-  const [username, setUsername] = useState('Guest');
+  const [allProducts, setAllProducts] = useState(() => getCache('products_all') || []);
+  const [cartCount, setCartCount] = useState(() => getCache(`cart_count_${localStorage.getItem('username') || 'Guest'}`) || 0);
+  const [username, setUsername] = useState(localStorage.getItem('username') || 'Guest');
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => !getCache('products_all'));
   const [error, setError] = useState('');
   const [profileModalType, setProfileModalType] = useState(null);
   const [profileModalData, setProfileModalData] = useState(null);
   const [profileModalLoading, setProfileModalLoading] = useState(false);
   const [profileModalResponse, setProfileModalResponse] = useState('');
   const deferredSearchTerm = useDeferredValue(searchTerm);
-  const productsCache = useRef(null);
-  const cartCountCache = useRef({ username: null, count: 0 });
+  const cartCountCache = useRef({ username: localStorage.getItem('username') || 'Guest', count: cartCount });
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = useCallback(() => {
     const token = localStorage.getItem('authToken');
     return token ? { Authorization: `Bearer ${token}` } : {};
-  };
+  }, []);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     setError('');
+
     try {
-      const { cachedFetch } = await import('./utils/apiClient');
-      const data = await cachedFetch('products_all', `${import.meta.env.VITE_API_URL}/api/products`, { credentials: 'include', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() } }, 30000).catch((e) => { throw e; });
+      const data = await cachedFetch(
+        'products_all',
+        `${import.meta.env.VITE_API_URL}/api/products`,
+        { credentials: 'include', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() } },
+        60000,
+      );
+
       const productList = Array.isArray(data?.products) ? data.products : (Array.isArray(data) ? data : []);
-      productsCache.current = productList;
       setAllProducts(productList);
-      const activeUsername = data?.user?.name || data?.user?.username || localStorage.getItem('username') || 'Guest';
-      setUsername(activeUsername);
+      setUsername(data?.user?.name || data?.user?.username || localStorage.getItem('username') || 'Guest');
+      setCache('products_all', productList, 60000);
     } catch (err) {
       console.error(err);
       setError('Unable to load products right now.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [getAuthHeaders]);
 
   const fetchCartCount = useCallback(async () => {
-    if (username === 'Guest') return;
-    if (cartCountCache.current.username === username && cartCountCache.current.count !== null) {
-      setCartCount(cartCountCache.current.count);
+    const activeUsername = localStorage.getItem('username') || username || 'Guest';
+    if (!activeUsername || activeUsername === 'Guest') {
+      setCartCount(0);
+      return;
+    }
+
+    const cacheKey = `cart_count_${activeUsername}`;
+    const cachedCount = getCache(cacheKey);
+    if (cachedCount !== null) {
+      setCartCount(cachedCount);
       return;
     }
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/items/count?username=${username}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/items/count?username=${encodeURIComponent(activeUsername)}`, {
         credentials: 'include',
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
       });
       if (res.ok) {
         const count = await res.json();
-        cartCountCache.current = { username, count };
         setCartCount(count);
+        setCache(cacheKey, count, 30000);
       }
-    } catch (e) {}
-  }, [username]);
+    } catch (e) {
+      console.warn('Cart count fetch failed', e);
+    }
+  }, [getAuthHeaders, username]);
 
   useEffect(() => {
     fetchProducts();
@@ -70,7 +85,7 @@ export default function CustomerHomePage() {
 
   useEffect(() => {
     fetchCartCount();
-  }, [username, fetchCartCount]);
+  }, [fetchCartCount]);
 
   const filteredProducts = useMemo(() => {
     const normalizedSearch = deferredSearchTerm.trim().toLowerCase();
@@ -94,29 +109,27 @@ export default function CustomerHomePage() {
     if (!productId) return;
 
     const activeUsername = localStorage.getItem('username') || username || 'Guest';
-    const newCount = cartCount + 1;
-    setCartCount((prev) => prev + 1);
-    cartCountCache.current = { username: activeUsername, count: newCount };
+    setCartCount((prev) => {
+      const next = prev + 1;
+      cartCountCache.current = { username: activeUsername, count: next };
+      return next;
+    });
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/add`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({ username: activeUsername, productId })
+        body: JSON.stringify({ username: activeUsername, productId }),
       });
 
       if (!res.ok) {
-        const revertedCount = newCount - 1;
-        setCartCount(revertedCount);
-        cartCountCache.current = { username: activeUsername, count: revertedCount };
+        setCartCount((prev) => Math.max(0, prev - 1));
       }
     } catch (e) {
-      const revertedCount = newCount - 1;
-      setCartCount(revertedCount);
-      cartCountCache.current = { username: activeUsername, count: revertedCount };
+      setCartCount((prev) => Math.max(0, prev - 1));
     }
-  }, [cartCount, username]);
+  }, [getAuthHeaders, username]);
 
   const handleOpenProfileModal = useCallback(async () => {
     setProfileModalType('viewProfile');
@@ -125,29 +138,25 @@ export default function CustomerHomePage() {
     setProfileModalData(null);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-      });
-
-      if (!res.ok) {
-        throw new Error('Unable to load your profile right now.');
-      }
-
-      const profile = await res.json();
+      const profile = await cachedFetch(
+        'profile_me',
+        `${import.meta.env.VITE_API_URL}/api/auth/me`,
+        { credentials: 'include', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() } },
+        60000,
+      );
       setProfileModalData(profile);
     } catch (err) {
       setProfileModalResponse(err.message || 'Unable to load your profile right now.');
     } finally {
       setProfileModalLoading(false);
     }
-  }, []);
+  }, [getAuthHeaders]);
 
-  const handleCloseProfileModal = () => {
+  const handleCloseProfileModal = useCallback(() => {
     setProfileModalType(null);
     setProfileModalData(null);
     setProfileModalResponse('');
-  };
+  }, []);
 
   const showSkeletons = loading && allProducts.length === 0;
 

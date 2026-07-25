@@ -120,13 +120,13 @@ const CartPage = () => {
       return;
     }
 
-    // try cache first to avoid network round-trip
     const cached = getCache('cart_items');
     if (cached) {
       setCartItems(cached.items || []);
       setUsername(cached.username || 'Guest');
       setSubtotal(cached.subtotal || '0.00');
       setLoading(false);
+      fetchCartItems();
       return;
     }
 
@@ -177,17 +177,17 @@ const CartPage = () => {
         };
       });
 
-      setCartItems(formatted);
-      setUsername(data?.username || "Guest");
-
-      // cache cart for short duration
-      try { setCache('cart_items', { items: formatted, username: data?.username || 'Guest', subtotal: calc }, 20000); } catch {}
-
       const calc = formatted
         .reduce((sum, item) => sum + Number(item.total_price), 0)
         .toFixed(2);
 
+      setCartItems(formatted);
+      setUsername(data?.username || "Guest");
       setSubtotal(calc);
+
+      try {
+        setCache('cart_items', { items: formatted, username: data?.username || 'Guest', subtotal: calc }, 20000);
+      } catch {}
     } catch (err) {
       console.error("Cart load error:", err);
       setError("Failed to load cart. Please try again.");
@@ -200,7 +200,7 @@ const CartPage = () => {
   };
 
   // Remove item
-  const handleRemoveItem = async (productId) => {
+  const handleRemoveItem = useCallback(async (productId) => {
     const id = productId;
     if (!id) return;
 
@@ -215,17 +215,12 @@ const CartPage = () => {
       if (res.ok || res.status === 204) {
         setCartItems((prev) => {
           const next = prev.filter((i) => getItemId(i) !== id);
-          // update cache
-          try { setCache('cart_items', { items: next, username, subtotal: (Number(subtotal) - Number((cartItems.find((i) => getItemId(i) === id) || {}).total_price || 0)).toFixed(2) }, 20000); } catch(e){}
+          const removed = prev.find((i) => getItemId(i) === id);
+          const newSubtotal = removed ? Math.max(0, Number(subtotal) - Number(removed.total_price)).toFixed(2) : subtotal;
+          try { setCache('cart_items', { items: next, username, subtotal: newSubtotal }, 20000); } catch (e) {}
+          setSubtotal(newSubtotal);
           return next;
         });
-
-        const removed = cartItems.find((i) => getItemId(i) === id);
-        if (removed) {
-          const newSub = (Number(subtotal) - Number(removed.total_price)).toFixed(2);
-          const final = newSub > 0 ? newSub : "0.00";
-          setSubtotal(final);
-        }
       } else {
         throw new Error(await res.text() || "Remove failed");
       }
@@ -233,56 +228,57 @@ const CartPage = () => {
       console.error("Remove failed:", err);
       alert("Could not remove item. Please try again.");
     }
-  };
+  }, [getAuthHeaders, username, subtotal]);
 
   // Update quantity
-  const handleQuantityChange = async (productId, delta) => {
-    const item = cartItems.find((i) => getItemId(i) === productId);
-    if (!item) return;
+  const handleQuantityChange = useCallback(async (productId, delta) => {
+    let requestedQuantity = null;
 
-    const newQty = item.quantity + delta;
-    if (newQty < 0) return;
-    if (newQty === 0) return handleRemoveItem(productId);
+    setCartItems((prev) => {
+      const item = prev.find((i) => getItemId(i) === productId);
+      if (!item) return prev;
+
+      const newQty = item.quantity + delta;
+      if (newQty <= 0) {
+        handleRemoveItem(productId);
+        return prev;
+      }
+
+      requestedQuantity = newQty;
+      const nextItems = prev.map((i) =>
+        getItemId(i) === productId
+          ? { ...i, quantity: newQty, total_price: (Number(i.price_per_unit) * newQty).toFixed(2) }
+          : i
+      );
+
+      const newSubtotal = nextItems.reduce((sum, item) => sum + Number(item.total_price), 0).toFixed(2);
+      try { setCache('cart_items', { items: nextItems, username, subtotal: newSubtotal }, 20000); } catch (e) {}
+      setSubtotal(newSubtotal);
+      return nextItems;
+    });
+
+    if (requestedQuantity === null) return;
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/update`, {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ username, productId, quantity: newQty }),
+        body: JSON.stringify({ username, productId, quantity: requestedQuantity }),
       });
 
       if (!res.ok) throw new Error(await res.text() || "Update failed");
-
-      setCartItems((prev) =>
-        prev.map((i) =>
-          getItemId(i) === productId
-            ? { ...i, quantity: newQty, total_price: (Number(i.price_per_unit) * newQty).toFixed(2) }
-            : i
-        )
-      );
-
-      setSubtotal((prev) => {
-        const diff = Number(item.price_per_unit) * delta;
-        const next = (Number(prev) + diff).toFixed(2);
-        const final = next > 0 ? next : "0.00";
-        // update cache with new values
-        try {
-          const nextItems = cartItems.map((i) => getItemId(i) === productId ? { ...i, quantity: newQty, total_price: (Number(i.price_per_unit) * newQty).toFixed(2) } : i);
-          setCache('cart_items', { items: nextItems, username, subtotal: final }, 20000);
-        } catch (e) {}
-        return final;
-      });
     } catch (err) {
       console.error("Qty update failed:", err);
       alert("Could not update quantity. Please try again.");
+      fetchCartItems();
     }
-  };
+  }, [cartItems, getAuthHeaders, handleRemoveItem]);
 
   // stable callbacks for child components
-  const handleIncrease = useCallback((id) => handleQuantityChange(id, +1), [cartItems]);
-  const handleDecrease = useCallback((id) => handleQuantityChange(id, -1), [cartItems]);
-  const handleRemove = useCallback((id) => handleRemoveItem(id), [cartItems]);
+  const handleIncrease = useCallback((id) => handleQuantityChange(id, +1), [handleQuantityChange]);
+  const handleDecrease = useCallback((id) => handleQuantityChange(id, -1), [handleQuantityChange]);
+  const handleRemove = useCallback((id) => handleRemoveItem(id), [handleRemoveItem]);
 
   const handleCheckout = async () => {
     if (checkoutLoading) return;
@@ -535,9 +531,7 @@ const CartPage = () => {
             <button className="back-button" onClick={() => navigate("/customerhome")}>
               ← Continue Shopping
             </button>
-            <button className="back-button back-button--ghost" onClick={() => navigate("/profile")}>
-              View Profile
-            </button>
+
           </div>
 
           <div className="cart-header">

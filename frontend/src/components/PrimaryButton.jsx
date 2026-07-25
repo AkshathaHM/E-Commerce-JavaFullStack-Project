@@ -1,17 +1,16 @@
 import React from 'react';
-import LoadingButton from './LoadingButton';
+import Button from './Button';
 
 export default function PrimaryButton({ children, isLoading = false, loadingText, variant = 'primary', className = '', ...props }) {
-  const baseClass = variant === 'secondary' ? 'form-button secondary-button' : 'form-button';
   return (
-    <LoadingButton
+    <Button
       {...props}
-      disabled={props.disabled || isLoading}
+      variant={variant}
       isLoading={isLoading}
       loadingText={loadingText}
-      className={`${baseClass} ${className}`.trim()}
+      className={className}
     >
       {children}
-    </LoadingButton>
+    </Button>
   );
 }

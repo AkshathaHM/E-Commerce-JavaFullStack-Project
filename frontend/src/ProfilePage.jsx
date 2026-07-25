@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CustomerLayout } from './CustomerLayout';
+import { cachedFetch } from './utils/apiClient';
 import { getAuthHeaders } from './auth';
 
 export default function ProfilePage() {
@@ -12,30 +13,32 @@ export default function ProfilePage() {
   useEffect(() => {
     let active = true;
 
-    async function loadProfile() {
+    async function loadProfile({ skipLoading = false } = {}) {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            ...getAuthHeaders(),
+        if (!skipLoading) setLoading(true);
+        setError('');
+
+        const payload = await cachedFetch(
+          'profile_data',
+          `${import.meta.env.VITE_API_URL}/api/auth/me`,
+          {
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              ...getAuthHeaders(),
+            },
           },
-        });
+          60000
+        );
 
-        if (!response.ok) {
-          throw new Error('Unable to load your profile right now.');
-        }
-
-        const payload = await response.json();
-        if (active) {
-          setProfile(payload);
-        }
+        if (!active) return;
+        setProfile(payload);
       } catch (err) {
         if (active) {
           setError(err.message || 'Unable to load your profile.');
         }
       } finally {
-        if (active) {
+        if (active && !skipLoading) {
           setLoading(false);
         }
       }
@@ -68,8 +71,20 @@ export default function ProfilePage() {
         </section>
 
         {loading ? (
-          <div className="profile-panel">
-            <p className="section-copy">Loading your profile details…</p>
+          <div className="profile-page-shell profile-skeleton">
+            <div className="profile-panel skeleton-card">
+              <div className="skeleton-block skeleton-line short" />
+              <div className="skeleton-block skeleton-line" />
+              <div className="skeleton-block skeleton-line tiny" />
+            </div>
+            <div className="profile-grid">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="profile-panel profile-panel--info skeleton-card">
+                  <div className="skeleton-block skeleton-line short" />
+                  <div className="skeleton-block skeleton-line" />
+                </div>
+              ))}
+            </div>
           </div>
         ) : error ? (
           <div className="profile-panel profile-panel--error">

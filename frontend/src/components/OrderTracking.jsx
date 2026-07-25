@@ -205,12 +205,45 @@ export default function OrderTracking() {
               <h3>Order details</h3>
             </div>
             <div className="order-tracking-details-grid">
-              <div><span>Customer</span><strong>{displayOrder.customerName}</strong></div>
-              <div><span>Address</span><strong>{displayOrder.address}</strong></div>
-              <div><span>Phone</span><strong>{displayOrder.phone}</strong></div>
-              <div><span>Payment</span><strong>{displayOrder.paymentStatus}</strong></div>
-              <div><span>Method</span><strong>{displayOrder.paymentMethod}</strong></div>
-              <div><span>Tracking state</span><strong>{currentStepLabel}</strong></div>
+              <div className="detail-card">
+                <span>ORDER NUMBER</span>
+                <strong className="detail-value detail-orderid">{displayOrder.orderId}</strong>
+              </div>
+
+              <div className="detail-card">
+                <span>STATUS</span>
+                <strong className="detail-value">{currentStepLabel}</strong>
+              </div>
+
+              <div className="detail-card">
+                <span>CREATED AT</span>
+                <strong className="detail-value">{new Date(displayOrder.createdAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' })}</strong>
+              </div>
+
+              <div className="detail-card">
+                <span>CUSTOMER NAME</span>
+                <strong className="detail-value">{displayOrder.customerName}</strong>
+              </div>
+
+              <div className="detail-card">
+                <span>DELIVERY ADDRESS</span>
+                <strong className="detail-value">{displayOrder.address}</strong>
+              </div>
+
+              <div className="detail-card">
+                <span>PHONE</span>
+                <strong className="detail-value">{displayOrder.phone || 'N/A'}</strong>
+              </div>
+
+              <div className="detail-card">
+                <span>PAYMENT METHOD</span>
+                <strong className="detail-value">{displayOrder.paymentMethod}</strong>
+              </div>
+
+              <div className="detail-card">
+                <span>PAYMENT STATUS</span>
+                <strong className="detail-value">{displayOrder.paymentStatus}</strong>
+              </div>
             </div>
 
             {!isCancelled && (

@@ -1,6 +1,6 @@
 // CustomModal.jsx
 import React, { useState, useEffect } from "react";
-import { FiEye, FiEyeOff, FiMail, FiMapPin, FiPhone, FiShield, FiUser, FiLock } from "react-icons/fi";
+import { FiMail, FiMapPin, FiPhone, FiShield, FiUser, FiEdit, FiSave } from "react-icons/fi";
 import { Toast } from "./Toast";
 import InputField from "./components/InputField";
 import PrimaryButton from "./components/PrimaryButton";
@@ -104,7 +104,6 @@ const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loadin
 };
 
 const ProfileViewModal = ({ onClose, modalData, loading }) => {
-  const [showPassword, setShowPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -226,7 +225,7 @@ const ProfileViewModal = ({ onClose, modalData, loading }) => {
       </div>
 
       {loading ? (
-        <div className="profile-modal-loading">Loading your profile…</div>
+        <div className="profile-modal-loading">View profile...</div>
       ) : !hasProfileData ? (
         <div className="profile-modal-empty">No profile information available.</div>
       ) : (
@@ -303,19 +302,7 @@ const ProfileViewModal = ({ onClose, modalData, loading }) => {
             </div>
           </div>
 
-          <div className="profile-detail-item profile-detail-item--password">
-            <div className="profile-detail-icon"><FiLock /></div>
-            <div className="profile-detail-content">
-              <div className="profile-detail-password-row">
-                <span className="profile-detail-label">Password</span>
-                <button type="button" className="profile-visibility-btn" onClick={() => setShowPassword((prev) => !prev)}>
-                  {showPassword ? <FiEyeOff /> : <FiEye />}
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
-              </div>
-              <strong className="profile-detail-value">{showPassword ? 'Password is masked for your security' : '********'}</strong>
-            </div>
-          </div>
+          {/* Password removed from profile view by request */}
 
         </div>
       )}
@@ -325,12 +312,18 @@ const ProfileViewModal = ({ onClose, modalData, loading }) => {
       <div className="profile-details-footer">
         {isEditing ? (
           <>
-            <PrimaryButton type="button" isLoading={saving} onClick={handleSave} className="form-button">{saving ? 'Saving...' : 'Save'}</PrimaryButton>
+            <PrimaryButton type="button" isLoading={saving} onClick={handleSave} className="form-button">
+              <FiSave className="profile-action-icon" />
+              <span>{saving ? 'Saving...' : 'Save'}</span>
+            </PrimaryButton>
             <button type="button" className="form-button secondary-button" onClick={() => { setIsEditing(false); setErrorMsg(''); setEditData({ username: profile.username || profile.name || '', email: profile.email || '', mobileNumber: profile.mobileNumber || '', address: profile.address || '' }); }}>Cancel</button>
           </>
         ) : (
           <>
-            <button type="button" className="form-button" onClick={() => setIsEditing(true)}>Edit Profile</button>
+            <button type="button" className="form-button" onClick={() => setIsEditing(true)}>
+              <FiEdit className="profile-action-icon" />
+              <span>Edit Profile</span>
+            </button>
             <button type="button" className="form-button secondary-button" onClick={onClose}>Close</button>
           </>
         )}

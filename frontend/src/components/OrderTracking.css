@@ -14,7 +14,15 @@
   border-radius: 28px;
   box-shadow: var(--shadow);
   padding: 32px;
+  padding-bottom: 40px; /* extra space for actions */
   animation: fadeInUp 0.45s ease;
+}
+
+/* Ensure timeline content wraps cleanly */
+.timeline-step-wrapper > div:nth-child(2) {
+  color: var(--text);
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .tracking-modal-overlay {
@@ -182,6 +190,12 @@
   font-size: 0.95rem;
 }
 
+/* Make order id and small metric text wrap cleanly */
+.tracking-pill strong, .tracking-pill span {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .tracking-layout {
   display: grid;
   grid-template-columns: 1.3fr 0.9fr;
@@ -251,28 +265,42 @@
 .order-tracking-details-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
   margin-top: 20px;
+  align-items: start;
 }
 
-.order-tracking-details-grid > div {
+.order-tracking-details-grid > .detail-card {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 14px;
+  border-radius: 12px;
+  padding: 12px 14px;
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.order-tracking-details-grid span {
+.order-tracking-details-grid .detail-card span {
   display: block;
   color: var(--text-muted);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   margin-bottom: 6px;
 }
 
-.order-tracking-details-grid strong {
-  color: #0f172a;
+.order-tracking-details-grid .detail-value {
+  color: var(--text);
+  font-size: 0.95rem;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.order-tracking-details-grid .detail-orderid {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .tracking-history-card {
@@ -281,7 +309,7 @@
 
 .tracking-history-card h3 {
   margin: 0 0 12px;
-  color: #0f172a;
+  color: var(--text);
 }
 
 .tracking-history-list {
@@ -310,7 +338,7 @@
 }
 
 .tracking-history-list strong {
-  color: #0f172a;
+  color: var(--text);
   text-align: right;
 }
 
@@ -402,6 +430,18 @@
   animation: pulse 1.2s infinite ease-in-out;
   background: linear-gradient(135deg, #2563eb, #4f46e5);
   color: var(--button-text);
+}
+
+.timeline-label {
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.timeline-detail {
+  color: var(--text-secondary);
+  line-height: 1.45;
+  font-size: 0.95rem;
 }
 
 .timeline-step--cancelled {
