@@ -452,7 +452,9 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
     }
 
     if (success) {
-      closeForm();
+      setIsFormOpen(false);
+      setEditingProduct(null);
+      setFormData(createEmptyProductForm());
       setViewingProduct(null);
       setConfirmDeleteProduct(null);
       onRefreshProducts && onRefreshProducts(true);

@@ -136,7 +136,7 @@ export default function CustomerHomePage() {
 
       if (!res.ok) {
         setCartCount((prev) => Math.max(0, prev - 1));
-        return;
+        return false;
       }
 
       setAddedCartIds((prev) => {
@@ -145,8 +145,10 @@ export default function CustomerHomePage() {
         localStorage.setItem(`added_cart_products_${activeUsername}`, JSON.stringify(Array.from(next)));
         return next;
       });
+      return true;
     } catch (e) {
       setCartCount((prev) => Math.max(0, prev - 1));
+      return false;
     }
   }, [getAuthHeaders, username]);
 
@@ -185,9 +187,8 @@ export default function CustomerHomePage() {
         <section className="home-hero">
           <div className="home-hero-content">
             <div>
-              <p className="section-eyebrow">Smart shopping</p>
-              <h2>Discover fresh picks for your next order</h2>
-              <p>Browse curated essentials, enjoy a smoother checkout, and keep track of every delivery from one place.</p>
+              <h2>Hello, {username}!</h2>
+              <p>Discover products, manage your cart, and track every order with ease.</p>
             </div>
             <div className="home-hero-actions">
               {/* Profile accessible only via profile dropdown now; remove dashboard button for customer */}

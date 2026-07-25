@@ -61,12 +61,15 @@ const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
   const productId = getId(product);
   const isAdded = productId ? addedProductIds?.has(productId) : false;
 
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback(async () => {
     const id = productId;
     if (!id || isAdded) return;
-    onAddToCart && onAddToCart(id);
+
+    const success = await onAddToCart?.(id);
+    if (!success) return;
+
     setActive(true);
-    window.setTimeout(() => setActive(false), 700);
+    window.setTimeout(() => setActive(false), 1400);
   }, [productId, onAddToCart, isAdded]);
 
   return (
@@ -96,7 +99,7 @@ const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
               aria-label={isAdded ? `${product.name} is already in cart` : `Add ${product.name} to cart`}
               disabled={isAdded}
             >
-              {isAdded ? 'Added to Cart' : (active ? 'Added' : 'Add to Cart')}
+              {isAdded ? 'Added to Cart' : (active ? 'Added to Cart' : 'Add to Cart')}
             </button>
           </div>
         </div>
