@@ -59,12 +59,14 @@ export default function AdminLogin() {
 
   return (
     <AuthLayout
-      title="Admin sign in"
-      subtitle="Secure access to the SalesSavvy admin console."
+      title="Admin login"
+      subtitle="Sign in with your admin credentials."
       notice="Only registered admin users may continue from this page."
       footer={
         <p className="auth-footer-copy">
-          Not an admin? <Link to="/" className="form-link">Login as customer</Link>
+          Need a customer account? <Link to="/" className="form-link">User login</Link>
+          <br />
+          Want to register? <Link to="/register" className="form-link">Create account</Link>
         </p>
       }
     >
@@ -74,7 +76,6 @@ export default function AdminLogin() {
         <InputField
           id="adminUsername"
           label="Username"
-          icon="👤"
           placeholder="Enter your admin username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
@@ -91,8 +92,8 @@ export default function AdminLogin() {
             Forgot Password?
           </Link>
         </div>
-        <PrimaryButton type="submit" isLoading={isSigningIn} loadingText="Signing In...">
-          Sign In
+        <PrimaryButton type="submit" isLoading={isSigningIn} loadingText="Admin Login...">
+          Admin Login
         </PrimaryButton>
       </form>
     </AuthLayout>

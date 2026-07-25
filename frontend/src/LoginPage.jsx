@@ -9,10 +9,9 @@ import PrimaryButton from "./components/PrimaryButton";
 import { getDashboardPath, setAuthSession } from "./auth";
 
 export default function LoginPage() {
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState("");
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const navigate = useNavigate();
@@ -25,8 +24,7 @@ export default function LoginPage() {
     setIsSigningIn(true);
 
     if (!identifier.trim() || !password.trim()) {
-      setError("Email or username and password are required.");
-      setIsSigningIn(false);
+      setError("Username and password are required.");
       return;
     }
 
@@ -56,10 +54,12 @@ export default function LoginPage() {
 
   return (
     <AuthLayout
-      title="Sign in to your account"
-      subtitle="Access your SalesSavvy dashboard and continue shopping with confidence."
+      title="User login"
+      subtitle="Sign in with your SalesSavvy username and password."
       footer={
         <p className="auth-footer-copy">
+          Need admin access? <Link to="/admin" className="form-link">Admin login</Link>
+          <br />
           Don’t have an account? <Link to="/register" className="form-link">Create account</Link>
         </p>
       }
@@ -69,32 +69,21 @@ export default function LoginPage() {
       <form onSubmit={handleSignIn} className="auth-form">
         <InputField
           id="username"
-          label="Email or Username"
-          icon="📧"
-          placeholder="john@example.com"
+          label="Username"
+          placeholder="Enter username"
           value={identifier}
           onChange={(e) => setIdentifier(e.target.value)}
         />
         <PasswordField
           id="password"
           label="Password"
-          placeholder="Enter your password"
+          placeholder="Enter password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-
-        <div className="auth-checkbox-row">
-          <label className="auth-checkbox">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-            />
-            Remember me
-          </label>
+        <div className="auth-footer-row">
           <Link to="/forgot-password" className="form-link">Forgot password?</Link>
         </div>
-
         <PrimaryButton type="submit" isLoading={isSigningIn} loadingText="Logging in...">
           Login
         </PrimaryButton>

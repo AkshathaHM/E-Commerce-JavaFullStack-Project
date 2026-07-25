@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './assets/styles.css';
 import { Toast } from './Toast';
@@ -12,36 +12,17 @@ const phoneRegex = /^\d{10}$/;
 
 export default function RegistrationPage() {
   const navigate = useNavigate();
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [gender, setGender] = useState('');
   const [address, setAddress] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
+  const [role, setRole] = useState('CUSTOMER');
   const [agreement, setAgreement] = useState(false);
   const [error, setError] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const userName = useMemo(() => {
-    const combined = `${firstName.trim()} ${lastName.trim()}`.trim();
-    return combined || email.split('@')[0] || '';
-  }, [firstName, lastName, email]);
-
-  const passwordStrength = useMemo(() => {
-    if (password.length >= 12 && /[A-Z]/.test(password) && /\d/.test(password) && /[^A-Za-z0-9]/.test(password)) {
-      return 'Strong';
-    }
-    if (password.length >= 8 && /[A-Z]/.test(password) && /\d/.test(password)) {
-      return 'Good';
-    }
-    if (password.length > 0) {
-      return 'Weak';
-    }
-    return '';
-  }, [password]);
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -49,8 +30,8 @@ export default function RegistrationPage() {
 
     setError('');
 
-    if (!firstName.trim() || !lastName.trim()) {
-      setError('First name and last name are required.');
+    if (!username.trim()) {
+      setError('Username is required.');
       return;
     }
 
@@ -60,7 +41,7 @@ export default function RegistrationPage() {
     }
 
     if (!phoneRegex.test(mobileNumber)) {
-      setError('Please enter a valid 10-digit phone number.');
+      setError('Please enter a valid 10-digit mobile number.');
       return;
     }
 
@@ -71,6 +52,11 @@ export default function RegistrationPage() {
 
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
+      return;
+    }
+
+    if (!role) {
+      setError('Please select a role.');
       return;
     }
 
@@ -87,10 +73,10 @@ export default function RegistrationPage() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          username: userName,
+          username,
           email,
           password,
-          role: 'CUSTOMER',
+          role,
           address,
           mobileNumber,
         }),
@@ -99,7 +85,7 @@ export default function RegistrationPage() {
 
       if (response.ok) {
         setShowToast(true);
-        navigate('/verify-otp', { state: { email, role: 'CUSTOMER' }, replace: true });
+        navigate('/verify-otp', { state: { email, role }, replace: true });
       } else {
         throw new Error(data.error || data.message || 'Registration failed.');
       }
@@ -113,39 +99,28 @@ export default function RegistrationPage() {
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="Start shopping smarter with a SalesSavvy customer account."
+      subtitle="Register a user or admin account for SalesSavvy."
       footer={
         <p className="auth-footer-copy">
-          Already have an account? <Link to="/" className="form-link">Login</Link>
+          Already have an account? <Link to="/" className="form-link">User login</Link>
+          <br />
+          Need admin access? <Link to="/admin" className="form-link">Admin login</Link>
         </p>
       }
     >
       <Toast message="✅ Registration Successful" show={showToast} />
       {error && <div className="auth-alert auth-alert--error">{error}</div>}
       <form onSubmit={handleSignUp} className="auth-form">
-        <div className="auth-form-row">
-          <InputField
-            id="firstName"
-            label="First Name"
-            icon="👤"
-            placeholder="John"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-          />
-          <InputField
-            id="lastName"
-            label="Last Name"
-            icon="👤"
-            placeholder="Doe"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-          />
-        </div>
-
+        <InputField
+          id="username"
+          label="Username"
+          placeholder="Enter username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
         <InputField
           id="email"
           label="Email"
-          icon="📧"
           type="email"
           placeholder="john@example.com"
           value={email}
@@ -153,54 +128,45 @@ export default function RegistrationPage() {
         />
         <InputField
           id="mobileNumber"
-          label="Phone"
-          icon="📱"
+          label="Mobile Number"
           type="tel"
           placeholder="9876543210"
           value={mobileNumber}
           onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
         />
-        <PasswordField
-          id="password"
-          label="Password"
-          placeholder="Create a strong password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <div className="password-strength-row">
-          <span className="password-strength-label">Strength:</span>
-          <span className={`password-strength-value password-strength-value--${passwordStrength.toLowerCase()}`}> {passwordStrength || 'Enter password'} </span>
-        </div>
-        <PasswordField
-          id="confirmPassword"
-          label="Confirm Password"
-          placeholder="Confirm your password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-        />
         <InputField
           id="address"
-          label="Address (optional)"
-          icon="🏠"
+          label="Address"
           placeholder="123 Main Street"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
         />
         <InputField
-          id="gender"
-          label="Gender (optional)"
-          icon="⚧"
+          id="role"
+          label="Role"
           type="select"
-          value={gender}
-          onChange={(e) => setGender(e.target.value)}
-          placeholder="Select gender"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          placeholder="Select role"
         >
-          <option value="">Select gender</option>
-          <option value="Female">Female</option>
-          <option value="Male">Male</option>
-          <option value="Other">Other</option>
+          <option value="">Select role</option>
+          <option value="CUSTOMER">Customer</option>
+          <option value="ADMIN">Admin</option>
         </InputField>
-
+        <PasswordField
+          id="password"
+          label="Password"
+          placeholder="Create password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <PasswordField
+          id="confirmPassword"
+          label="Confirm Password"
+          placeholder="Confirm password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
         <label className="auth-checkbox">
           <input
             type="checkbox"
