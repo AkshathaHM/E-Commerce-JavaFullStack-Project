@@ -1501,6 +1501,7 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
   const [sortDirection, setSortDirection] = useState("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [cartPopupOrder, setCartPopupOrder] = useState(null);
   const pageSize = 5;
 
   const formatAmount = (value) => {
@@ -1711,7 +1712,18 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
                                 )}
                               </div>
                               <div className="details-section">
-                                <h3>Order Information</h3>
+                                <div className="order-details-header">
+                                  <h3>Order Information</h3>
+                                  <div className="order-details-actions">
+                                    <button
+                                      type="button"
+                                      className="primary-action-btn"
+                                      onClick={(e) => { e.stopPropagation(); setExpandedOrderId(null); setCartPopupOrder(order); }}
+                                    >
+                                      View Cart
+                                    </button>
+                                  </div>
+                                </div>
                                 <div className="info-grid">
                                   <div className="info-item">
                                     <label>Order ID</label>
@@ -1758,6 +1770,49 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
 
       {response && response.includes("Error") && (
         <div className="response-message error">{response}</div>
+      )}
+
+      {cartPopupOrder && (
+        <div className="modal-overlay modal-overlay--nested" onClick={() => setCartPopupOrder(null)}>
+          <div className="order-cart-popup" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="modal-close-btn" onClick={() => setCartPopupOrder(null)}>&times;</button>
+            <h3>Order Cart — {toSafeString(cartPopupOrder.orderId || cartPopupOrder.id || cartPopupOrder._id)}</h3>
+            <div className="items-list">
+              <table className="items-table">
+                <thead>
+                  <tr>
+                    <th>Product ID</th>
+                    <th>Name</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.isArray(cartPopupOrder.items) && cartPopupOrder.items.length > 0 ? (
+                    cartPopupOrder.items.map((item, idx) => (
+                      <tr key={item.id || item.productId || idx}>
+                        <td>#{item.productId ?? item.product_id ?? item.id ?? 'N/A'}</td>
+                        <td>{item.name || item.title || item.productName || '—'}</td>
+                        <td>{getItemQuantity(item)}</td>
+                        <td>{formatAmount(getItemUnitPrice(item))}</td>
+                        <td><strong>{formatAmount(getItemLineTotal(item))}</strong></td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan="5">No items in this order.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="order-cart-summary">
+              <div className="summary-row">
+                <span>Order Total:</span>
+                <strong>{formatAmount(getOrderValue(cartPopupOrder, 'total'))}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="modal-form-buttons">

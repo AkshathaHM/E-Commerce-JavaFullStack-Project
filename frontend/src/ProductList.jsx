@@ -57,6 +57,7 @@ const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
 
   const { theme } = useContext(ThemeContext);
   const [active, setActive] = useState(false);
+  const [optimistic, setOptimistic] = useState(false);
   const getId = (p) => p.product_id || p.id || p.productId;
   const productId = getId(product);
   const isAdded = productId ? addedProductIds?.has(productId) : false;
@@ -66,13 +67,25 @@ const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
     if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
 
     const id = productId;
-    if (!id || isAdded) return;
+    if (!id || isAdded || optimistic) return;
 
-    const success = await onAddToCart?.(id);
-    if (!success) return;
+    // optimistic UI: mark as added immediately
+    setOptimistic(true);
 
-    setActive(true);
-    window.setTimeout(() => setActive(false), 1400);
+    try {
+      const success = await onAddToCart?.(id);
+      if (!success) {
+        // revert optimistic state on failure
+        setOptimistic(false);
+        return;
+      }
+
+      // show brief active animation even after optimistic set
+      setActive(true);
+      window.setTimeout(() => setActive(false), 1400);
+    } catch (err) {
+      setOptimistic(false);
+    }
   }, [productId, onAddToCart, isAdded]);
 
   return (
@@ -97,12 +110,12 @@ const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
             <p className="product-price">₹{product.price}</p>
             <button
               type="button"
-              className={`add-to-cart-btn ${(isAdded || active) ? 'add-to-cart-btn--active' : ''}`}
+              className={`add-to-cart-btn ${(isAdded || active || optimistic) ? 'add-to-cart-btn--active' : ''}`}
               onClick={(e) => handleClick(e)}
-              aria-label={isAdded ? `${product.name} is already in cart` : `Add ${product.name} to cart`}
-              disabled={isAdded}
+              aria-label={(isAdded || optimistic) ? `${product.name} is already in cart` : `Add ${product.name} to cart`}
+              disabled={isAdded || optimistic}
             >
-              {isAdded ? 'Added to Cart' : (active ? 'Added to Cart' : 'Add to Cart')}
+              {(isAdded || optimistic) ? 'Added to Cart' : (active ? 'Added to Cart' : 'Add to Cart')}
             </button>
           </div>
         </div>
