@@ -1,13 +1,18 @@
 package com.kodnest.app.adminControllers;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.kodnest.app.adminServices.AdminProductServiceContract;
 import com.kodnest.app.entities.Product;
+import com.kodnest.app.entities.ProductAddRequestDto;
+import com.kodnest.app.entities.ProductDeleteRequestDto;
+import com.kodnest.app.entities.ProductImage;
+import com.kodnest.app.entities.ProductResponseDto;
+import com.kodnest.app.entities.ProductUpdateRequestDto;
 
 @RestController
 @CrossOrigin(origins = {"http://localhost:5174", "http://localhost:5173", "http://127.0.0.1:5174", "http://127.0.0.1:5173", "https://e-commerce-java-full-stack-project-five.vercel.app", "https://e-commerce-java-full-stack-project-seven.vercel.app", "https://e-commerce-javafullstack-project-2.onrender.com"}, allowCredentials = "true")
@@ -21,26 +26,18 @@ public class AdminProductController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<?> addProduct(@RequestBody Map<String, Object> productRequest) {
+    public ResponseEntity<?> addProduct(@Valid @RequestBody ProductAddRequestDto productRequest) {
         try {
-            String name = getRequiredString(productRequest, "name");
-            String description = (String) productRequest.get("description");
-
-            Double price = getRequiredDouble(productRequest, "price");
-            if (price <= 0) return ResponseEntity.badRequest().body("Price must be positive");
-
-            Integer stock = getRequiredInteger(productRequest, "stock");
-            if (stock < 0) return ResponseEntity.badRequest().body("Stock cannot be negative");
-
-            Integer categoryId = getRequiredInteger(productRequest, "categoryId");
-
-            String imageUrl = (String) productRequest.get("imageUrl");
-
             Product addedProduct = adminProductService.addProductWithImage(
-                    name, description, price, stock, categoryId, imageUrl
+                    productRequest.getName().trim(),
+                    productRequest.getDescription(),
+                    productRequest.getPrice(),
+                    productRequest.getStock(),
+                    productRequest.getCategoryId(),
+                    productRequest.getImageUrl()
             );
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(addedProduct);
+            return ResponseEntity.status(HttpStatus.CREATED).body(productToDto(addedProduct));
 
         } catch ( IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -52,9 +49,9 @@ public class AdminProductController {
     }
 
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteProduct(@RequestBody Map<String, Integer> requestBody) {
+    public ResponseEntity<?> deleteProduct(@RequestBody ProductDeleteRequestDto requestBody) {
         try {
-            Integer productId = requestBody.get("productId");
+            Integer productId = requestBody.getProductId();
             if (productId == null) {
                 return ResponseEntity.badRequest().body("productId is required");
             }
@@ -72,29 +69,23 @@ public class AdminProductController {
     }
 
     @PostMapping("/delete")
-    public ResponseEntity<?> deleteProductPost(@RequestBody Map<String, Integer> requestBody) {
+    public ResponseEntity<?> deleteProductPost(@RequestBody ProductDeleteRequestDto requestBody) {
         return deleteProduct(requestBody);
     }
 
     @PutMapping("/update")
-    public ResponseEntity<?> updateProduct(@RequestBody Map<String, Object> requestBody) {
+    public ResponseEntity<?> updateProduct(@Valid @RequestBody ProductUpdateRequestDto requestBody) {
         try {
-            Integer productId = getRequiredInteger(requestBody, "productId");
-            String name = (String) requestBody.get("name");
-            String description = (String) requestBody.get("description");
-            Double price = requestBody.containsKey("price") && requestBody.get("price") != null
-                    ? getRequiredDouble(requestBody, "price")
-                    : null;
-            Integer stock = requestBody.containsKey("stock") && requestBody.get("stock") != null
-                    ? getRequiredInteger(requestBody, "stock")
-                    : null;
-            Integer categoryId = requestBody.containsKey("categoryId") && requestBody.get("categoryId") != null
-                    ? getRequiredInteger(requestBody, "categoryId")
-                    : null;
-            String imageUrl = (String) requestBody.get("imageUrl");
+            Integer productId = requestBody.getProductId();
 
-            Product updatedProduct = adminProductService.updateProduct(productId, name, description, price, stock, categoryId, imageUrl);
-            return ResponseEntity.ok(updatedProduct);
+            Product updatedProduct = adminProductService.updateProduct(productId,
+                    requestBody.getName(),
+                    requestBody.getDescription(),
+                    requestBody.getPrice(),
+                    requestBody.getStock(),
+                    requestBody.getCategoryId(),
+                    requestBody.getImageUrl());
+            return ResponseEntity.ok(productToDto(updatedProduct));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
@@ -107,20 +98,9 @@ public class AdminProductController {
     @GetMapping("/all")
     public ResponseEntity<?> getAllProducts() {
         try {
-            List<Map<String, Object>> products = adminProductService.getAllProducts().stream().map(product -> {
-                Map<String, Object> productDetails = Map.of(
-                        "productId", product.getProductId(),
-                        "name", product.getName(),
-                        "description", product.getDescription(),
-                        "price", product.getPrice(),
-                        "stock", product.getStock(),
-                        "category", product.getCategory() != null ? product.getCategory().getCategoryName() : null,
-                        "images", product.getProductImages() == null ? List.of() : product.getProductImages().stream()
-                                .map(image -> image.getImageUrl())
-                                .collect(Collectors.toList())
-                );
-                return productDetails;
-            }).collect(Collectors.toList());
+            List<ProductResponseDto> products = adminProductService.getAllProducts().stream()
+                    .map(this::productToDto)
+                    .collect(Collectors.toList());
             return ResponseEntity.ok(products);
         } catch (Exception e) {
             e.printStackTrace();
@@ -130,31 +110,24 @@ public class AdminProductController {
     }
 
     // Your helper methods (keep as-is)
-    private String getRequiredString(Map<String, Object> map, String key) {
-        Object val = map.get(key);
-        if (val == null || String.valueOf(val).trim().isEmpty()) {
+    private ProductResponseDto productToDto(Product product) {
+        return new ProductResponseDto(
+                product.getProductId(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getStock(),
+                product.getCategory() != null ? product.getCategory().getCategoryName() : null,
+                product.getProductImages() == null ? List.of() : product.getProductImages().stream()
+                        .map(ProductImage::getImageUrl)
+                        .collect(Collectors.toList())
+        );
+    }
+
+    private String getRequiredString(String value, String key) {
+        if (value == null || value.trim().isEmpty()) {
             throw new IllegalArgumentException(key + " is required");
         }
-        return String.valueOf(val).trim();
-    }
-
-    private Double getRequiredDouble(Map<String, Object> map, String key) {
-        Object val = map.get(key);
-        if (val == null) throw new IllegalArgumentException(key + " is required");
-        try {
-            return Double.parseDouble(String.valueOf(val));
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid " + key + " format");
-        }
-    }
-
-    private Integer getRequiredInteger(Map<String, Object> map, String key) {
-        Object val = map.get(key);
-        if (val == null) throw new IllegalArgumentException(key + " is required");
-        try {
-            return Integer.parseInt(String.valueOf(val));
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid " + key + " format");
-        }
+        return value.trim();
     }
 }
