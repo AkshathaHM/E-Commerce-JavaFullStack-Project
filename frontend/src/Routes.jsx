@@ -13,11 +13,10 @@ const AdminLogin = lazy(() => import("./AdminLogin"));
 const AdminDashboard = lazy(() => import("./AdminDashboard"));
 const OrderSuccess = lazy(() => import('./components/OrderSuccess'));
 const OrderTracking = lazy(() => import('./components/OrderTracking'));
-import { isAuthenticated, getStoredAuthToken } from "./auth";
+import { isAuthenticated } from "./auth";
 
 const ProtectedRoute = ({ element, allowedRole }) => {
-  const token = getStoredAuthToken();
-  if (!token) {
+  if (!isAuthenticated()) {
     return <Navigate to="/" replace />;
   }
 

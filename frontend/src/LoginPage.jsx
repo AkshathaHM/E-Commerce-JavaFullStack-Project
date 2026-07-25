@@ -52,6 +52,10 @@ export default function LoginPage() {
       }
 
       const role = data.role || "CUSTOMER";
+      if (role === "ADMIN") {
+        throw new Error("Admin users must sign in from the admin login page.");
+      }
+
       setAuthSession(data.token || null, { username: data.username || identifier, role });
       setShowToast(true);
       navigate(getDashboardPath(role), { replace: true });

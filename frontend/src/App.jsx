@@ -3,6 +3,7 @@ import { HashRouter as Router } from 'react-router-dom';
 import AppRoutes from './Routes';
 import './assets/styles.css';
 import { ThemeProvider } from './ThemeContext';
+import { clearAuthSession, isSessionExpired } from './auth';
 const CustomModal = lazy(() => import('./CustomModal'));
 
 // Global profile modal: listens for the `openProfileModal` event and fetches /api/auth/me
@@ -34,6 +35,19 @@ function AppWrapper() {
     const listener = (event) => handler(event.detail);
     window.addEventListener('openProfileModal', listener);
     return () => window.removeEventListener('openProfileModal', listener);
+  }, []);
+
+  useEffect(() => {
+    const checkSession = () => {
+      if (isSessionExpired()) {
+        clearAuthSession();
+        window.location.hash = '/';
+      }
+    };
+
+    checkSession();
+    const timer = window.setInterval(checkSession, 60 * 1000);
+    return () => window.clearInterval(timer);
   }, []);
 
   return (

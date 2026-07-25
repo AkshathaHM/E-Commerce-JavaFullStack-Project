@@ -53,7 +53,7 @@ export default function AdminLogin() {
       }
 
       if (data.role !== "ADMIN") {
-        throw new Error("Only admin can log in from this page.");
+        throw new Error("Only admin users can log in from this page. Use the user login page for customer accounts.");
       }
 
       setAuthSession(data.token || null, { username: data.username || username, role: 'ADMIN' });

@@ -24,6 +24,8 @@ export default function RegistrationPage() {
   const [error, setError] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const passwordsMatch = password.trim() && confirmPassword.trim() && password === confirmPassword;
+  const confirmPasswordError = fieldErrors.confirmPassword || (confirmPassword.trim() && password !== confirmPassword ? 'Passwords do not match.' : '');
   const isSubmitDisabled = !username.trim() || !email.trim() || !mobileNumber.trim() || !address.trim() || !password.trim() || !confirmPassword.trim() || !agreement || isSubmitting;
 
   const handleSignUp = async (e) => {
@@ -193,10 +195,20 @@ export default function RegistrationPage() {
           placeholder="Confirm password"
           value={confirmPassword}
           onChange={(e) => {
-            setConfirmPassword(e.target.value);
-            if (fieldErrors.confirmPassword) setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
+            const value = e.target.value;
+            setConfirmPassword(value);
+            setFieldErrors((prev) => {
+              const next = { ...prev };
+              if (next.confirmPassword) delete next.confirmPassword;
+              return next;
+            });
+            if (value.trim() && password.trim() && value !== password) {
+              setFieldErrors((prev) => ({ ...prev, confirmPassword: 'Passwords do not match.' }));
+            }
           }}
-          error={fieldErrors.confirmPassword}
+          error={confirmPasswordError}
+          valid={passwordsMatch}
+          info={passwordsMatch ? 'Passwords match.' : undefined}
         />
         <label className="auth-checkbox">
           <input
