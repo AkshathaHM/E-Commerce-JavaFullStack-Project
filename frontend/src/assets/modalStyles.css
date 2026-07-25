@@ -2,7 +2,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(7, 16, 28, 0.82);
+  background: rgba(7, 16, 28, 0.62);
   display: grid;
   place-items: center;
   z-index: 1400;
@@ -16,9 +16,9 @@
   overflow-y: auto;
   padding: 28px;
   border-radius: 28px;
-  background: rgba(11, 22, 38, 0.98);
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 32px 90px rgba(0,0,0,0.22);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
 .modal-close-btn {
@@ -28,15 +28,15 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: none;
-  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+  background: var(--card);
   color: var(--text);
   font-size: 1.2rem;
   cursor: pointer;
 }
 
 .modal-close-btn:hover {
-  background: rgba(255,255,255,0.14);
+  filter: brightness(0.95);
 }
 
 .modal-form,
@@ -69,8 +69,8 @@
   min-height: 48px;
   padding: 14px 16px;
   border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--input-border, var(--border));
+  background: var(--input-bg, var(--surface));
   color: var(--input-text);
   outline: none;
 }
@@ -81,8 +81,8 @@
 .modern-form-field input:focus,
 .modern-form-field textarea:focus,
 .modern-form-field select:focus {
-  border-color: #3cc5ff;
-  box-shadow: 0 0 0 4px rgba(60,197,255,0.16);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(56,189,248,0.12);
 }
 
 .modal-form-buttons,
@@ -139,8 +139,8 @@
   min-width: 280px;
   padding: 14px 16px;
   border-radius: 999px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--input-bg, rgba(0,0,0,0.04));
+  border: 1px solid var(--input-border, var(--border));
 }
 
 .product-search input,

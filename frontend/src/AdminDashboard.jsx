@@ -19,11 +19,11 @@ const AdminDashboard = () => {
 
   const cardData = [
     {
-      type: "orderManagement",
-      title: "Order & Product Management",
+      type: "productManagement",
+      title: "Product Management",
       description: "Manage orders and products.",
       team: "Operations",
-      modalType: "orders",
+      modalType: "manageProducts",
       icon: "🛍️",
     },
     { title: "View All Users", description: "List all customers", team: "User Management", modalType: "viewAllUsers", icon: "👥" },

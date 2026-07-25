@@ -234,8 +234,22 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
     });
 
   const getPreviewImage = (product) => {
-    const images = Array.isArray(product.images) ? product.images.filter(Boolean) : [];
+    // support multiple possible image fields
+    const candidates = [];
+    if (Array.isArray(product.images)) candidates.push(...product.images);
+    if (product.imageUrl) candidates.push(product.imageUrl);
+    if (product.image) candidates.push(product.image);
+    if (product.image_url) candidates.push(product.image_url);
+    const images = candidates.filter(Boolean);
     return images[0] || "/images/no-image.png";
+  };
+
+  const getDisplayName = (product) => {
+    return product.name || product.title || product.productName || product.product_name || "Untitled Product";
+  };
+
+  const getDisplayDescription = (product) => {
+    return product.description || product.desc || product.shortDescription || "Premium product ready for customers.";
   };
 
   return (
@@ -248,8 +262,8 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
           <h2>Product Management</h2>
         </div>
         <div className="manage-products-header__actions">
-          <button type="button" className="secondary-action-btn" onClick={onRefreshProducts} disabled={loading}>
-            {loading ? "Loading..." : "Refresh"}
+          <button type="button" className="secondary-action-btn" onClick={() => { setViewingProduct(null); setIsFormOpen(false); onRefreshProducts(); }} disabled={loading}>
+            {loading ? "Loading..." : "View Products"}
           </button>
           <button type="button" className="primary-action-btn" onClick={openAddForm}>
             Add Product
@@ -304,21 +318,21 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
           ) : filteredProducts.length > 0 ? (
             <div className="product-grid">
               {filteredProducts.map((product) => (
-                <div key={product.product_id || product.productId} className="product-card">
+                <div key={product.product_id || product.productId || product.id} className="product-card">
                   <div className="product-image-wrap">
-                    <img src={getPreviewImage(product)} alt={product.name} className="product-image" loading="lazy" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/images/no-image.png"; }} />
+                    <img src={getPreviewImage(product)} alt={getDisplayName(product)} className="product-image" loading="lazy" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/images/no-image.png"; }} />
                   </div>
                   <div className="product-info">
                     <div className="product-card-body">
-                      <h3 className="product-name">{product.name}</h3>
-                      <p className="product-description">{product.description || "Premium product ready for customers."}</p>
+                      <h3 className="product-name">{getDisplayName(product)}</h3>
+                      <p className="product-description">{getDisplayDescription(product)}</p>
                       <div className="admin-product-meta">
-                        <span><strong>ID:</strong> {product.product_id || product.productId}</span>
-                        <span><strong>Category:</strong> {product.category || "—"}</span>
-                        <span><strong>Price:</strong> ₹{Number(product.price || 0).toLocaleString()}</span>
-                        <span><strong>Stock:</strong> {product.stock || 0}</span>
+                        <span><strong>ID:</strong> {product.product_id || product.productId || product.id}</span>
+                        <span><strong>Category:</strong> {product.category || product.categoryName || "—"}</span>
+                        <span><strong>Price:</strong> ₹{Number(product.price || product.amount || 0).toLocaleString()}</span>
+                        <span><strong>Stock:</strong> {product.stock || product.quantity || 0}</span>
                         <span><strong>Status:</strong> {product.status || "Active"}</span>
-                        <span><strong>Brand:</strong> {product.brand || "—"}</span>
+                        <span><strong>Brand:</strong> {product.brand || product.manufacturer || "—"}</span>
                       </div>
                     </div>
                     <div className="product-card-footer admin-product-actions">
