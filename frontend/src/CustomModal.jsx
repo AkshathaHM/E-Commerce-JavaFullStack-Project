@@ -450,6 +450,9 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
 
     if (success) {
       closeForm();
+      setViewingProduct(null);
+      setConfirmDeleteProduct(null);
+      onRefreshProducts && onRefreshProducts({ forceRefresh: true });
     }
   };
 
@@ -458,6 +461,8 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
     const success = await onDeleteProduct({ productId: Number(confirmDeleteProduct.product_id || confirmDeleteProduct.productId) });
     if (success) {
       setConfirmDeleteProduct(null);
+      setViewingProduct(null);
+      onRefreshProducts && onRefreshProducts({ forceRefresh: true });
     }
   };
 
@@ -511,9 +516,11 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
           <h2>Product Management</h2>
         </div>
         <div className="manage-products-header__actions">
-          <button type="button" className="primary-action-btn" onClick={openAddForm}>
-            Add Product
-          </button>
+          {!isFormOpen && (
+            <button type="button" className="primary-action-btn" onClick={openAddForm}>
+              Add Product
+            </button>
+          )}
         </div>
       </div>
 
@@ -706,8 +713,10 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
             <h3>Delete Product?</h3>
             <p>Are you sure want to delete? This action cannot be undone.</p>
             <div className="modern-product-form__footer">
-              <button type="button" className="secondary-action-btn" onClick={() => setConfirmDeleteProduct(null)}>Cancel</button>
-              <button type="button" className="product-delete-btn" onClick={handleDelete}>Delete</button>
+              <button type="button" className="secondary-action-btn" onClick={() => setConfirmDeleteProduct(null)} disabled={busyAction === 'deleting'}>Cancel</button>
+              <button type="button" className="product-delete-btn" onClick={handleDelete} disabled={busyAction === 'deleting'}>
+                {busyAction === 'deleting' ? 'Deleting...' : 'Delete'}
+              </button>
             </div>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { AdminHeader } from "./AdminHeader";
 import "./assets/styles.css";
 import CustomModal from "./CustomModal";
 import { clearAuthSession, getAuthHeaders } from "./auth";
+import { cachedFetch } from "./utils/apiClient";
 import { getCache, setCache } from "./utils/cache";
 
 const AdminDashboard = () => {
@@ -70,7 +71,28 @@ const AdminDashboard = () => {
       }
     };
     fetchCurrentUser();
-  }, [location.state?.username, navigate]);
+  }, [location.state?.username, navigate, getAuthHeaders]);
+
+  useEffect(() => {
+    const prefetchOrders = async () => {
+      try {
+        await cachedFetch(
+          'admin_orders',
+          `${import.meta.env.VITE_API_URL}/admin/orders/all`,
+          {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          },
+          30000,
+        );
+      } catch (e) {
+        // Ignore background prefetch failures.
+      }
+    };
+
+    prefetchOrders();
+  }, [getAuthHeaders]);
 
   // Handlers
   const handleAddProductSubmit = async (productData) => {
@@ -125,7 +147,7 @@ const AdminDashboard = () => {
       }
 
       if (response.ok) {
-        setResponse("✅ Product Deleted Successfully");
+        setResponse("Product deleted successfully");
         setModalData((prev) => {
           const next = Array.isArray(prev) ? prev.filter((product) => String(product.product_id || product.productId) !== String(data.productId)) : prev;
           try { setCache('admin_products', next, 30000); } catch {}
@@ -254,7 +276,7 @@ const AdminDashboard = () => {
       });
 
       if (response.ok) {
-        setResponse("✅ Product Updated Successfully");
+        setResponse("Product updated successfully");
         await handleManageProducts(true);
         return true;
       }
@@ -523,31 +545,36 @@ const AdminDashboard = () => {
   const handleViewOrders = async (data) => {
     const cacheKey = 'admin_orders';
     const cached = getCache(cacheKey) || modalCacheRef.current.orders;
+    const shouldShowLoading = !cached || data?.forceRefresh;
+
     if (cached && !data?.forceRefresh) {
       setModalData(cached);
-      return cached;
     }
 
-    setLoading(true);
+    setLoading(shouldShowLoading);
     setResponse(null);
-    setModalData(null);
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/orders/all`, {
-        method: "GET",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      });
+    if (!shouldShowLoading) {
+      setModalData(cached);
+    } else {
+      setModalData(null);
+    }
 
-      if (response.ok) {
-        const orders = await response.json();
-        modalCacheRef.current.orders = orders;
-        setCache(cacheKey, orders, 30000);
-        setModalData(orders);
-        return orders;
-      } else {
-        const error = await response.text();
-        setResponse(`Error: ${error}`);
-      }
+    try {
+      const orders = await cachedFetch(
+        cacheKey,
+        `${import.meta.env.VITE_API_URL}/admin/orders/all`,
+        {
+          method: 'GET',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        },
+        30000,
+      );
+
+      modalCacheRef.current.orders = orders;
+      setCache(cacheKey, orders, 30000);
+      setModalData(orders);
+      return orders;
     } catch (error) {
       setResponse(`Error: ${error.message}`);
     } finally {
