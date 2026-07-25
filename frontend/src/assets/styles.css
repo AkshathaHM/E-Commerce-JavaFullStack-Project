@@ -3082,26 +3082,25 @@ button.button--ghost:hover,
 }
 
 .image-preview-list {
-  display: grid;
+  display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .image-preview-item {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
   align-items: center;
-  gap: 12px;
-  padding: 14px;
-  border-radius: 18px;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
+  width: 120px;
 }
 
 .image-remove-btn {
   border: none;
   background: var(--danger-bg);
   color: var(--danger);
-  padding: 10px 14px;
-  border-radius: 999px;
+  padding: 8px 10px;
+  border-radius: 10px;
   cursor: pointer;
 }
 
@@ -3111,6 +3110,19 @@ button.button--ghost:hover,
   gap: 12px;
   color: var(--text-muted);
 }
+
+.image-preview-item img {
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.image-preview-item span { display: none; }
+.image-preview-actions { display:flex; gap:6px; }
+.image-input-row { display:flex; gap:8px; align-items:center; }
+.image-input-row input[type="text"] { flex:1; padding:10px 12px; border-radius:10px; }
 
 .admin-product-actions {
   display: flex;

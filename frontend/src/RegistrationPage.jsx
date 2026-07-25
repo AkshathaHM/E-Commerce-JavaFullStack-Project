@@ -18,7 +18,7 @@ export default function RegistrationPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [address, setAddress] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
-  const [role, setRole] = useState('CUSTOMER');
+  const [role, setRole] = useState('');
   const [agreement, setAgreement] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
@@ -172,9 +172,8 @@ export default function RegistrationPage() {
           type="select"
           value={role}
           onChange={(e) => setRole(e.target.value)}
-          placeholder="Select role"
+          placeholder="Select role I want"
         >
-          <option value="">Select role</option>
           <option value="CUSTOMER">Customer</option>
           <option value="ADMIN">Admin</option>
         </InputField>
