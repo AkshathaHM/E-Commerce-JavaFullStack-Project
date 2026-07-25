@@ -70,14 +70,13 @@ export default function CustomerHomePage() {
     }
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/items/count?username=${encodeURIComponent(activeUsername)}`, {
+      const data = await cachedFetch(cacheKey, `${import.meta.env.VITE_API_URL}/api/cart/items/count?username=${encodeURIComponent(activeUsername)}`, {
         credentials: 'include',
         headers: getAuthHeaders(),
-      });
-      if (res.ok) {
-        const count = await res.json();
-        setCartCount(count);
-        setCache(cacheKey, count, 30000);
+      }, 30000).catch(() => null);
+      if (data !== null && data !== undefined) {
+        setCartCount(data);
+        setCache(cacheKey, data, 30000);
       }
     } catch (e) {
       console.warn('Cart count fetch failed', e);

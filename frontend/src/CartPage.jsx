@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { CartItemSkeleton } from "./components/Skeleton";
 import CartItem from "./components/CartItem";
 import { getCache, setCache, clearCache } from './utils/cache';
+import { cachedFetch, invalidateCache } from './utils/apiClient';
 import { getPaymentErrorDetails } from "./utils/paymentFlow";
 import { getDerivedOrderStatus, getStatusLabel } from "./utils/orderStatus";
 
@@ -139,27 +140,19 @@ const CartPage = () => {
     setError(null);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/items`, {
-        credentials: "include",
-        headers: {
-          ...getAuthHeaders(),
-        },
-      });
+      const data = await cachedFetch('cart_items', `${import.meta.env.VITE_API_URL}/api/cart/items`, {
+        credentials: 'include',
+        headers: { ...getAuthHeaders() },
+      }, 20000).catch(() => null);
 
-      if (!res.ok) {
-        const errText = await res.text();
-        if (res.status === 401) {
-          setError("Please log in to view your cart.");
-          setCartItems([]);
-          setUsername("Guest");
-          setSubtotal("0.00");
-          return;
-        }
-        throw new Error(`Cart fetch failed: ${errText}`);
+      if (!data) {
+        setCartItems([]);
+        setUsername('Guest');
+        setSubtotal('0.00');
+        return;
       }
 
-      const data = await res.json();
-      const products = data?.cart?.products || [];
+      const products = data?.cart?.products || data?.items || [];
 
       const formatted = products.map((item) => {
         const quantity = Math.max(1, Number(item.quantity || item.qty || 1));
@@ -169,31 +162,27 @@ const CartPage = () => {
         return {
           ...item,
           quantity,
-          price_per_unit: Number.isFinite(pricePerUnit) ? pricePerUnit.toFixed(2) : "0.00",
-          total_price: Number.isFinite(totalPrice) ? totalPrice.toFixed(2) : "0.00",
+          price_per_unit: Number.isFinite(pricePerUnit) ? pricePerUnit.toFixed(2) : '0.00',
+          total_price: Number.isFinite(totalPrice) ? totalPrice.toFixed(2) : '0.00',
           display_name: getDisplayName(item),
           display_description: getDisplayDescription(item),
           display_image_url: getDisplayImageUrl(item),
         };
       });
 
-      const calc = formatted
-        .reduce((sum, item) => sum + Number(item.total_price), 0)
-        .toFixed(2);
+      const calc = formatted.reduce((sum, item) => sum + Number(item.total_price), 0).toFixed(2);
 
       setCartItems(formatted);
-      setUsername(data?.username || "Guest");
+      setUsername(data?.username || 'Guest');
       setSubtotal(calc);
 
-      try {
-        setCache('cart_items', { items: formatted, username: data?.username || 'Guest', subtotal: calc }, 20000);
-      } catch {}
+      try { setCache('cart_items', { items: formatted, username: data?.username || 'Guest', subtotal: calc }, 20000); } catch {}
     } catch (err) {
-      console.error("Cart load error:", err);
-      setError("Failed to load cart. Please try again.");
+      console.error('Cart load error:', err);
+      setError('Failed to load cart. Please try again.');
       setCartItems([]);
-      setUsername("Guest");
-      setSubtotal("0.00");
+      setUsername('Guest');
+      setSubtotal('0.00');
     } finally {
       setLoading(false);
     }

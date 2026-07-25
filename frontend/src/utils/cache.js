@@ -2,7 +2,12 @@ const store = {};
 
 export function setCache(key, value, ttlMs = 30000) {
   const expires = Date.now() + ttlMs;
-  store[key] = { value, expires };
+  try {
+    const copy = typeof structuredClone === 'function' ? structuredClone(value) : JSON.parse(JSON.stringify(value));
+    store[key] = { value: copy, expires };
+  } catch (e) {
+    store[key] = { value, expires };
+  }
 }
 
 export function getCache(key) {
@@ -12,7 +17,11 @@ export function getCache(key) {
     delete store[key];
     return null;
   }
-  return entry.value;
+  try {
+    return typeof structuredClone === 'function' ? structuredClone(entry.value) : JSON.parse(JSON.stringify(entry.value));
+  } catch (e) {
+    return entry.value;
+  }
 }
 
 export function clearCache(key) {

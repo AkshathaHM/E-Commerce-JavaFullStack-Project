@@ -50,24 +50,24 @@ const AdminDashboard = () => {
 
     const fetchCurrentUser = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
-          credentials: "include",
-          headers: {
-            ...getAuthHeaders(),
-          },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.role !== "ADMIN") {
-            navigate("/admin", { replace: true });
-            return;
-          }
-          setAdminUsername(data.name || data.username || data.user?.name || "Admin");
-        } else {
-          navigate("/admin", { replace: true });
+        const data = await cachedFetch('admin_profile', `${import.meta.env.VITE_API_URL}/api/auth/me`, {
+          credentials: 'include',
+          headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+        }, 30000).catch(() => null);
+
+        if (!data) {
+          navigate('/admin', { replace: true });
+          return;
         }
+
+        if (data.role !== 'ADMIN') {
+          navigate('/admin', { replace: true });
+          return;
+        }
+
+        setAdminUsername(data.name || data.username || data.user?.name || 'Admin');
       } catch {
-        navigate("/admin", { replace: true });
+        navigate('/admin', { replace: true });
       }
     };
     fetchCurrentUser();
@@ -182,22 +182,16 @@ const AdminDashboard = () => {
     }
     setModalData(null);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/products/all`, {
-        method: "GET",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      });
+      const products = await cachedFetch(cacheKey, `${import.meta.env.VITE_API_URL}/admin/products/all`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      }, 30000);
 
-      if (response.ok) {
-        const products = await response.json();
-        modalCacheRef.current.products = products;
-        setCache(cacheKey, products, 30000);
-        setModalData(products);
-        return products;
-      } else {
-        const error = await response.text();
-        setResponse(`Error: ${error}`);
-      }
+      modalCacheRef.current.products = products;
+      setCache(cacheKey, products, 30000);
+      setModalData(products);
+      return products;
     } catch (error) {
       setResponse(`Error: ${error.message}`);
     } finally {
@@ -218,22 +212,16 @@ const AdminDashboard = () => {
       setModalData(null);
     }
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
-        method: "GET",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      });
+      const profile = await cachedFetch(cacheKey, `${import.meta.env.VITE_API_URL}/api/auth/me`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      }, 30000).catch(() => null);
 
-      if (response.ok) {
-        const profile = await response.json();
-        setCache(cacheKey, profile, 30000);
-        setModalData(profile);
-        return profile;
-      }
-
-      const error = await response.text();
-      setResponse(`Error: ${error}`);
-      return null;
+      if (!profile) return null;
+      setCache(cacheKey, profile, 30000);
+      setModalData(profile);
+      return profile;
     } catch (error) {
       setResponse(`Error: ${error.message}`);
       return null;
@@ -409,27 +397,20 @@ const AdminDashboard = () => {
       setModalData(cached);
       return cached;
     }
-
     setLoading(true);
     setResponse(null);
     setModalData(null);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/user/all`, {
-        method: "GET",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      });
+      const users = await cachedFetch(cacheKey, `${import.meta.env.VITE_API_URL}/admin/user/all`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      }, 30000);
 
-      if (response.ok) {
-        const users = await response.json();
-        modalCacheRef.current.users = users;
-        setCache(cacheKey, users, 30000);
-        setModalData(users);
-        return users;
-      } else {
-        const error = await response.text();
-        setResponse(`Error: ${error}`);
-      }
+      modalCacheRef.current.users = users;
+      setCache(cacheKey, users, 30000);
+      setModalData(users);
+      return users;
     } catch (error) {
       setResponse(`Error: ${error.message}`);
     } finally {
@@ -443,19 +424,13 @@ const AdminDashboard = () => {
     setResponse(null);
     setModalData(null);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/business/overall`, {
-        method: "GET",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      });
+      const revenue = await cachedFetch('admin_business_overall', `${import.meta.env.VITE_API_URL}/admin/business/overall`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      }, 30000);
 
-      if (response.ok) {
-        const revenue = await response.json();
-        setModalData(revenue);
-      } else {
-        const error = await response.text();
-        setResponse(`Error: ${error}`);
-      }
+      setModalData(revenue);
     } catch (error) {
       setResponse(`Error: ${error.message}`);
     } finally {
@@ -469,19 +444,13 @@ const AdminDashboard = () => {
     setModalData(null);
     try {
       const date = data.date || new Date().toISOString().split('T')[0];
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/business/daily?date=${date}`, {
-        method: "GET",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      });
+      const sales = await cachedFetch(`admin_business_daily_${date}`, `${import.meta.env.VITE_API_URL}/admin/business/daily?date=${date}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      }, 30000);
 
-      if (response.ok) {
-        const sales = await response.json();
-        setModalData(sales);
-      } else {
-        const error = await response.text();
-        setResponse(`Error: ${error}`);
-      }
+      setModalData(sales);
     } catch (error) {
       setResponse(`Error: ${error.message}`);
     } finally {
@@ -496,19 +465,13 @@ const AdminDashboard = () => {
     try {
       const month = data.month || new Date().getMonth() + 1;
       const year = data.year || new Date().getFullYear();
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/business/monthly?month=${month}&year=${year}`, {
-        method: "GET",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      });
+      const sales = await cachedFetch(`admin_business_monthly_${year}_${month}`, `${import.meta.env.VITE_API_URL}/admin/business/monthly?month=${month}&year=${year}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      }, 30000);
 
-      if (response.ok) {
-        const sales = await response.json();
-        setModalData(sales);
-      } else {
-        const error = await response.text();
-        setResponse(`Error: ${error}`);
-      }
+      setModalData(sales);
     } catch (error) {
       setResponse(`Error: ${error.message}`);
     } finally {
@@ -522,19 +485,13 @@ const AdminDashboard = () => {
     setModalData(null);
     try {
       const year = data.year || new Date().getFullYear();
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/business/yearly?year=${year}`, {
-        method: "GET",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-      });
+      const sales = await cachedFetch(`admin_business_yearly_${year}`, `${import.meta.env.VITE_API_URL}/admin/business/yearly?year=${year}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      }, 30000);
 
-      if (response.ok) {
-        const sales = await response.json();
-        setModalData(sales);
-      } else {
-        const error = await response.text();
-        setResponse(`Error: ${error}`);
-      }
+      setModalData(sales);
     } catch (error) {
       setResponse(`Error: ${error.message}`);
     } finally {

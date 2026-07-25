@@ -367,6 +367,14 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
   const actionMessage = busyAction === "adding" ? "Adding Product..." : busyAction === "updating" ? "Updating Product..." : busyAction === "deleting" ? "Deleting Product..." : "";
 
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [categoryLabel, setCategoryLabel] = useState("");
+
+  const stripHtml = (html) => {
+    if (!html) return "";
+    return String(html).replace(/<[^>]*>/g, "").trim();
+  };
+
   useEffect(() => {
     if (initialAction === "add") {
       setIsFormOpen(true);
@@ -393,16 +401,18 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
     setConfirmDeleteProduct(null);
     setEditingProduct(product);
     const categoryMatch = CATEGORY_OPTIONS.find((option) => option.label.toLowerCase() === String(product.category || "").toLowerCase());
+    const cleanedDescription = stripHtml(product.description || product.desc || "");
     setFormData({
       name: product.name || "",
-      description: product.description || "",
+      description: cleanedDescription,
       price: product.price ?? "",
       stock: product.stock ?? "",
       categoryId: product.categoryId || product.category_id || (categoryMatch ? categoryMatch.value : ""),
       brand: product.brand || "",
       status: product.status || "Active",
-      imageUrls: Array.isArray(product.images) && product.images.length > 0 ? product.images : [],
+      imageUrls: Array.isArray(product.images) && product.images.length > 0 ? product.images.filter(Boolean) : [],
     });
+    setCategoryLabel(categoryMatch ? "" : (product.category || product.categoryName || ""));
     setIsFormOpen(true);
   };
 
