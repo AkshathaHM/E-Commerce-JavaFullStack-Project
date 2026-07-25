@@ -1351,54 +1351,50 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
             <table className="orders-table">
               <thead>
                 <tr>
-                  <th style={{width: "40px"}}></th>
-                  <th>#</th>
-                  <th>Customer</th>
-                  <th>Contact</th>
-                  <th>Address</th>
-                  <th>Order ID</th>
-                  <th>Status</th>
-                  <th>Total</th>
-                  <th>Created</th>
+                  <th style={{ width: "40px" }}></th>
+                  <th style={{ width: "48px" }}>#</th>
+                  <th style={{ minWidth: "220px" }}>Customer</th>
+                  <th style={{ minWidth: "140px" }}>Contact</th>
+                  <th style={{ minWidth: "220px" }}>Address</th>
+                  <th style={{ minWidth: "160px" }}>Order ID</th>
+                  <th style={{ width: "120px" }}>Status</th>
+                  <th style={{ width: "110px" }}>Total</th>
+                  <th style={{ width: "140px" }}>Date</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedOrders.map((order, index) => {
-                  const orderId = order.orderId || order.id;
+                  const orderId = order.orderId || order.id || order.order_id || order._id || "N/A";
                   const orderStatus = getOrderValue(order, "status");
                   const badgeClass = toSafeLower(orderStatus).replace(/\s+/g, "-");
                   const rowNumber = (currentPage - 1) * pageSize + index + 1;
                   const isExpanded = expandedOrderId === orderId;
 
                   return (
-                    <React.Fragment key={orderId}>
+                    <React.Fragment key={`${orderId}-${index}`}>
                       <tr className={isExpanded ? "expanded-row" : ""}>
-                        <td style={{width: "40px", textAlign: "center"}}>
+                        <td>
                           <button
                             className="expand-btn"
                             onClick={() => setExpandedOrderId(isExpanded ? null : orderId)}
-                            style={{
-                              background: "none",
-                              border: "none",
-                              cursor: "pointer",
-                              fontSize: "18px",
-                              padding: "0",
-                            }}
+                            aria-label={isExpanded ? "Collapse order details" : "Expand order details"}
                           >
                             {isExpanded ? "▼" : "▶"}
                           </button>
                         </td>
                         <td>{rowNumber}</td>
                         <td>
-                          <div>
+                          <div className="orders-customer-cell">
                             <strong>{toSafeString(getOrderValue(order, "user"))}</strong>
-                            <div>{toSafeString(getOrderValue(order, "email"))}</div>
+                            <span>{toSafeString(getOrderValue(order, "email"))}</span>
                           </div>
                         </td>
                         <td>{toSafeString(getOrderValue(order, "mobile"))}</td>
                         <td>{toSafeString(getOrderValue(order, "address"))}</td>
                         <td>{toSafeString(orderId)}</td>
-                        <td><span className={`status-badge ${badgeClass}`}>{toSafeString(orderStatus)}</span></td>
+                        <td>
+                          <span className={`status-badge ${badgeClass}`}>{toSafeString(orderStatus)}</span>
+                        </td>
                         <td>{formatAmount(getOrderValue(order, "total"))}</td>
                         <td>{toSafeString(getOrderValue(order, "createdAt") || "N/A")}</td>
                       </tr>
@@ -1408,7 +1404,7 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
                             <div className="order-details-panel">
                               <div className="details-section">
                                 <h3>Order Items</h3>
-                                {order.items && order.items.length > 0 ? (
+                                {Array.isArray(order.items) && order.items.length > 0 ? (
                                   <div className="items-list">
                                     <table className="items-table">
                                       <thead>
@@ -1421,11 +1417,11 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
                                       </thead>
                                       <tbody>
                                         {order.items.map((item, idx) => (
-                                          <tr key={item.id || idx}>
-                                            <td>#{item.productId}</td>
-                                            <td style={{textAlign: "center"}}>{item.quantity}</td>
-                                            <td>{formatAmount(item.pricePerUnit)}</td>
-                                            <td><strong>{formatAmount(item.totalPrice)}</strong></td>
+                                          <tr key={item.id || item.productId || idx}>
+                                            <td>#{item.productId ?? item.product_id ?? item.id ?? "N/A"}</td>
+                                            <td>{toSafeString(item.quantity)}</td>
+                                            <td>{formatAmount(item.pricePerUnit ?? item.unitPrice ?? item.price)}</td>
+                                            <td><strong>{formatAmount(item.totalPrice ?? item.total)}</strong></td>
                                           </tr>
                                         ))}
                                       </tbody>
@@ -1433,7 +1429,7 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
                                     <div className="order-summary">
                                       <div className="summary-row">
                                         <span>Subtotal:</span>
-                                        <span>{formatAmount(order.items.reduce((sum, item) => sum + Number(item.totalPrice || 0), 0))}</span>
+                                        <span>{formatAmount(order.items.reduce((sum, item) => sum + Number(item.totalPrice ?? item.total ?? 0), 0))}</span>
                                       </div>
                                       <div className="summary-row total-row">
                                         <span>Order Total:</span>
@@ -1449,20 +1445,20 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
                                 <h3>Order Information</h3>
                                 <div className="info-grid">
                                   <div className="info-item">
-                                    <label>Order ID:</label>
+                                    <label>Order ID</label>
                                     <span>{toSafeString(orderId)}</span>
                                   </div>
                                   <div className="info-item">
-                                    <label>Status:</label>
+                                    <label>Status</label>
                                     <span className={`status-badge ${badgeClass}`}>{toSafeString(orderStatus)}</span>
                                   </div>
                                   <div className="info-item">
-                                    <label>Created:</label>
+                                    <label>Created</label>
                                     <span>{toSafeString(getOrderValue(order, "createdAt") || "N/A")}</span>
                                   </div>
                                   <div className="info-item">
-                                    <label>Updated:</label>
-                                    <span>{toSafeString(order.updatedAt || "N/A")}</span>
+                                    <label>Updated</label>
+                                    <span>{toSafeString(order.updatedAt || order.updated_at || "N/A")}</span>
                                   </div>
                                 </div>
                               </div>

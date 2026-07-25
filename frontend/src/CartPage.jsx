@@ -72,6 +72,24 @@ const CartPage = () => {
 
   const authTokenExists = () => !!localStorage.getItem("authToken");
 
+  const getItemId = useCallback((item) => {
+    const id = item?.product_id ?? item?.productId ?? item?.id ?? null;
+    return id != null ? String(id) : null;
+  }, []);
+  const getDisplayName = useCallback(
+    (item) => item?.name || item?.title || item?.productName || item?.product_name || "Product",
+    []
+  );
+  const getDisplayDescription = useCallback(
+    (item) =>
+      item?.description || item?.desc || item?.shortDescription || item?.product_description || "No description available",
+    []
+  );
+  const getDisplayImageUrl = useCallback(
+    (item) => item?.image_url || item?.imageUrl || item?.image || item?.thumbnail || "/images/no-image.png",
+    []
+  );
+
   useEffect(() => {
     try {
       const savedOrder = localStorage.getItem('lastOrder');
@@ -131,11 +149,21 @@ const CartPage = () => {
       const data = await res.json();
       const products = data?.cart?.products || [];
 
-      const formatted = products.map((item) => ({
-        ...item,
-        price_per_unit: Number(item.price_per_unit || 0).toFixed(2),
-        total_price: Number(item.total_price || 0).toFixed(2),
-      }));
+      const formatted = products.map((item) => {
+        const quantity = Math.max(1, Number(item.quantity || item.qty || 1));
+        const pricePerUnit = Number(item.price_per_unit ?? item.price ?? item.unit_price ?? item.pricePerUnit || 0);
+        const totalPrice = Number(item.total_price ?? item.totalPrice ?? pricePerUnit * quantity || 0);
+
+        return {
+          ...item,
+          quantity,
+          price_per_unit: Number.isFinite(pricePerUnit) ? pricePerUnit.toFixed(2) : "0.00",
+          total_price: Number.isFinite(totalPrice) ? totalPrice.toFixed(2) : "0.00",
+          display_name: getDisplayName(item),
+          display_description: getDisplayDescription(item),
+          display_image_url: getDisplayImageUrl(item),
+        };
+      });
 
       setCartItems(formatted);
       setUsername(data?.username || "Guest");
@@ -158,18 +186,21 @@ const CartPage = () => {
 
   // Remove item
   const handleRemoveItem = async (productId) => {
+    const id = productId;
+    if (!id) return;
+
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/delete`, {
         method: "DELETE",
         credentials: "include",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ username, productId }),
+        body: JSON.stringify({ username, productId: id }),
       });
 
       if (res.ok || res.status === 204) {
-        setCartItems((prev) => prev.filter((i) => i.product_id !== productId));
+        setCartItems((prev) => prev.filter((i) => getItemId(i) !== id));
 
-        const removed = cartItems.find((i) => i.product_id === productId);
+        const removed = cartItems.find((i) => getItemId(i) === id);
         if (removed) {
           const newSub = (Number(subtotal) - Number(removed.total_price)).toFixed(2);
           setSubtotal(newSub > 0 ? newSub : "0.00");
@@ -185,7 +216,7 @@ const CartPage = () => {
 
   // Update quantity
   const handleQuantityChange = async (productId, delta) => {
-    const item = cartItems.find((i) => i.product_id === productId);
+    const item = cartItems.find((i) => getItemId(i) === productId);
     if (!item) return;
 
     const newQty = item.quantity + delta;
@@ -204,7 +235,7 @@ const CartPage = () => {
 
       setCartItems((prev) =>
         prev.map((i) =>
-          i.product_id === productId
+          getItemId(i) === productId
             ? { ...i, quantity: newQty, total_price: (Number(i.price_per_unit) * newQty).toFixed(2) }
             : i
         )
@@ -241,9 +272,9 @@ const CartPage = () => {
       const payload = {
         totalAmount: Number(subtotal),
         cartItems: cartItems.map((item) => ({
-          productId: item.product_id,
+          productId: getItemId(item),
           quantity: item.quantity,
-          price: Number(item.price_per_unit)
+          price: Number(item.price_per_unit || item.price || item.unit_price || 0),
         }))
       };
 
@@ -290,9 +321,9 @@ const CartPage = () => {
                 razorpay_signature: rzpRes.razorpay_signature,
                 totalAmount: Number(subtotal),
                 cartItems: cartItems.map((item) => ({
-                  productId: item.product_id,
+                  productId: getItemId(item),
                   quantity: item.quantity,
-                  price: Number(item.price_per_unit)
+                  price: Number(item.price_per_unit || item.price || item.unit_price || 0),
                 }))
               }),
             });
@@ -483,38 +514,45 @@ const CartPage = () => {
           )}
 
           <div className="cart-items">
-            {cartItems.map((item) => (
-              <div key={item.product_id} className="cart-item">
-                <img
-                  src={item.image_url?.startsWith("http") ? item.image_url : "/images/no-image.png"}
-                  alt={item.name || "Product"}
-                  onError={(e) => {
-                    e.currentTarget.onerror = null;
-                    e.currentTarget.src = "/images/no-image.png";
-                  }}
-                />
-                <div className="item-details">
-                  <div className="item-info">
-                    <h3>{item.name}</h3>
-                    <p>{item.description || "No description available"}</p>
-                  </div>
+            {cartItems.map((item, index) => {
+              const itemId = getItemId(item) || index;
+              const imageUrl = getDisplayImageUrl(item);
+              const title = getDisplayName(item);
+              const description = getDisplayDescription(item);
 
-                  <div className="item-actions">
-                    <div className="quantity-controls">
-                      <button onClick={() => handleQuantityChange(item.product_id, -1)} disabled={item.quantity <= 1}>−</button>
-                      <span className="quantity-display">{item.quantity}</span>
-                      <button onClick={() => handleQuantityChange(item.product_id, +1)}>+</button>
+              return (
+                <div key={itemId} className="cart-item">
+                  <img
+                    src={imageUrl?.startsWith?.("http") ? imageUrl : "/images/no-image.png"}
+                    alt={title}
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "/images/no-image.png";
+                    }}
+                  />
+                  <div className="item-details">
+                    <div className="item-info">
+                      <h3>{title}</h3>
+                      <p>{description}</p>
                     </div>
 
-                    <span className="price">₹{item.total_price}</span>
+                    <div className="item-actions">
+                      <div className="quantity-controls">
+                        <button onClick={() => handleQuantityChange(itemId, -1)} disabled={item.quantity <= 1}>−</button>
+                        <span className="quantity-display">{item.quantity}</span>
+                        <button onClick={() => handleQuantityChange(itemId, +1)}>+</button>
+                      </div>
 
-                    <button className="remove-btn" onClick={() => handleRemoveItem(item.product_id)}>
-                      🗑
-                    </button>
+                      <span className="price">₹{item.total_price}</span>
+
+                      <button className="remove-btn" onClick={() => handleRemoveItem(itemId)}>
+                        🗑
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
