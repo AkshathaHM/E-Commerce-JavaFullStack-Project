@@ -4,25 +4,7 @@
 }
 
 :root {
-  color-scheme: dark;
-  --bg: #07101c;
-  --surface: #111f33;
-  --surface-elevated: #141f34;
-  --surface-muted: #17283f;
-  --surface-strong: #1f3150;
-  --text: #f8fafc;
-  --text-muted: #9fb4cf;
-  --border: rgba(255,255,255,0.08);
-  --border-strong: rgba(255,255,255,0.12);
-  --brand: #3cc5ff;
-  --brand-dark: #0091c8;
-  --brand-soft: rgba(60,197,255,0.18);
-  --accent: #ffd166;
-  --success: #22c55e;
-  --success-soft: rgba(34,197,94,0.16);
-  --danger: #ef4444;
-  --danger-soft: rgba(239,68,68,0.16);
-  --shadow: 0 32px 90px rgba(0, 0, 0, 0.18);
+  /* keep layout tokens local; color tokens come from index.css to support theming */
   --radius: 22px;
   --radius-sm: 14px;
   --radius-pill: 999px;
@@ -51,20 +33,33 @@ button, input, textarea, select {
   font: inherit;
 }
 
-body,
-button,
-input,
-textarea,
-select,
-option {
-  font-family: Inter, sans-serif;
-}
-
 a {
   color: inherit;
   text-decoration: none;
 }
 
+card,
+panel,
+auth-card,
+modal-card,
+toast-notification,
+product-card,
+cart-item,
+order-card,
+dashboard-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.auth-card {
+  padding: 32px;
+  border-radius: var(--radius-sm);
+  max-width: 560px;
+  margin: 0 auto;
+  background: var(--card);
+}
 img {
   display: block;
   max-width: 100%;
@@ -220,9 +215,9 @@ READONLY
   min-height: 56px;
   padding: 16px;
   border-radius: 14px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
+  border: 1px solid var(--input-border, var(--border));
+  background: var(--input-bg, var(--surface));
+  color: var(--input-text, var(--text));
   outline: none;
   font-size: 16px;
   transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition);
@@ -236,8 +231,8 @@ READONLY
 .modal-form select:focus,
 .otp-input-box:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 4px rgba(56,189,248,0.15);
-  background: var(--surface);
+  box-shadow: 0 0 0 4px rgba(56,189,248,0.12);
+  background: var(--input-bg, var(--surface));
 }
 
 .field-label,
@@ -264,6 +259,13 @@ READONLY
 .auth-input-field {
   position: relative;
   width: 100%;
+}
+
+.auth-input::placeholder,
+.form-input::placeholder,
+.modal-form input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.8;
 }
 
 .auth-input-icon {
@@ -411,8 +413,8 @@ READONLY
 .auth-card__notice {
   padding: 18px 20px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
 }
 
 .auth-form {

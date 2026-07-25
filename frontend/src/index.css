@@ -12,6 +12,7 @@
   --white: rgb(255 255 255);
   --surface: var(--white);
   --card: #f8fafc;
+  --border: #e6eef8;
   --surface-alt: #eff6ff;
   --text: #111827;
   --text-secondary: #4b5563;
@@ -31,6 +32,7 @@
   --bg: #081526;
   --surface: #1f2937;
   --card: #111827;
+  --border: rgba(255,255,255,0.06);
   --text: #ffffff;
   --text-secondary: #cbd5e1;
   --text2: #cbd5e1;
