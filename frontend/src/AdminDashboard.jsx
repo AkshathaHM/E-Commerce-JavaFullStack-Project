@@ -571,23 +571,27 @@ const AdminDashboard = () => {
           </div>
         </section>
         <div className="cards-grid">
-          {cardData.map((card, index) => (
-            card.type === "orderManagement" ? (
-              <div key={index} className="card order-management-card" onClick={() => openModal(card.modalType)}>
-                <div className="card-content">
-                  <div className="card-header-row">
-                    <span className="card-icon" aria-hidden="true">{card.icon}</span>
-                    <h3 className="card-title">{card.title}</h3>
+          {cardData.map((card, index) => {
+            if (card.type === "productManagement") {
+              return (
+                <div key={index} className="card order-management-card" onClick={() => navigate('/admin/products')}>
+                  <div className="card-content">
+                    <div className="card-header-row">
+                      <span className="card-icon" aria-hidden="true">{card.icon}</span>
+                      <h3 className="card-title">{card.title}</h3>
+                    </div>
+                    <p className="card-description">{card.description}</p>
+                    <span className="card-team">Team: {card.team}</span>
                   </div>
-                  <p className="card-description">{card.description}</p>
-                  <span className="card-team">Team: {card.team}</span>
+                  <div className="order-management-actions">
+                    <button type="button" className="product-management-action" onClick={(e) => { e.stopPropagation(); navigate('/admin/products'); }}>View Products</button>
+                    <button type="button" className="product-management-action secondary" onClick={(e) => { e.stopPropagation(); navigate('/admin/products', { state: { initialAction: 'add' } }); }}>Add Product</button>
+                  </div>
                 </div>
-                <div className="order-management-actions">
-                  <button type="button" className="product-management-action" onClick={(e) => { e.stopPropagation(); openModal("manageProducts", "list"); }}>View Products</button>
-                  <button type="button" className="product-management-action secondary" onClick={(e) => { e.stopPropagation(); openModal("manageProducts", "add"); }}>Add Product</button>
-                </div>
-              </div>
-            ) : (
+              );
+            }
+
+            return (
               <div key={index} className="card" onClick={() => openModal(card.modalType)}>
                 <div className="card-content">
                   <div className="card-header-row">
@@ -598,8 +602,8 @@ const AdminDashboard = () => {
                   <span className="card-team">Team: {card.team}</span>
                 </div>
               </div>
-            )
-          ))}
+            );
+          })}
         </div>
       </main>
 

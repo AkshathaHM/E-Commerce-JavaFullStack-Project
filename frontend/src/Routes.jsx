@@ -11,6 +11,7 @@ const ProfilePage = lazy(() => import('./ProfilePage'));
 const SettingsPage = lazy(() => import('./SettingsPage'));
 const AdminLogin = lazy(() => import("./AdminLogin"));
 const AdminDashboard = lazy(() => import("./AdminDashboard"));
+const AdminProductsPage = lazy(() => import("./AdminProductsPage"));
 const OrderSuccess = lazy(() => import('./components/OrderSuccess'));
 const OrderTracking = lazy(() => import('./components/OrderTracking'));
 import { isAuthenticated } from "./auth";
@@ -56,6 +57,7 @@ const AppRoutes = () => {
       <Route path="/order-tracking" element={<ProtectedRoute element={<Suspense fallback={pageFallback}><OrderTracking /></Suspense>} allowedRole="CUSTOMER" />} />
       <Route path="/admin" element={<PublicRoute element={<Suspense fallback={pageFallback}><AdminLogin /></Suspense>} />} />
       <Route path="/admindashboard" element={<ProtectedRoute element={<Suspense fallback={pageFallback}><AdminDashboard /></Suspense>} allowedRole="ADMIN" />} />
+      <Route path="/admin/products" element={<ProtectedRoute element={<Suspense fallback={pageFallback}><AdminProductsPage /></Suspense>} allowedRole="ADMIN" />} />
     </Routes>
   );
 };
