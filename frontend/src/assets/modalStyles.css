@@ -85,6 +85,103 @@
   box-shadow: 0 0 0 4px var(--focus-ring);
 }
 
+.profile-details-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.profile-details-header h2 {
+  margin: 6px 0 0;
+  color: var(--heading);
+}
+
+.profile-details-list {
+  display: grid;
+  gap: 12px;
+}
+
+.profile-detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+}
+
+.profile-detail-item--password {
+  background: linear-gradient(135deg, var(--surface-alt), var(--surface));
+}
+
+.profile-detail-icon {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.profile-detail-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-detail-label {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.profile-detail-value {
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.profile-detail-password-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.profile-visibility-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.profile-details-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.profile-modal-loading,
+.profile-modal-empty {
+  padding: 22px;
+  border-radius: 18px;
+  background: var(--surface-alt);
+  color: var(--text-muted);
+  text-align: center;
+}
+
 .product-search {
   display: flex;
   align-items: center;

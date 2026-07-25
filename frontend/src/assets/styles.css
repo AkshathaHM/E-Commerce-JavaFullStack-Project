@@ -1088,7 +1088,7 @@ img {
   gap: 16px;
   padding: 18px;
   border-radius: 24px;
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-alt) 100%);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
 }
@@ -1121,11 +1121,33 @@ img {
   margin: 0;
 }
 
+.manage-products-shell .product-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .manage-products-shell .product-name {
   margin: 0;
   color: var(--heading);
   font-size: 1.06rem;
   line-height: 1.35;
+}
+
+.manage-products-shell .product-card-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: var(--success-bg);
+  color: var(--success);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .manage-products-shell .product-card-footer {
@@ -1134,9 +1156,10 @@ img {
   justify-content: space-between;
   gap: 10px;
   margin-top: auto;
+  padding-top: 2px;
 }
 
-.manage-products-shell .product-card-footer .product-outline-btn,
+.manage-products-shell .product-card-footer .product-view-btn,
 .manage-products-shell .product-card-footer .add-to-cart-btn,
 .manage-products-shell .product-card-footer .product-delete-btn {
   flex: 1 1 0;
@@ -1152,11 +1175,11 @@ img {
   justify-content: center;
 }
 
-.manage-products-shell .product-outline-btn,
-.manage-products-shell .secondary-action-btn {
-  background: var(--surface-alt);
-  color: var(--text);
-  border: 1px solid var(--border);
+.manage-products-shell .product-view-btn {
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  color: var(--button-text);
+  border: 1px solid transparent;
+  box-shadow: none;
 }
 
 .manage-products-shell .add-to-cart-btn,
@@ -1174,9 +1197,8 @@ img {
   box-shadow: none;
 }
 
-.manage-products-shell .product-outline-btn:hover,
-.manage-products-shell .secondary-action-btn:hover {
-  background: var(--surface);
+.manage-products-shell .product-view-btn:hover {
+  filter: brightness(0.97);
 }
 
 .manage-products-shell .add-to-cart-btn:hover,
@@ -1202,6 +1224,10 @@ img {
   display: flex;
   flex-direction: column;
   gap: 3px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
   color: var(--text);
   font-size: 0.92rem;
 }
@@ -1502,6 +1528,20 @@ img {
   color: var(--button-text);
 }
 
+.cart-empty-actions,
+.cart-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cart-empty-secondary,
+.back-button--ghost {
+  background: var(--surface-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
 .latest-order-status-banner {
   display: grid;
   grid-template-columns: auto auto;
@@ -1530,6 +1570,13 @@ img {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+
+.order-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+  border-color: var(--brand);
 }
 
 .order-card-header,
@@ -1561,18 +1608,40 @@ img {
 
 .order-card-body {
   display: grid;
-  grid-template-columns: minmax(160px, 180px) 1fr;
+  grid-template-columns: minmax(180px, 220px) 1fr;
   gap: 18px;
   align-items: start;
+}
+
+.order-product-visual {
+  display: grid;
+  gap: 10px;
 }
 
 .order-product-image {
   width: 100%;
   min-height: 160px;
-  max-height: 180px;
+  max-height: 220px;
   border-radius: 22px;
   object-fit: cover;
   background: var(--surface-alt);
+}
+
+.order-product-caption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.order-product-caption strong {
+  color: var(--heading);
 }
 
 .order-details {
@@ -1597,6 +1666,7 @@ img {
 .order-detail-row strong {
   color: var(--heading);
   text-align: right;
+  overflow-wrap: anywhere;
 }
 
 .order-card-actions {
@@ -1620,6 +1690,80 @@ img {
   display: flex;
   justify-content: center;
   margin-top: 10px;
+}
+
+.profile-page-shell {
+  display: grid;
+  gap: 18px;
+}
+
+.profile-panel {
+  padding: 24px;
+  border-radius: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.profile-panel--hero {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, var(--surface-alt), var(--surface));
+}
+
+.profile-panel--error {
+  display: grid;
+  gap: 12px;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.profile-label {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.profile-value {
+  color: var(--heading);
+  font-size: 1rem;
+}
+
+.profile-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.profile-badge--success {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .order-card-action {
@@ -1670,6 +1814,186 @@ img {
   padding: 28px;
   background: var(--surface-alt);
   border: 1px solid var(--border);
+}
+
+.tracking-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 1600;
+}
+
+.tracking-modal-card {
+  width: min(100%, 1040px);
+  max-height: 95vh;
+  overflow-y: auto;
+  padding: 24px;
+  border-radius: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  position: relative;
+}
+
+.tracking-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.tracking-hero__content {
+  display: grid;
+  gap: 8px;
+}
+
+.tracking-hero__copy {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.tracking-hero__metrics {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.tracking-pill {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.tracking-pill strong {
+  color: var(--heading);
+}
+
+.tracking-panel {
+  padding: 20px;
+  border-radius: 24px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+}
+
+.tracking-status-banner {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  margin: 16px 0;
+}
+
+.tracking-status-banner span {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.tracking-status-banner strong {
+  color: var(--heading);
+}
+
+.order-tracking-details-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.order-tracking-details-grid > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.order-tracking-details-grid > div:last-child {
+  border-bottom: none;
+}
+
+.order-tracking-details-grid span {
+  color: var(--text-muted);
+}
+
+.order-tracking-details-grid strong {
+  color: var(--heading);
+  text-align: right;
+}
+
+.tracking-history-card {
+  margin-top: 16px;
+}
+
+.tracking-history-list li {
+  background: var(--surface);
+}
+
+.timeline-step-wrapper {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 10px 0;
+}
+
+.timeline-step {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.timeline-step--complete {
+  border-color: var(--success);
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.timeline-step--active {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.timeline-step--cancelled {
+  border-color: var(--danger);
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.timeline-label {
+  font-weight: 700;
+  color: var(--heading);
+}
+
+.timeline-detail {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.timeline-step-wrapper--cancelled .timeline-content {
+  opacity: 0.9;
 }
 
 .tracking-hero__metrics,
@@ -1807,6 +2131,27 @@ img {
 .status-badge.transit { background: rgba(237,233,254,0.95); color: #5b21b6; }
 .status-badge.delivered { background: var(--success-bg); color: var(--success); }
 .status-badge.cancelled { background: var(--danger-bg); color: var(--danger); }
+
+.status-badge--placed,
+.status-badge--shipped,
+.status-badge--transit,
+.status-badge--delivered,
+.status-badge--cancelled {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  min-width: 118px;
+}
+
+.status-badge--placed { background: var(--info-bg); color: var(--brand); }
+.status-badge--shipped { background: rgba(254,243,199,0.95); color: #92400e; }
+.status-badge--transit { background: rgba(237,233,254,0.95); color: #5b21b6; }
+.status-badge--delivered { background: var(--success-bg); color: var(--success); }
+.status-badge--cancelled { background: var(--danger-bg); color: var(--danger); }
 
 .expand-btn {
   width: 36px;
@@ -1946,15 +2291,6 @@ img {
     grid-template-columns: 1fr;
   }
 }
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--surface-alt);
-  color: var(--text);
-  border-radius: 999px;
-  padding: 12px 16px;
-  border: 1px solid var(--border);
-}
 
 .tracking-layout {
   display: grid;
@@ -2074,13 +2410,16 @@ img {
 }
 
 .admin-dashboard .card {
-  padding: 22px;
+  padding: 24px;
   border-radius: 26px;
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text);
   cursor: pointer;
   box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .admin-dashboard .card:hover {
@@ -2089,8 +2428,10 @@ img {
 }
 
 .admin-dashboard .card-content {
-  display: grid;
-  gap: 14px;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .admin-dashboard .card-header-row {
@@ -2113,11 +2454,18 @@ img {
 .admin-dashboard .card-title {
   margin: 0;
   color: var(--heading);
+  line-height: 1.3;
 }
 
 .admin-dashboard .card-description,
 .admin-dashboard .card-team {
+  margin: 0;
   color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.admin-dashboard .card-team {
+  margin-top: 2px;
 }
 
 .admin-dashboard .order-management-actions,
@@ -2125,6 +2473,8 @@ img {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 4px;
 }
 
 .admin-dashboard .product-management-action {
@@ -2135,6 +2485,7 @@ img {
   border-radius: 999px;
   cursor: pointer;
   font-weight: 700;
+  min-height: 44px;
 }
 
 .admin-dashboard .product-management-action.secondary {
@@ -2262,6 +2613,20 @@ img {
   gap: 18px;
 }
 
+.modal-form-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.modal-form-buttons button {
+  min-width: 120px;
+  padding: 12px 16px;
+  border-radius: 14px;
+}
+
 .modern-product-form__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2358,6 +2723,10 @@ img {
     padding: 16px 18px;
   }
 
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
   .customer-page-content,
   .main-content,
   .container {
@@ -2387,6 +2756,13 @@ img {
 
   .product-search {
     width: 100%;
+  }
+
+  .cart-empty-actions,
+  .cart-page-actions,
+  .profile-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .product-toolbar,

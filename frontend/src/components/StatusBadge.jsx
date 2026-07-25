@@ -5,6 +5,7 @@ const statusClassMap = {
   shipped: 'status-badge--shipped',
   transit: 'status-badge--transit',
   delivered: 'status-badge--delivered',
+  cancelled: 'status-badge--cancelled',
 };
 
 const normalizeStatus = (status) => {

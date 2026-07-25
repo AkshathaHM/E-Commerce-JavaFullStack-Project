@@ -88,16 +88,23 @@ const OrderCard = memo(function OrderCard({ order, onTrackOrder, onCancelOrder, 
       </div>
 
       <div className="order-card-body">
-        <img
-          src={order.imageUrl?.startsWith('http') || order.imageUrl?.startsWith('data:image/') ? order.imageUrl : NO_IMAGE}
-          alt={order.name}
-          className="order-product-image"
-          loading="lazy"
-          onError={fallbackImage}
-        />
+        <div className="order-product-visual">
+          <img
+            src={order.imageUrl?.startsWith('http') || order.imageUrl?.startsWith('data:image/') ? order.imageUrl : NO_IMAGE}
+            alt={order.name}
+            className="order-product-image"
+            loading="lazy"
+            onError={fallbackImage}
+          />
+          <div className="order-product-caption">
+            <span>{order.category}</span>
+            <strong>{order.quantity} item{order.quantity === 1 ? '' : 's'}</strong>
+          </div>
+        </div>
 
         <div className="order-details">
           <div className="order-detail-row"><span>Product</span><strong>{order.name}</strong></div>
+          <div className="order-detail-row"><span>Description</span><strong>{order.description}</strong></div>
           <div className="order-detail-row"><span>Category</span><strong>{order.category}</strong></div>
           <div className="order-detail-row"><span>Quantity</span><strong>{order.quantity}</strong></div>
           <div className="order-detail-row"><span>Item total</span><strong>{formatCurrency(order.price)}</strong></div>

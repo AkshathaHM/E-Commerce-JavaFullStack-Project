@@ -474,7 +474,10 @@ const CartPage = () => {
         <div className="cart-page empty">
           <h2>Your Cart is Empty</h2>
           <p>Start adding some awesome products!</p>
-          <button onClick={() => navigate("/customerhome")}>Continue Shopping</button>
+          <div className="cart-empty-actions">
+            <button onClick={() => navigate("/customerhome")}>Continue Shopping</button>
+            <button className="cart-empty-secondary" onClick={() => navigate("/profile")}>View Profile</button>
+          </div>
         </div>
       </CustomerLayout>
     );
@@ -496,9 +499,14 @@ const CartPage = () => {
 
       <div className="cart-container">
         <div className="cart-page">
-          <button className="back-button" onClick={() => navigate("/customerhome")}>
-            ← Continue Shopping
-          </button>
+          <div className="cart-page-actions">
+            <button className="back-button" onClick={() => navigate("/customerhome")}>
+              ← Continue Shopping
+            </button>
+            <button className="back-button back-button--ghost" onClick={() => navigate("/profile")}>
+              View Profile
+            </button>
+          </div>
 
           <div className="cart-header">
             <h2>Shopping Cart</h2>

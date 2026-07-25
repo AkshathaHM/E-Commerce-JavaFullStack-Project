@@ -11,10 +11,7 @@ export default function AuthLayout({ title, subtitle, notice, children, footer }
           <ThemeToggleButton />
 
           <div className="auth-card__brand">
-            <Logo />
-            <div className="auth-card__brand-copy">
-              <p className="auth-brand-label">SalesSavvy</p>
-            </div>
+            <Logo showBrandText={false} />
           </div>
 
           <div className="auth-card__intro">

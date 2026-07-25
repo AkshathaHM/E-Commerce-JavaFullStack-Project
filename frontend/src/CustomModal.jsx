@@ -1,5 +1,6 @@
 // CustomModal.jsx
 import React, { useState, useEffect } from "react";
+import { FiEye, FiEyeOff, FiMail, FiMapPin, FiPhone, FiShield, FiUser, FiLock } from "react-icons/fi";
 import { Toast } from "./Toast";
 import "./assets/modalStyles.css";
 
@@ -44,6 +45,11 @@ const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loadin
           <ViewUserForm onSubmit={onSubmit} onClose={onClose} response={response} modalData={modalData} loading={loading} />
         )}
 
+        {/* Profile View */}
+        {modalType === "viewProfile" && (
+          <ProfileViewModal onClose={onClose} modalData={modalData} loading={loading} />
+        )}
+
         {/* Modify User Form */}
         {modalType === "modifyUser" && (
           <ModifyUserForm onSubmit={onSubmit} onClose={onClose} response={response} modalData={modalData} loading={loading} />
@@ -78,6 +84,77 @@ const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loadin
         {modalType === "orders" && (
           <OrdersForm onSubmit={onSubmit} onClose={onClose} response={response} modalData={modalData} loading={loading} />
         )}
+      </div>
+    </div>
+  );
+};
+
+const ProfileViewModal = ({ onClose, modalData, loading }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const profile = modalData || {};
+
+  const hasProfileData = Boolean(
+    profile.username || profile.name || profile.email || profile.mobileNumber || profile.address || profile.role
+  );
+
+  const formatRole = (value) => {
+    const normalized = toSafeString(value).toUpperCase();
+    if (normalized === "ADMIN") return "Admin";
+    if (normalized === "CUSTOMER") return "Customer";
+    return toSafeString(value) || "Customer";
+  };
+
+  const profileFields = [
+    { label: "Username", value: profile.username || profile.name || "Not available", icon: <FiUser /> },
+    { label: "Email", value: profile.email || "Not available", icon: <FiMail /> },
+    { label: "Mobile Number", value: profile.mobileNumber || "Not available", icon: <FiPhone /> },
+    { label: "Address", value: profile.address || "Not available", icon: <FiMapPin /> },
+    { label: "Role", value: formatRole(profile.role), icon: <FiShield /> },
+  ];
+
+  return (
+    <div className="profile-details-shell">
+      <div className="profile-details-header">
+        <div>
+          <p className="section-eyebrow">Account overview</p>
+          <h2>My Profile</h2>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="profile-modal-loading">Loading your profile…</div>
+      ) : !hasProfileData ? (
+        <div className="profile-modal-empty">No profile information available.</div>
+      ) : (
+        <div className="profile-details-list">
+          {profileFields.map((field) => (
+            <div key={field.label} className="profile-detail-item">
+              <div className="profile-detail-icon">{field.icon}</div>
+              <div className="profile-detail-content">
+                <span className="profile-detail-label">{field.label}</span>
+                <strong className="profile-detail-value">{field.value}</strong>
+              </div>
+            </div>
+          ))}
+
+          <div className="profile-detail-item profile-detail-item--password">
+            <div className="profile-detail-icon"><FiLock /></div>
+            <div className="profile-detail-content">
+              <div className="profile-detail-password-row">
+                <span className="profile-detail-label">Password</span>
+                <button type="button" className="profile-visibility-btn" onClick={() => setShowPassword((prev) => !prev)}>
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
+              <strong className="profile-detail-value">{showPassword ? "Password is masked for your security" : "********"}</strong>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="profile-details-footer">
+        <button type="button" className="primary-action-btn" onClick={onClose}>Close</button>
       </div>
     </div>
   );
@@ -262,9 +339,6 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
           <h2>Product Management</h2>
         </div>
         <div className="manage-products-header__actions">
-          <button type="button" className="secondary-action-btn" onClick={() => { setViewingProduct(null); setIsFormOpen(false); onRefreshProducts(); }} disabled={loading}>
-            {loading ? "Loading..." : "View Products"}
-          </button>
           <button type="button" className="primary-action-btn" onClick={openAddForm}>
             Add Product
           </button>
@@ -324,7 +398,10 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
                   </div>
                   <div className="product-info">
                     <div className="product-card-body">
-                      <h3 className="product-name">{getDisplayName(product)}</h3>
+                      <div className="product-card-heading">
+                        <h3 className="product-name">{getDisplayName(product)}</h3>
+                        <span className="product-card-status">{product.status || "Active"}</span>
+                      </div>
                       <p className="product-description">{getDisplayDescription(product)}</p>
                       <div className="admin-product-meta">
                         <span><strong>ID</strong>{product.product_id || product.productId || product.id}</span>
@@ -336,7 +413,7 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
                       </div>
                     </div>
                     <div className="product-card-footer admin-product-actions">
-                      <button type="button" className="product-outline-btn" onClick={() => setViewingProduct(product)}>View</button>
+                      <button type="button" className="product-view-btn" onClick={() => setViewingProduct(product)}>View</button>
                       <button type="button" className="add-to-cart-btn" onClick={() => openEditForm(product)}>Update</button>
                       <button type="button" className="product-delete-btn" onClick={() => setConfirmDeleteProduct(product)}>Delete</button>
                     </div>

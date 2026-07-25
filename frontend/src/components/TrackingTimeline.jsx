@@ -35,7 +35,7 @@ export default function TrackingTimeline({ currentStatus, steps = defaultSteps }
         const isCancelled = normalized === 'cancelled' && step.key === 'cancelled';
 
         return (
-          <div key={step.key} className={`timeline-step-wrapper ${isCompleted ? 'timeline-step-wrapper--complete' : ''}`}>
+          <div key={step.key} className={`timeline-step-wrapper ${isCompleted ? 'timeline-step-wrapper--complete' : ''} ${isCancelled ? 'timeline-step-wrapper--cancelled' : ''}`}>
             <div className={`timeline-step ${isCompleted ? 'timeline-step--complete' : ''} ${isActive ? 'timeline-step--active' : ''} ${isCancelled ? 'timeline-step--cancelled' : ''}`}>
               <div className="timeline-icon">
                 {isCompleted ? '✓' : isCancelled ? '✕' : index + 1}

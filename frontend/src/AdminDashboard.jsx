@@ -27,6 +27,7 @@ const AdminDashboard = () => {
       modalType: "manageProducts",
       icon: "🛍️",
     },
+    { title: "View Profile", description: "View your logged-in admin profile", team: "Account", modalType: "viewProfile", icon: "👤" },
     { title: "View All Users", description: "List all customers", team: "User Management", modalType: "viewAllUsers", icon: "👥" },
     { title: "Modify User", description: "Update user details", team: "User Management", modalType: "modifyUser", icon: "🛠️" },
     { title: "View User Details", description: "Fetch user info", team: "User Management", modalType: "viewUser", icon: "👤" },
@@ -176,12 +177,44 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleViewProfile = async () => {
+    setLoading(true);
+    setResponse(null);
+    setModalData(null);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+      });
+
+      if (response.ok) {
+        const profile = await response.json();
+        setModalData(profile);
+        return profile;
+      }
+
+      const error = await response.text();
+      setResponse(`Error: ${error}`);
+      return null;
+    } catch (error) {
+      setResponse(`Error: ${error.message}`);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const openModal = async (type, view = "list") => {
     setModalType(type);
     setProductManagementView(view);
 
     if (type === "manageProducts") {
       await handleManageProducts();
+    }
+
+    if (type === "viewProfile") {
+      await handleViewProfile();
     }
 
     if (type === "viewAllUsers") {

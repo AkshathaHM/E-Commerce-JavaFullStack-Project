@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef, useDeferredVa
 import { CustomerLayout } from './CustomerLayout';
 import { ProductList } from './ProductList';
 import { ProductCardSkeleton } from './components/Skeleton';
+import CustomModal from './CustomModal';
 import './assets/styles.css';
 
 export default function CustomerHomePage() {
@@ -11,6 +12,10 @@ export default function CustomerHomePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [profileModalType, setProfileModalType] = useState(null);
+  const [profileModalData, setProfileModalData] = useState(null);
+  const [profileModalLoading, setProfileModalLoading] = useState(false);
+  const [profileModalResponse, setProfileModalResponse] = useState('');
   const deferredSearchTerm = useDeferredValue(searchTerm);
   const productsCache = useRef(null);
   const cartCountCache = useRef({ username: null, count: 0 });
@@ -40,7 +45,8 @@ export default function CustomerHomePage() {
       const productList = Array.isArray(data.products) ? data.products : [];
       productsCache.current = productList;
       setAllProducts(productList);
-      setUsername(data.user?.name || 'Guest');
+      const activeUsername = data.user?.name || data.user?.username || localStorage.getItem('username') || 'Guest';
+      setUsername(activeUsername);
     } catch (err) {
       console.error(err);
       setError('Unable to load products right now.');
@@ -96,29 +102,63 @@ export default function CustomerHomePage() {
   }, [allProducts, deferredSearchTerm]);
 
   const handleAddToCart = useCallback(async (productId) => {
+    if (!productId) return;
+
+    const activeUsername = localStorage.getItem('username') || username || 'Guest';
     const newCount = cartCount + 1;
     setCartCount((prev) => prev + 1);
-    cartCountCache.current = { username, count: newCount };
+    cartCountCache.current = { username: activeUsername, count: newCount };
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/add`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({ username, productId })
+        body: JSON.stringify({ username: activeUsername, productId })
       });
-      
+
       if (!res.ok) {
         const revertedCount = newCount - 1;
         setCartCount(revertedCount);
-        cartCountCache.current = { username, count: revertedCount };
+        cartCountCache.current = { username: activeUsername, count: revertedCount };
       }
     } catch (e) {
       const revertedCount = newCount - 1;
       setCartCount(revertedCount);
-      cartCountCache.current = { username, count: revertedCount };
+      cartCountCache.current = { username: activeUsername, count: revertedCount };
     }
   }, [cartCount, username]);
+
+  const handleOpenProfileModal = useCallback(async () => {
+    setProfileModalType('viewProfile');
+    setProfileModalLoading(true);
+    setProfileModalResponse('');
+    setProfileModalData(null);
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      });
+
+      if (!res.ok) {
+        throw new Error('Unable to load your profile right now.');
+      }
+
+      const profile = await res.json();
+      setProfileModalData(profile);
+    } catch (err) {
+      setProfileModalResponse(err.message || 'Unable to load your profile right now.');
+    } finally {
+      setProfileModalLoading(false);
+    }
+  }, []);
+
+  const handleCloseProfileModal = () => {
+    setProfileModalType(null);
+    setProfileModalData(null);
+    setProfileModalResponse('');
+  };
 
   const showSkeletons = loading && allProducts.length === 0;
 
@@ -131,6 +171,9 @@ export default function CustomerHomePage() {
               <p className="section-eyebrow">Smart shopping</p>
               <h2>Discover fresh picks for your next order</h2>
               <p>Browse curated essentials, enjoy a smoother checkout, and keep track of every delivery from one place.</p>
+            </div>
+            <div className="home-hero-actions">
+              <button type="button" className="primary-action-btn" onClick={handleOpenProfileModal}>My Profile</button>
             </div>
           </div>
         </section>
@@ -161,6 +204,17 @@ export default function CustomerHomePage() {
           <ProductList products={filteredProducts} onAddToCart={handleAddToCart} error={error} />
         )}
       </div>
+
+      {profileModalType && (
+        <CustomModal
+          modalType={profileModalType}
+          onClose={handleCloseProfileModal}
+          onSubmit={() => {}}
+          response={profileModalResponse}
+          modalData={profileModalData}
+          loading={profileModalLoading}
+        />
+      )}
     </CustomerLayout>
   );
 }
