@@ -455,7 +455,7 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
       closeForm();
       setViewingProduct(null);
       setConfirmDeleteProduct(null);
-      onRefreshProducts && onRefreshProducts({ forceRefresh: true });
+      onRefreshProducts && onRefreshProducts(true);
     }
   };
 
@@ -679,7 +679,7 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
           <div className="modern-product-form__footer">
             <button type="button" className="secondary-action-btn" onClick={closeForm}>Cancel</button>
             <button type="submit" className="primary-action-btn" disabled={loading}>
-              {loading ? <span className="btn-loading">{editingProduct ? "Updating..." : "Saving..."}</span> : editingProduct ? "Save Product" : "Save Product"}
+              {loading ? <span className="btn-loading">{editingProduct ? "Updating..." : "Saving..."}</span> : editingProduct ? "Update Product" : "Save Product"}
             </button>
           </div>
         </form>
