@@ -2,12 +2,15 @@ import React from 'react';
 import { HashRouter as Router } from 'react-router-dom';
 import AppRoutes from './Routes';
 import './assets/styles.css';
+import { ThemeProvider } from './ThemeContext';
 
 function App() {
   return (
-    <Router>
-      <AppRoutes />
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <AppRoutes />
+      </Router>
+    </ThemeProvider>
   );
 }
 

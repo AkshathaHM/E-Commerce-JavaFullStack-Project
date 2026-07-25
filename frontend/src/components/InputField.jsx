@@ -3,7 +3,6 @@ import React from 'react';
 export default function InputField({
   id,
   label,
-  icon,
   type = 'text',
   value,
   onChange,
@@ -23,7 +22,6 @@ export default function InputField({
         {info && <span className="auth-field-info">{info}</span>}
       </label>
       <div className="auth-input-wrap">
-        {icon && <span className="auth-input-icon">{icon}</span>}
         {type === 'select' ? (
           <select
             id={id}

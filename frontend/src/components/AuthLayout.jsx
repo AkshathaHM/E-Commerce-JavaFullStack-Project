@@ -1,6 +1,7 @@
 import React from 'react';
 import Logo from '../Logo';
 import AuthCard from './AuthCard';
+import ThemeToggleButton from '../ThemeToggleButton';
 
 export default function AuthLayout({ title, subtitle, notice, children, footer }) {
   return (
@@ -11,8 +12,8 @@ export default function AuthLayout({ title, subtitle, notice, children, footer }
             <Logo />
             <div className="auth-card__brand-copy">
               <p className="auth-brand-label">SalesSavvy</p>
-              <p className="auth-brand-subtitle">Smart Online Shopping Platform</p>
             </div>
+            <ThemeToggleButton />
           </div>
 
           <div className="auth-card__intro">

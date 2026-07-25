@@ -12,19 +12,28 @@ export default function AdminLogin() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [showToast, setShowToast] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const navigate = useNavigate();
+  const isSubmitDisabled = !username.trim() || !password.trim() || isSigningIn;
 
   const handleSignIn = async (e) => {
     e.preventDefault();
     if (isSigningIn) return;
 
     setError('');
+    setFieldErrors({});
     setIsSigningIn(true);
 
-    if (!username.trim() || !password.trim()) {
-      setError('Username and password are required.');
+    if (!username.trim()) {
+      setFieldErrors({ username: 'Username is required.' });
+      setIsSigningIn(false);
+      return;
+    }
+
+    if (!password.trim()) {
+      setFieldErrors({ password: 'Password is required.' });
       setIsSigningIn(false);
       return;
     }
@@ -78,21 +87,24 @@ export default function AdminLogin() {
           label="Username"
           placeholder="Enter your admin username"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e) => {
+            setUsername(e.target.value);
+            if (fieldErrors.username) setFieldErrors((prev) => ({ ...prev, username: '' }));
+          }}
+          error={fieldErrors.username}
         />
         <PasswordField
           id="adminPassword"
           label="Password"
           placeholder="Enter your password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: '' }));
+          }}
+          error={fieldErrors.password}
         />
-        <div className="auth-footer-row">
-          <Link to="/forgot-password" state={{ returnTo: '/admin' }} className="form-link">
-            Forgot Password?
-          </Link>
-        </div>
-        <PrimaryButton type="submit" isLoading={isSigningIn} loadingText="Admin Login...">
+        <PrimaryButton type="submit" isLoading={isSigningIn} loadingText="Admin Login..." disabled={isSubmitDisabled}>
           Admin Login
         </PrimaryButton>
       </form>

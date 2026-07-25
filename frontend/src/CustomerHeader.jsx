@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartIcon } from './CartIcon';
 import { ProfileDropdown } from './ProfileDropdown';
+import ThemeToggleButton from './ThemeToggleButton';
 
 export const CustomerHeader = memo(function CustomerHeader({ cartCount = 0, username = 'Guest' }) {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ export const CustomerHeader = memo(function CustomerHeader({ cartCount = 0, user
         </button>
 
         <div className="app-header__actions">
+          <ThemeToggleButton />
           <CartIcon count={cartCount} />
           <ProfileDropdown
             username={username}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import './assets/styles.css';
 import { Toast } from './Toast';
@@ -7,29 +7,18 @@ import InputField from './components/InputField';
 import PasswordField from './components/PasswordField';
 import PrimaryButton from './components/PrimaryButton';
 
-const calculateStrength = (password) => {
-  if (!password) return '';
-  if (password.length >= 12 && /[A-Z]/.test(password) && /\d/.test(password) && /[^A-Za-z0-9]/.test(password)) {
-    return 'Strong';
-  }
-  if (password.length >= 8 && /[A-Z]/.test(password) && /\d/.test(password)) {
-    return 'Good';
-  }
-  return 'Weak';
-};
-
 export default function ForgotPasswordPage() {
   const [username, setUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const location = useLocation();
+  const isSubmitDisabled = !username.trim() || !newPassword.trim() || !confirmPassword.trim() || isSubmitting;
   const navigate = useNavigate();
   const returnTo = location.state?.returnTo || '/';
-
-  const strengthLabel = useMemo(() => calculateStrength(newPassword), [newPassword]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,18 +26,27 @@ export default function ForgotPasswordPage() {
 
     setError('');
 
+    const newErrors = {};
+
     if (!username.trim()) {
-      setError('Username is required.');
-      return;
+      newErrors.username = 'Username is required.';
     }
 
-    if (newPassword.length < 8) {
-      setError('Password must be at least 8 characters long.');
-      return;
+    if (!newPassword.trim()) {
+      newErrors.newPassword = 'Password is required.';
+    } else if (newPassword.length < 8) {
+      newErrors.newPassword = 'Password must be at least 8 characters long.';
     }
 
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match.');
+    if (!confirmPassword.trim()) {
+      newErrors.confirmPassword = 'Confirm password is required.';
+    } else if (newPassword !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match.';
+    }
+
+    if (Object.keys(newErrors).length) {
+      setFieldErrors(newErrors);
+      setError('Please fix the highlighted fields.');
       return;
     }
 
@@ -91,31 +89,38 @@ export default function ForgotPasswordPage() {
         <InputField
           id="forgotUsername"
           label="Username"
-          icon="👤"
           placeholder="Enter your username"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e) => {
+            setUsername(e.target.value);
+            if (fieldErrors.username) setFieldErrors((prev) => ({ ...prev, username: '' }));
+          }}
+          error={fieldErrors.username}
         />
         <PasswordField
           id="newPassword"
           label="New Password"
           placeholder="Create a new password"
           value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
+          onChange={(e) => {
+            setNewPassword(e.target.value);
+            if (fieldErrors.newPassword) setFieldErrors((prev) => ({ ...prev, newPassword: '' }));
+          }}
+          error={fieldErrors.newPassword}
         />
-        <div className="password-strength-row">
-          <span className="password-strength-label">Strength:</span>
-          <span className={`password-strength-value password-strength-value--${strengthLabel.toLowerCase()}`}>{strengthLabel || 'Enter a password'}</span>
-        </div>
         <PasswordField
           id="confirmPassword"
           label="Confirm Password"
           placeholder="Re-enter new password"
           value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          onChange={(e) => {
+            setConfirmPassword(e.target.value);
+            if (fieldErrors.confirmPassword) setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
+          }}
+          error={fieldErrors.confirmPassword}
         />
 
-        <PrimaryButton type="submit" isLoading={isSubmitting} loadingText="Resetting...">
+        <PrimaryButton type="submit" isLoading={isSubmitting} loadingText="Resetting..." disabled={isSubmitDisabled}>
           Reset Password
         </PrimaryButton>
       </form>

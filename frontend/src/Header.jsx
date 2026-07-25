@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartIcon } from './CartIcon';
 import { ProfileDropdown } from './ProfileDropdown';
+import ThemeToggleButton from './ThemeToggleButton';
 
 export function Header({ cartCount, username }) {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ export function Header({ cartCount, username }) {
         </div>
 
         <div className="header-actions">
+          <ThemeToggleButton />
           <CartIcon count={cartCount} />
           <ProfileDropdown username={username} />
         </div>

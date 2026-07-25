@@ -20,9 +20,11 @@ export default function RegistrationPage() {
   const [mobileNumber, setMobileNumber] = useState('');
   const [role, setRole] = useState('CUSTOMER');
   const [agreement, setAgreement] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmitDisabled = !username.trim() || !email.trim() || !mobileNumber.trim() || !address.trim() || !password.trim() || !confirmPassword.trim() || !agreement || isSubmitting;
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -30,39 +32,52 @@ export default function RegistrationPage() {
 
     setError('');
 
+    const newErrors = {};
+
     if (!username.trim()) {
-      setError('Username is required.');
-      return;
+      newErrors.username = 'Username is required.';
     }
 
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address.');
-      return;
+    if (!email.trim()) {
+      newErrors.email = 'Email is required.';
+    } else if (!emailRegex.test(email)) {
+      newErrors.email = 'Enter a valid email.';
     }
 
-    if (!phoneRegex.test(mobileNumber)) {
-      setError('Please enter a valid 10-digit mobile number.');
-      return;
+    if (!mobileNumber.trim()) {
+      newErrors.mobileNumber = 'Mobile number is required.';
+    } else if (!phoneRegex.test(mobileNumber)) {
+      newErrors.mobileNumber = 'Enter a valid 10-digit mobile number.';
     }
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters long.');
-      return;
+    if (!address.trim()) {
+      newErrors.address = 'Address is required.';
     }
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+    if (!password.trim()) {
+      newErrors.password = 'Password is required.';
+    } else if (password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters long.';
+    }
+
+    if (!confirmPassword.trim()) {
+      newErrors.confirmPassword = 'Confirm password is required.';
+    } else if (password !== confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match.';
+    }
+
+    if (!agreement) {
+      newErrors.agreement = 'You must agree to the Terms & Conditions.';
+    }
+
+    if (Object.keys(newErrors).length) {
+      setFieldErrors(newErrors);
+      setError('Please fix the highlighted fields.');
       return;
     }
 
     if (!role) {
-      setError('Please select a role.');
-      return;
-    }
-
-    if (!agreement) {
-      setError('You must agree to the Terms & Conditions.');
-      return;
+      setRole('CUSTOMER');
     }
 
     setIsSubmitting(true);
@@ -130,16 +145,24 @@ export default function RegistrationPage() {
           id="mobileNumber"
           label="Mobile Number"
           type="tel"
-          placeholder="9876543210"
+          placeholder="Enter mobile number"
           value={mobileNumber}
-          onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+          onChange={(e) => {
+            setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10));
+            if (fieldErrors.mobileNumber) setFieldErrors((prev) => ({ ...prev, mobileNumber: '' }));
+          }}
+          error={fieldErrors.mobileNumber}
         />
         <InputField
           id="address"
           label="Address"
           placeholder="123 Main Street"
           value={address}
-          onChange={(e) => setAddress(e.target.value)}
+          onChange={(e) => {
+            setAddress(e.target.value);
+            if (fieldErrors.address) setFieldErrors((prev) => ({ ...prev, address: '' }));
+          }}
+          error={fieldErrors.address}
         />
         <InputField
           id="role"
@@ -158,25 +181,37 @@ export default function RegistrationPage() {
           label="Password"
           placeholder="Create password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: '' }));
+          }}
+          error={fieldErrors.password}
         />
         <PasswordField
           id="confirmPassword"
           label="Confirm Password"
           placeholder="Confirm password"
           value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          onChange={(e) => {
+            setConfirmPassword(e.target.value);
+            if (fieldErrors.confirmPassword) setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
+          }}
+          error={fieldErrors.confirmPassword}
         />
         <label className="auth-checkbox">
           <input
             type="checkbox"
             checked={agreement}
-            onChange={(e) => setAgreement(e.target.checked)}
+            onChange={(e) => {
+              setAgreement(e.target.checked);
+              if (fieldErrors.agreement) setFieldErrors((prev) => ({ ...prev, agreement: '' }));
+            }}
           />
           I agree to the Terms & Conditions
         </label>
+        {fieldErrors.agreement && <p className="auth-feedback">{fieldErrors.agreement}</p>}
 
-        <PrimaryButton type="submit" isLoading={isSubmitting} loadingText="Registering...">
+        <PrimaryButton type="submit" isLoading={isSubmitting} loadingText="Registering..." disabled={isSubmitDisabled}>
           Register
         </PrimaryButton>
       </form>

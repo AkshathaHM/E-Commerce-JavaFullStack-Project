@@ -12,19 +12,29 @@ export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [showToast, setShowToast] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const navigate = useNavigate();
+  const isSubmitDisabled = !identifier.trim() || !password.trim() || isSigningIn;
 
   const handleSignIn = async (e) => {
     e.preventDefault();
     if (isSigningIn) return;
 
-    setError("");
+    setError('');
+    setFieldErrors({});
     setIsSigningIn(true);
 
-    if (!identifier.trim() || !password.trim()) {
-      setError("Username and password are required.");
+    if (!identifier.trim()) {
+      setFieldErrors({ identifier: 'Username is required.' });
+      setIsSigningIn(false);
+      return;
+    }
+
+    if (!password.trim()) {
+      setFieldErrors({ password: 'Password is required.' });
+      setIsSigningIn(false);
       return;
     }
 
@@ -72,19 +82,27 @@ export default function LoginPage() {
           label="Username"
           placeholder="Enter username"
           value={identifier}
-          onChange={(e) => setIdentifier(e.target.value)}
+          onChange={(e) => {
+            setIdentifier(e.target.value);
+            if (fieldErrors.identifier) setFieldErrors((prev) => ({ ...prev, identifier: '' }));
+          }}
+          error={fieldErrors.identifier}
         />
         <PasswordField
           id="password"
           label="Password"
           placeholder="Enter password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: '' }));
+          }}
+          error={fieldErrors.password}
         />
         <div className="auth-footer-row">
           <Link to="/forgot-password" className="form-link">Forgot password?</Link>
         </div>
-        <PrimaryButton type="submit" isLoading={isSigningIn} loadingText="Logging in...">
+        <PrimaryButton type="submit" isLoading={isSigningIn} loadingText="Logging in..." disabled={isSubmitDisabled}>
           Login
         </PrimaryButton>
       </form>

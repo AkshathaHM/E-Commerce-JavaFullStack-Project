@@ -10,7 +10,6 @@ export default function PasswordField({
   error,
   info,
   valid,
-  icon = '🔒',
   ...props
 }) {
   const [revealed, setRevealed] = useState(false);
@@ -19,7 +18,6 @@ export default function PasswordField({
     <InputField
       id={id}
       label={label}
-      icon={icon}
       type={revealed ? 'text' : 'password'}
       value={value}
       onChange={onChange}
