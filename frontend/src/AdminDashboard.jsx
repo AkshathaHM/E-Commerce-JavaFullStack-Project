@@ -583,10 +583,6 @@ const AdminDashboard = () => {
                     <p className="card-description">{card.description}</p>
                     <span className="card-team">Team: {card.team}</span>
                   </div>
-                  <div className="order-management-actions">
-                    <button type="button" className="product-management-action" onClick={(e) => { e.stopPropagation(); navigate('/admin/products'); }}>View Products</button>
-                    <button type="button" className="product-management-action secondary" onClick={(e) => { e.stopPropagation(); navigate('/admin/products', { state: { initialAction: 'add' } }); }}>Add Product</button>
-                  </div>
                 </div>
               );
             }
