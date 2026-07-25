@@ -614,11 +614,12 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
           )}
         </>
       ) : (
-        <form onSubmit={handleSubmit} className="modern-product-form">
-          <div className="modern-product-form__header">
-            <h3>{editingProduct ? "Update Product" : "Add Product"}</h3>
-            <button type="button" className="secondary-action-btn" onClick={closeForm}>Close</button>
-          </div>
+        <div className="modal-overlay modal-overlay--nested form-overlay" onClick={closeForm}>
+          <form onSubmit={handleSubmit} className="modern-product-form" onClick={(e) => e.stopPropagation()}>
+            <div className="modern-product-form__header">
+              <h3>{editingProduct ? "Update Product" : "Add Product"}</h3>
+              <button type="button" className="secondary-action-btn" onClick={closeForm}>Close</button>
+            </div>
 
           <div className="modern-product-form__grid">
             <div className="modern-product-form__column">
@@ -684,7 +685,8 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
               {loading ? <span className="btn-loading">{editingProduct ? "Updating..." : "Saving..."}</span> : editingProduct ? "Update Product" : "Save Product"}
             </button>
           </div>
-        </form>
+          </form>
+        </div>
       )}
 
       {viewingProduct && (
@@ -1614,7 +1616,7 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
             </select>
           </div>
 
-          <div className="orders-table-wrapper">
+          <div className="orders-table-wrapper" onClick={() => setExpandedOrderId(null)}>
             <table className="orders-table">
               <thead>
                 <tr>
@@ -1640,15 +1642,15 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
                   return (
                     <React.Fragment key={`${orderId}-${index}`}>
                       <tr className={isExpanded ? "expanded-row" : ""}>
-                        <td>
-                          <button
-                            className="expand-btn"
-                            onClick={() => setExpandedOrderId(isExpanded ? null : orderId)}
-                            aria-label={isExpanded ? "Collapse order details" : "Expand order details"}
-                          >
-                            {isExpanded ? "▼" : "▶"}
-                          </button>
-                        </td>
+                          <td>
+                            <button
+                              className="expand-btn"
+                              onClick={(e) => { e.stopPropagation(); setExpandedOrderId(isExpanded ? null : orderId); }}
+                              aria-label={isExpanded ? "Collapse order details" : "Expand order details"}
+                            >
+                              {isExpanded ? "▼" : "▶"}
+                            </button>
+                          </td>
                         <td>{rowNumber}</td>
                         <td>
                           <div className="orders-customer-cell">
@@ -1665,10 +1667,10 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
                         <td>{formatAmount(getOrderValue(order, "total"))}</td>
                         <td>{toSafeString(getOrderValue(order, "createdAt") || "N/A")}</td>
                       </tr>
-                      {isExpanded && (
+                          {isExpanded && (
                         <tr className="order-details-row">
                           <td colSpan="9">
-                            <div className="order-details-panel">
+                            <div className="order-details-panel" onClick={(e) => e.stopPropagation()}>
                               <div className="details-section">
                                 <h3>Order Items</h3>
                                 {Array.isArray(order.items) && order.items.length > 0 ? (
