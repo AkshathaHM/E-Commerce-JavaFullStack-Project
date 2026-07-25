@@ -3,7 +3,7 @@ import React, { useContext, useState, useCallback } from 'react';
 import { ThemeContext } from './ThemeContext';
 import './assets/styles.css';
 
-export const ProductList = React.memo(({ products, onAddToCart, error }) => {
+export const ProductList = React.memo(({ products, onAddToCart, addedProductIds, error }) => {
   if (error) {
     return (
       <div className="product-empty-state product-empty-state--error">
@@ -36,7 +36,12 @@ export const ProductList = React.memo(({ products, onAddToCart, error }) => {
       </div>
       <div className="product-grid">
         {products.map((product) => (
-          <ProductCard key={product.product_id || product.id || product.productId} product={product} onAddToCart={onAddToCart} />
+          <ProductCard
+            key={product.product_id || product.id || product.productId}
+            product={product}
+            onAddToCart={onAddToCart}
+            addedProductIds={addedProductIds}
+          />
         ))}
       </div>
     </div>
@@ -45,23 +50,24 @@ export const ProductList = React.memo(({ products, onAddToCart, error }) => {
 
 ProductList.displayName = 'ProductList';
 
-const ProductCard = React.memo(({ product, onAddToCart }) => {
+const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
   const imageUrl = product.images?.[0] && (product.images[0].startsWith("http") || product.images[0].startsWith("data:image/"))
     ? product.images[0]
     : (product.imageUrl || product.image || "/images/no-image.png");
 
   const { theme } = useContext(ThemeContext);
   const [active, setActive] = useState(false);
-
   const getId = (p) => p.product_id || p.id || p.productId;
+  const productId = getId(product);
+  const isAdded = productId ? addedProductIds?.has(productId) : false;
 
   const handleClick = useCallback(() => {
-    const id = getId(product);
-    if (!id) return;
+    const id = productId;
+    if (!id || isAdded) return;
     onAddToCart && onAddToCart(id);
     setActive(true);
     window.setTimeout(() => setActive(false), 700);
-  }, [product, onAddToCart]);
+  }, [productId, onAddToCart, isAdded]);
 
   return (
     <div className="product-card">
@@ -85,11 +91,12 @@ const ProductCard = React.memo(({ product, onAddToCart }) => {
             <p className="product-price">₹{product.price}</p>
             <button
               type="button"
-              className={`add-to-cart-btn ${active ? 'add-to-cart-btn--active' : ''}`}
+              className={`add-to-cart-btn ${(isAdded || active) ? 'add-to-cart-btn--active' : ''}`}
               onClick={handleClick}
-              aria-label={`Add ${product.name} to cart`}
+              aria-label={isAdded ? `${product.name} is already in cart` : `Add ${product.name} to cart`}
+              disabled={isAdded}
             >
-              {active ? 'Added' : 'Add to Cart'}
+              {isAdded ? 'Added to Cart' : (active ? 'Added' : 'Add to Cart')}
             </button>
           </div>
         </div>

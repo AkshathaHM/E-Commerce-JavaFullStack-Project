@@ -6,6 +6,7 @@ import { clearAuthSession, getAuthHeaders } from './auth';
 export function ProfileDropdown({ username, showOrders = true, showCart = true, showProfile = true, showSettings = true, showLogout = true, logoutRedirect = '/' }) {
   const [isOpen, setIsOpen] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null);
@@ -83,20 +84,27 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
           {showProfile && (
             <button
               type="button"
-              className={`dropdown-link${isLinkActive('profile') ? ' active' : ''}`}
+              className={`dropdown-link${isLinkActive('profile') ? ' active' : ''}${profileLoading ? ' is-loading' : ''}`}
               onClick={() => {
+                  if (profileLoading) return;
                   setIsOpen(false);
-                  // open profile modal via global event so we keep it as a popup
+                  setProfileLoading(true);
                   try {
-                    window.dispatchEvent(new CustomEvent('openProfileModal', { detail: {} }));
+                    window.dispatchEvent(new CustomEvent('openProfileModal', {
+                      detail: {
+                        onComplete: () => setProfileLoading(false),
+                      },
+                    }));
                   } catch (e) {
-                    // fallback to route navigation
+                    setProfileLoading(false);
                     navigate('/profile');
                   }
                 }}
+              disabled={profileLoading}
+              aria-busy={profileLoading}
             >
               <span className="dropdown-link__icon">👤</span>
-              <span>View Profile</span>
+              <span>{profileLoading ? 'View Profile...' : 'View Profile'}</span>
             </button>
           )}
           {showOrders && (

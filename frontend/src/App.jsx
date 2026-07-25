@@ -12,7 +12,7 @@ function AppWrapper() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const handler = async () => {
+    const handler = async (detail) => {
       setLoading(true);
       setModalType(null);
       setModalData(null);
@@ -27,10 +27,11 @@ function AppWrapper() {
         console.error('openProfileModal error', e);
       } finally {
         setLoading(false);
+        detail?.onComplete?.();
       }
     };
 
-    const listener = () => handler();
+    const listener = (event) => handler(event.detail);
     window.addEventListener('openProfileModal', listener);
     return () => window.removeEventListener('openProfileModal', listener);
   }, []);

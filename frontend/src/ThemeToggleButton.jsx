@@ -13,7 +13,7 @@ export default function ThemeToggleButton() {
       aria-label="Toggle theme"
       title="Toggle light / dark mode"
     >
-      {theme === 'dark' ? <FiSun size={20} /> : <FiMoon size={20} />}
+      {theme === 'dark' ? <FiSun size={18} /> : <FiMoon size={18} />}
     </button>
   );
 }

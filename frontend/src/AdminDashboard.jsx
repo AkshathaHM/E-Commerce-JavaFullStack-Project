@@ -28,7 +28,6 @@ const AdminDashboard = () => {
       modalType: "manageProducts",
       icon: "🛍️",
     },
-    { title: "View Profile", description: "View your logged-in admin profile", team: "Account", modalType: "viewProfile", icon: "👤" },
     { title: "View All Users", description: "List all customers", team: "User Management", modalType: "viewAllUsers", icon: "👥" },
     { title: "Modify User", description: "Update user details", team: "User Management", modalType: "modifyUser", icon: "🛠️" },
     { title: "View User Details", description: "Fetch user info", team: "User Management", modalType: "viewUser", icon: "👤" },

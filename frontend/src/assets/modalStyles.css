@@ -193,6 +193,15 @@
 .profile-details-footer {
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.profile-details-footer .form-button {
+  min-width: 100px;
+  padding: 10px 14px;
+  font-size: 0.93rem;
+  border-radius: 14px;
 }
 
 .profile-modal-loading,

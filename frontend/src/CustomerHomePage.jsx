@@ -11,6 +11,11 @@ export default function CustomerHomePage() {
   const [allProducts, setAllProducts] = useState(() => getCache('products_all') || []);
   const [cartCount, setCartCount] = useState(() => getCache(`cart_count_${localStorage.getItem('username') || 'Guest'}`) || 0);
   const [username, setUsername] = useState(localStorage.getItem('username') || 'Guest');
+  const [addedCartIds, setAddedCartIds] = useState(() => {
+    const key = `added_cart_products_${localStorage.getItem('username') || 'Guest'}`;
+    const stored = localStorage.getItem(key);
+    return new Set(stored ? JSON.parse(stored) : []);
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(() => !getCache('products_all'));
   const [error, setError] = useState('');
@@ -87,6 +92,12 @@ export default function CustomerHomePage() {
     fetchCartCount();
   }, [fetchCartCount]);
 
+  useEffect(() => {
+    const key = `added_cart_products_${username || 'Guest'}`;
+    const stored = localStorage.getItem(key);
+    setAddedCartIds(new Set(stored ? JSON.parse(stored) : []));
+  }, [username]);
+
   const filteredProducts = useMemo(() => {
     const normalizedSearch = deferredSearchTerm.trim().toLowerCase();
 
@@ -125,7 +136,15 @@ export default function CustomerHomePage() {
 
       if (!res.ok) {
         setCartCount((prev) => Math.max(0, prev - 1));
+        return;
       }
+
+      setAddedCartIds((prev) => {
+        const next = new Set(prev);
+        next.add(productId);
+        localStorage.setItem(`added_cart_products_${activeUsername}`, JSON.stringify(Array.from(next)));
+        return next;
+      });
     } catch (e) {
       setCartCount((prev) => Math.max(0, prev - 1));
     }
@@ -199,7 +218,7 @@ export default function CustomerHomePage() {
             ))}
           </div>
         ) : (
-          <ProductList products={filteredProducts} onAddToCart={handleAddToCart} error={error} />
+          <ProductList products={filteredProducts} onAddToCart={handleAddToCart} addedProductIds={addedCartIds} error={error} />
         )}
       </div>
 
