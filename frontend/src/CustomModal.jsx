@@ -107,6 +107,7 @@ const ProfileViewModal = ({ onClose, modalData, loading }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const profile = modalData || {};
 
   const [editData, setEditData] = useState({
@@ -208,6 +209,7 @@ const ProfileViewModal = ({ onClose, modalData, loading }) => {
         mobileNumber: updated.mobileNumber || editData.mobileNumber,
         address: updated.address || editData.address,
       });
+      setToast({ show: true, message: 'Profile saved successfully.', type: 'success' });
     } catch (err) {
       setErrorMsg(err.message || 'Save failed');
     } finally {
@@ -308,6 +310,7 @@ const ProfileViewModal = ({ onClose, modalData, loading }) => {
       )}
 
       {errorMsg && <div className="auth-alert auth-alert--error">{errorMsg}</div>}
+      <Toast show={toast.show} message={toast.message} type={toast.type} duration={2800} onClose={() => setToast({ show: false, message: '', type: 'success' })} />
 
       <div className="profile-details-footer">
         {isEditing ? (

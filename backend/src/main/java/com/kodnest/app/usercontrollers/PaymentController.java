@@ -59,8 +59,8 @@ public class PaymentController {
             List<OrderItem> orderItems = cartItemsRaw.stream().map(item -> {
                 System.out.println("Mapping item: " + item);
                 OrderItem oi = new OrderItem();
-                oi.setProductId((Integer) item.get("productId"));
-                oi.setQuantity((Integer) item.get("quantity"));
+                oi.setProductId(parseIntegerValue(item.get("productId"), "productId"));
+                oi.setQuantity(parseIntegerValue(item.get("quantity"), "quantity"));
                 BigDecimal price = new BigDecimal(item.get("price").toString());
                 oi.setPricePerUnit(price);
                 oi.setTotalPrice(price.multiply(BigDecimal.valueOf(oi.getQuantity())));
@@ -121,8 +121,8 @@ public class PaymentController {
             if (cartItemsRaw != null) {
                 orderItems = cartItemsRaw.stream().map(item -> {
                     OrderItem oi = new OrderItem();
-                    oi.setProductId((Integer) item.get("productId"));
-                    oi.setQuantity((Integer) item.get("quantity"));
+                    oi.setProductId(parseIntegerValue(item.get("productId"), "productId"));
+                    oi.setQuantity(parseIntegerValue(item.get("quantity"), "quantity"));
                     BigDecimal price = new BigDecimal(item.get("price").toString());
                     oi.setPricePerUnit(price);
                     oi.setTotalPrice(price.multiply(BigDecimal.valueOf(oi.getQuantity())));
@@ -146,5 +146,25 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("success", false, "error", e.getMessage() != null ? e.getMessage() : "Payment verification failed"));
         }
+    }
+
+    private int parseIntegerValue(Object value, String fieldName) {
+        if (value == null) {
+            throw new IllegalArgumentException(fieldName + " is required");
+        }
+        if (value instanceof Integer integerValue) {
+            return integerValue;
+        }
+        if (value instanceof Number numberValue) {
+            return numberValue.intValue();
+        }
+        if (value instanceof String stringValue) {
+            try {
+                return Integer.parseInt(stringValue.trim());
+            } catch (NumberFormatException ex) {
+                throw new IllegalArgumentException(fieldName + " must be a valid integer");
+            }
+        }
+        throw new IllegalArgumentException(fieldName + " must be an integer");
     }
 }
