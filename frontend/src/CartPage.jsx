@@ -151,8 +151,8 @@ const CartPage = () => {
 
       const formatted = products.map((item) => {
         const quantity = Math.max(1, Number(item.quantity || item.qty || 1));
-        const pricePerUnit = Number(item.price_per_unit ?? item.price ?? item.unit_price ?? item.pricePerUnit || 0);
-        const totalPrice = Number(item.total_price ?? item.totalPrice ?? pricePerUnit * quantity || 0);
+        const pricePerUnit = Number(item.price_per_unit ?? item.price ?? item.unit_price ?? item.pricePerUnit ?? 0);
+        const totalPrice = Number(item.total_price ?? item.totalPrice ?? (pricePerUnit * quantity) ?? 0);
 
         return {
           ...item,
