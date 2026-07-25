@@ -495,7 +495,8 @@ button.button--ghost:hover,
 .auth-input-wrap,
 .form-field {
   position: relative;
-  display: block;
+  display: inline-block;
+  width: 100%;
 }
 
 .auth-input-field {
@@ -504,7 +505,32 @@ button.button--ghost:hover,
 }
 
 .auth-input {
-  padding-right: 48px;
+  padding-right: 56px;
+  box-sizing: border-box;
+}
+
+.auth-input-wrap .password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+
+.password-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle:focus {
+  outline: none;
 }
 
 .auth-input::placeholder,
@@ -2941,6 +2967,79 @@ button.button--ghost:hover,
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+.modal-form .card,
+.modal-form .card.small-card,
+.modal-form .user-card {
+  padding: 22px 24px;
+  border-radius: 24px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  color: var(--text);
+}
+
+.modal-form .card.small-card {
+  background: linear-gradient(135deg, rgba(234,242,255,0.92), rgba(248,250,252,0.95));
+}
+
+[data-theme='dark'] .modal-form .card.small-card {
+  background: linear-gradient(135deg, rgba(56,189,248,0.12), rgba(15,23,42,0.92));
+}
+
+.view-all-users-list {
+  display: grid;
+  gap: 16px;
+}
+
+.view-all-users-list .user-card {
+  background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(255,255,255,0.16));
+  border-color: rgba(59,130,246,0.24);
+}
+
+[data-theme='dark'] .view-all-users-list .user-card {
+  background: linear-gradient(135deg, rgba(56,189,248,0.18), rgba(17,24,39,0.92));
+  border-color: rgba(56,189,248,0.28);
+}
+
+.modal-form .report-list {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.modal-form .report-list h4 {
+  margin: 0 0 8px;
+  color: var(--heading);
+}
+
+.modal-form .report-list p {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+}
+
+[data-theme='light'] .modal-form .card,
+[data-theme='light'] .modal-form .user-card {
+  background: linear-gradient(135deg, #f8fafc, #eff6ff);
+}
+
+[data-theme='dark'] .modal-form .card,
+[data-theme='dark'] .modal-form .user-card {
+  background: linear-gradient(135deg, rgba(15,23,42,0.92), rgba(30,41,59,0.96));
+}
+
+.modal-form .card small,
+.modal-form .user-card small {
+  display: block;
+  margin-top: 8px;
+  color: var(--text-muted);
 }
 
 .modal-form-buttons {

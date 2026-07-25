@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.kodnest.app.adminServices.AdminProductServiceContract;
 import com.kodnest.app.entities.Category;
 import com.kodnest.app.entities.Product;
@@ -15,6 +16,7 @@ import com.kodnest.app.usersrepositaries.OrderItemRepository;
 import com.kodnest.app.usersrepositaries.ProductRepository;
 
 @Service
+@Transactional
 public class AdminProductService implements AdminProductServiceContract {
 
     private final ProductRepository productRepository;
@@ -91,7 +93,9 @@ public class AdminProductService implements AdminProductServiceContract {
         }
 
         product.setUpdatedAt(LocalDateTime.now());
-        return productRepository.save(product);
+        Product updatedProduct = productRepository.save(product);
+        updatedProduct.getProductImages().size(); // initialize lazy collection before leaving transactional context
+        return updatedProduct;
     }
 
     @Override
