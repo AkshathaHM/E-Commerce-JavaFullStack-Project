@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import PropTypes from 'prop-types';
+import { useState } from 'react';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import InputField from './InputField';
 
 export default function PasswordField({
@@ -31,9 +33,21 @@ export default function PasswordField({
         type="button"
         className="password-toggle"
         onClick={() => setRevealed((current) => !current)}
+        aria-label={revealed ? 'Hide password' : 'Show password'}
       >
-        {revealed ? 'Hide' : 'Show'}
+        {revealed ? <FiEyeOff size={20} /> : <FiEye size={20} />}
       </button>
     </InputField>
   );
 }
+
+PasswordField.propTypes = {
+  id: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  placeholder: PropTypes.string,
+  error: PropTypes.string,
+  info: PropTypes.string,
+  valid: PropTypes.bool,
+};

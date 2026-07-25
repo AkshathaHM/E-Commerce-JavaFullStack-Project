@@ -1,4 +1,4 @@
-import React from 'react';
+import PropTypes from 'prop-types';
 import Logo from '../Logo';
 import AuthCard from './AuthCard';
 import ThemeToggleButton from '../ThemeToggleButton';
@@ -7,13 +7,14 @@ export default function AuthLayout({ title, subtitle, notice, children, footer }
   return (
     <div className="auth-page">
       <div className="auth-page__container">
-        <AuthCard>
+        <AuthCard className="auth-card--auth-layout">
+          <ThemeToggleButton />
+
           <div className="auth-card__brand">
             <Logo />
             <div className="auth-card__brand-copy">
               <p className="auth-brand-label">SalesSavvy</p>
             </div>
-            <ThemeToggleButton />
           </div>
 
           <div className="auth-card__intro">
@@ -29,3 +30,11 @@ export default function AuthLayout({ title, subtitle, notice, children, footer }
     </div>
   );
 }
+
+AuthLayout.propTypes = {
+  title: PropTypes.string.isRequired,
+  subtitle: PropTypes.string,
+  notice: PropTypes.string,
+  children: PropTypes.node.isRequired,
+  footer: PropTypes.node,
+};
