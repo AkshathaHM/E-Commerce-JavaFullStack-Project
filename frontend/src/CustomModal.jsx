@@ -327,12 +327,12 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
                       <h3 className="product-name">{getDisplayName(product)}</h3>
                       <p className="product-description">{getDisplayDescription(product)}</p>
                       <div className="admin-product-meta">
-                        <span><strong>ID:</strong> {product.product_id || product.productId || product.id}</span>
-                        <span><strong>Category:</strong> {product.category || product.categoryName || "—"}</span>
-                        <span><strong>Price:</strong> ₹{Number(product.price || product.amount || 0).toLocaleString()}</span>
-                        <span><strong>Stock:</strong> {product.stock || product.quantity || 0}</span>
-                        <span><strong>Status:</strong> {product.status || "Active"}</span>
-                        <span><strong>Brand:</strong> {product.brand || product.manufacturer || "—"}</span>
+                        <span><strong>ID</strong>{product.product_id || product.productId || product.id}</span>
+                        <span><strong>Category</strong>{product.category || product.categoryName || "—"}</span>
+                        <span><strong>Price</strong>₹{Number(product.price || product.amount || 0).toLocaleString()}</span>
+                        <span><strong>Stock</strong>{product.stock || product.quantity || 0}</span>
+                        <span><strong>Status</strong>{product.status || "Active"}</span>
+                        <span><strong>Brand</strong>{product.brand || product.manufacturer || "—"}</span>
                       </div>
                     </div>
                     <div className="product-card-footer admin-product-actions">
@@ -1261,6 +1261,10 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
     return order?.[field] || "";
   };
 
+  const getItemUnitPrice = (item) => Number(item?.pricePerUnit ?? item?.unitPrice ?? item?.price ?? item?.price_per_unit ?? item?.unit_price ?? 0);
+  const getItemQuantity = (item) => Number(item?.quantity ?? item?.qty ?? item?.count ?? 0);
+  const getItemLineTotal = (item) => getItemUnitPrice(item) * getItemQuantity(item);
+
   const orders = Array.isArray(modalData)
     ? modalData
     : Array.isArray(modalData?.orders)
@@ -1419,9 +1423,9 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
                                         {order.items.map((item, idx) => (
                                           <tr key={item.id || item.productId || idx}>
                                             <td>#{item.productId ?? item.product_id ?? item.id ?? "N/A"}</td>
-                                            <td>{toSafeString(item.quantity)}</td>
-                                            <td>{formatAmount(item.pricePerUnit ?? item.unitPrice ?? item.price)}</td>
-                                            <td><strong>{formatAmount(item.totalPrice ?? item.total)}</strong></td>
+                                            <td>{toSafeString(getItemQuantity(item))}</td>
+                                            <td>{formatAmount(getItemUnitPrice(item))}</td>
+                                            <td><strong>{formatAmount(getItemLineTotal(item))}</strong></td>
                                           </tr>
                                         ))}
                                       </tbody>
@@ -1429,11 +1433,11 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
                                     <div className="order-summary">
                                       <div className="summary-row">
                                         <span>Subtotal:</span>
-                                        <span>{formatAmount(order.items.reduce((sum, item) => sum + Number(item.totalPrice ?? item.total ?? 0), 0))}</span>
+                                        <span>{formatAmount(order.items.reduce((sum, item) => sum + getItemLineTotal(item), 0))}</span>
                                       </div>
                                       <div className="summary-row total-row">
                                         <span>Order Total:</span>
-                                        <span>{formatAmount(getOrderValue(order, "total"))}</span>
+                                        <span>{formatAmount(Number(getOrderValue(order, "total")) > 0 ? getOrderValue(order, "total") : order.items.reduce((sum, item) => sum + getItemLineTotal(item), 0))}</span>
                                       </div>
                                     </div>
                                   </div>

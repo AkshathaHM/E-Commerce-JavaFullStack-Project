@@ -11,7 +11,7 @@ export default function OrderSuccess() {
   const order = location.state?.order || JSON.parse(localStorage.getItem('lastOrder') || '{}');
 
   const summary = useMemo(() => ({
-    orderId: order.orderId || order.order_id || 'N/A',
+    orderId: order.orderId || order.order_id || order.id || 'N/A',
     paymentStatus: order.paymentStatus || 'Paid',
     amount: order.amount || order.totalAmount || order.total_price || 0,
     orderDate: order.orderDate || new Date().toLocaleString('en-IN'),

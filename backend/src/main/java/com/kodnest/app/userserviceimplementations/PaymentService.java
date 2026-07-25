@@ -7,6 +7,7 @@ import com.kodnest.app.entities.Payment;
 import com.kodnest.app.entities.Product;
 import com.kodnest.app.entities.User;
 import com.kodnest.app.userservices.PaymentServiceContract;
+import com.kodnest.app.utils.SequentialIdGenerator;
 import com.kodnest.app.usersrepositaries.UserRepository;
 import com.kodnest.app.usersrepositaries.CartRepository;
 import com.kodnest.app.usersrepositaries.OrderItemRepository;
@@ -49,6 +50,7 @@ public class PaymentService implements PaymentServiceContract {
     private final ProductRepository productRepository;
     private final PaymentRepository paymentRepository;
     private final EmailService emailService;
+    private final SequentialIdGenerator sequentialIdGenerator;
 
     private RazorpayClient razorpayClient;
 
@@ -67,6 +69,7 @@ public class PaymentService implements PaymentServiceContract {
         this.productRepository = productRepository;
         this.paymentRepository = paymentRepository;
         this.emailService = emailService;
+        this.sequentialIdGenerator = new SequentialIdGenerator();
     }
 
     // Lazy init RazorpayClient (only when needed)
@@ -117,10 +120,6 @@ public class PaymentService implements PaymentServiceContract {
             throw new IllegalArgumentException("Invalid Razorpay Signature");
         }
 
-        if (orderRepository.existsById(razorpayOrderId)) {
-            throw new IllegalStateException("Order Already Exists");
-        }
-
         if (orderItems == null || orderItems.isEmpty()) {
             throw new IllegalArgumentException("No cart items were provided for checkout");
         }
@@ -129,10 +128,17 @@ public class PaymentService implements PaymentServiceContract {
                 .orElseThrow(() -> new IllegalArgumentException("User not found for payment verification"));
 
         LocalDateTime now = LocalDateTime.now();
-        log.info("Payment Verified | orderId={} | paymentId={}", razorpayOrderId, razorpayPaymentId);
+        int currentMaxExistingOrderId = orderRepository.findAll().stream()
+                .map(Order::getOrderId)
+                .filter(id -> id != null && id.matches("\\d+"))
+                .mapToInt(Integer::parseInt)
+                .max()
+                .orElse(0);
+        String sequentialOrderId = sequentialIdGenerator.nextOrderId(currentMaxExistingOrderId, id -> orderRepository.existsById(id));
+        log.info("Payment Verified | orderId={} | paymentId={}", sequentialOrderId, razorpayPaymentId);
 
         Order order = new Order();
-        order.setOrderId(razorpayOrderId);
+        order.setOrderId(sequentialOrderId);
         order.setUserId(userId);
         order.setTotalAmount(totalAmount != null ? totalAmount : BigDecimal.ZERO);
         order.setStatus(OrderStatus.SUCCESS);
@@ -142,7 +148,7 @@ public class PaymentService implements PaymentServiceContract {
         order.setCreatedAt(now);
         order.setUpdatedAt(now);
         orderRepository.save(order);
-        log.info("Saving Order | orderId={}", razorpayOrderId);
+        log.info("Saving Order | orderId={}", sequentialOrderId);
 
         for (OrderItem item : orderItems) {
             if (item == null) {
@@ -161,7 +167,7 @@ public class PaymentService implements PaymentServiceContract {
             product.setStock(product.getStock() - item.getQuantity());
             productRepository.save(product);
         }
-        log.info("Saving Order Items | orderId={} | itemCount={}", razorpayOrderId, orderItems.size());
+        log.info("Saving Order Items | orderId={} | itemCount={}", sequentialOrderId, orderItems.size());
 
         Payment payment = new Payment();
         payment.setOrder(order);
@@ -171,24 +177,24 @@ public class PaymentService implements PaymentServiceContract {
         payment.setStatus("PAID");
         payment.setCreatedAt(now);
         paymentRepository.save(payment);
-        log.info("Saving Payment | orderId={} | paymentId={}", razorpayOrderId, razorpayPaymentId);
+        log.info("Saving Payment | orderId={} | paymentId={}", sequentialOrderId, razorpayPaymentId);
 
         cartRepository.deleteAllByUserUserId(userId);
         log.info("Clearing Cart | userId={}", userId);
 
         try {
-            emailService.sendOrderConfirmationEmail(user, razorpayOrderId, totalAmount != null ? totalAmount.toPlainString() : "0");
+            emailService.sendOrderConfirmationEmail(user, sequentialOrderId, totalAmount != null ? totalAmount.toPlainString() : "0");
         } catch (Exception emailException) {
-            log.warn("Order confirmation email failed | orderId={} | error={}", razorpayOrderId, emailException.getMessage(), emailException);
+            log.warn("Order confirmation email failed | orderId={} | error={}", sequentialOrderId, emailException.getMessage(), emailException);
         }
 
         response.put("success", true);
         response.put("message", "Payment verified successfully");
-        response.put("orderId", razorpayOrderId);
+        response.put("orderId", sequentialOrderId);
         response.put("paymentId", razorpayPaymentId);
         response.put("paymentStatus", "PAID");
         response.put("orderStatus", OrderStatus.SUCCESS.name());
-        log.info("Transaction Committed | orderId={} | paymentId={}", razorpayOrderId, razorpayPaymentId);
+        log.info("Transaction Committed | orderId={} | paymentId={}", sequentialOrderId, razorpayPaymentId);
         return response;
     }
 

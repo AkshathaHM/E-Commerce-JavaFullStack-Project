@@ -75,9 +75,18 @@ const OrderCard = memo(function OrderCard({ order, onTrackOrder, onCancelOrder, 
   return (
     <article className="order-card">
       <div className="order-card-header">
-        <p className="section-eyebrow">Order ID</p>
-        <h3>{order.orderId}</h3>
+        <div>
+          <p className="section-eyebrow">Order ID</p>
+          <h3>{order.orderId}</h3>
+        </div>
+        <div className="order-card-meta">
+          <span>{formatDisplayDate(order.orderDate, 'Date unavailable')}</span>
+          <div className={`order-status-badge ${isCancelled ? 'order-status-badge--cancelled' : isDelivered ? 'order-status-badge--delivered' : 'order-status-badge--default'}`}>
+            {statusLabel}
+          </div>
+        </div>
       </div>
+
       <div className="order-card-body">
         <img
           src={order.imageUrl?.startsWith('http') || order.imageUrl?.startsWith('data:image/') ? order.imageUrl : NO_IMAGE}
@@ -86,20 +95,19 @@ const OrderCard = memo(function OrderCard({ order, onTrackOrder, onCancelOrder, 
           loading="lazy"
           onError={fallbackImage}
         />
+
         <div className="order-details">
           <div className="order-detail-row"><span>Product</span><strong>{order.name}</strong></div>
-          <div className="order-detail-row"><span>Order Number</span><strong>{order.orderId}</strong></div>
+          <div className="order-detail-row"><span>Category</span><strong>{order.category}</strong></div>
           <div className="order-detail-row"><span>Quantity</span><strong>{order.quantity}</strong></div>
-          <div className="order-detail-row"><span>Total</span><strong>{formatCurrency(order.totalPrice)}</strong></div>
+          <div className="order-detail-row"><span>Item total</span><strong>{formatCurrency(order.price)}</strong></div>
+          <div className="order-detail-row"><span>Order total</span><strong>{formatCurrency(order.totalPrice)}</strong></div>
           <div className="order-detail-row"><span>Payment</span><strong>{order.paymentStatus || 'Paid'}</strong></div>
-          <div className="order-detail-row"><span>Order Date</span><strong>{new Date(order.orderDate).toLocaleString('en-IN')}</strong></div>
-          <div className="order-detail-row"><span>Backend Status</span><strong>{statusLabel}</strong></div>
+          <div className="order-detail-row"><span>Method</span><strong>{order.paymentMethod}</strong></div>
         </div>
       </div>
-      <div className="order-card-footer">
-        <div className={`order-status-badge ${isCancelled ? 'order-status-badge--cancelled' : isDelivered ? 'order-status-badge--delivered' : 'order-status-badge--default'}`}>
-          {statusLabel}
-        </div>
+
+      <div className="order-card-footer order-card-footer--actions">
         <div className="order-card-actions">
           {!isCancelled && <button className="order-card-action" type="button" onClick={() => onTrackOrder(order)}>Track Order</button>}
           {showCancel && <button className="order-card-action order-card-action--danger" type="button" onClick={() => onCancelOrder(order)}>Cancel Order</button>}

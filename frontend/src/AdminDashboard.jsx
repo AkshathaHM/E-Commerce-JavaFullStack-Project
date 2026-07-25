@@ -1,5 +1,5 @@
 // AdminDashboard.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { AdminHeader } from "./AdminHeader";
@@ -16,8 +16,9 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [productManagementView, setProductManagementView] = useState("list");
   const [busyAction, setBusyAction] = useState(null);
+  const modalCacheRef = useRef({});
 
-  const cardData = [
+  const cardData = useMemo(() => [
     {
       type: "productManagement",
       title: "Product Management",
@@ -34,7 +35,7 @@ const AdminDashboard = () => {
     { title: "Monthly Sales", description: "Monthly revenue report", team: "Analytics", modalType: "monthlySales", icon: "🗓️" },
     { title: "Yearly Sales", description: "Yearly revenue report", team: "Analytics", modalType: "yearlySales", icon: "🏆" },
     { title: "Order Management", description: "View all orders", team: "Order Management", modalType: "orders", icon: "📦" },
-  ];
+  ], []);
 
   const navigate = useNavigate();
 
@@ -141,6 +142,12 @@ const AdminDashboard = () => {
   };
 
   const handleManageProducts = async (preserveResponse = false) => {
+    const cached = modalCacheRef.current.products;
+    if (cached && !preserveResponse) {
+      setModalData(cached);
+      return cached;
+    }
+
     setLoading(true);
     if (!preserveResponse) {
       setResponse(null);
@@ -155,7 +162,9 @@ const AdminDashboard = () => {
 
       if (response.ok) {
         const products = await response.json();
+        modalCacheRef.current.products = products;
         setModalData(products);
+        return products;
       } else {
         const error = await response.text();
         setResponse(`Error: ${error}`);
@@ -324,6 +333,12 @@ const AdminDashboard = () => {
   };
 
   const handleViewAllUsers = async (data) => {
+    const cached = modalCacheRef.current.users;
+    if (cached && !data?.forceRefresh) {
+      setModalData(cached);
+      return cached;
+    }
+
     setLoading(true);
     setResponse(null);
     setModalData(null);
@@ -336,7 +351,9 @@ const AdminDashboard = () => {
 
       if (response.ok) {
         const users = await response.json();
+        modalCacheRef.current.users = users;
         setModalData(users);
+        return users;
       } else {
         const error = await response.text();
         setResponse(`Error: ${error}`);
@@ -346,6 +363,7 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
+    return null;
   };
 
   const handleOverallRevenue = async (data) => {
@@ -453,6 +471,12 @@ const AdminDashboard = () => {
   };
 
   const handleViewOrders = async (data) => {
+    const cached = modalCacheRef.current.orders;
+    if (cached && !data?.forceRefresh) {
+      setModalData(cached);
+      return cached;
+    }
+
     setLoading(true);
     setResponse(null);
     setModalData(null);
@@ -465,7 +489,9 @@ const AdminDashboard = () => {
 
       if (response.ok) {
         const orders = await response.json();
+        modalCacheRef.current.orders = orders;
         setModalData(orders);
+        return orders;
       } else {
         const error = await response.text();
         setResponse(`Error: ${error}`);
@@ -475,6 +501,7 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
+    return null;
   };
 
   const handleLogout = async () => {
@@ -489,9 +516,10 @@ const AdminDashboard = () => {
       });
     } catch (error) {
       console.error('Logout error:', error);
+    } finally {
+      clearAuthSession();
+      navigate('/', { replace: true });
     }
-    clearAuthSession();
-    navigate('/', { replace: true });
   };
 
   return (

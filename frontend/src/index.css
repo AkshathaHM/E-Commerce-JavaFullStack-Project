@@ -29,6 +29,12 @@
   --danger: #ef4444;
   --success: #16a34a;
   --warning: #f59e0b;
+  --primary: #0ea5e9;
+  --primary2: #2563eb;
+  --footer-bg: #f8fafc;
+  --footer-link: #0f172a;
+  --footer-link-hover: #2563eb;
+  --newsletter-input-bg: #eef2ff;
   --danger-bg: rgba(239,68,68,0.12);
   --danger-border: rgba(239,68,68,0.22);
   --success-bg: rgba(34,197,94,0.14);
@@ -61,6 +67,12 @@
   --danger: #f87171;
   --success: #4ade80;
   --warning: #fbbf24;
+  --primary: #0ea5e9;
+  --primary2: #7dd3fc;
+  --footer-bg: #07101c;
+  --footer-link: #cbd5e1;
+  --footer-link-hover: #7dd3fc;
+  --newsletter-input-bg: #111827;
   --danger-bg: rgba(248,113,113,0.16);
   --danger-border: rgba(248,113,113,0.28);
   --success-bg: rgba(74,222,128,0.16);

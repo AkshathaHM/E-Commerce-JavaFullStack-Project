@@ -32,7 +32,7 @@
   cursor: pointer;
 }
 
-..latest-order-status-banner span {
+.latest-order-status-banner span {
   color: var(--text-secondary);
   font-size: 0.78rem;
   text-transform: uppercase;

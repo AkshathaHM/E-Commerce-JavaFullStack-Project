@@ -7,6 +7,8 @@ import VerifyOtpPage from "./VerifyOtpPage";
 import CustomerHomePage from "./CustomerHomePage";
 import CartPage from "./CartPage";
 import OrderPage from "./OrderPage";
+import ProfilePage from "./ProfilePage";
+import SettingsPage from "./SettingsPage";
 import AdminLogin from "./AdminLogin"; 
 import AdminDashboard from "./AdminDashboard";
 import OrderSuccess from "./components/OrderSuccess";
@@ -41,6 +43,8 @@ const AppRoutes = () => {
       <Route path="/customerhome" element={<ProtectedRoute element={<CustomerHomePage />} allowedRole="CUSTOMER" />} />
       <Route path="/UserCartPage" element={<ProtectedRoute element={<CartPage />} allowedRole="CUSTOMER" />} />
       <Route path="/orders" element={<ProtectedRoute element={<OrderPage />} allowedRole="CUSTOMER" />} />
+      <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} allowedRole="CUSTOMER" />} />
+      <Route path="/settings" element={<ProtectedRoute element={<SettingsPage />} allowedRole="CUSTOMER" />} />
       <Route path="/orders/:orderId/tracking" element={<ProtectedRoute element={<OrderTracking />} allowedRole="CUSTOMER" />} />
       <Route path="/order-success" element={<ProtectedRoute element={<OrderSuccess />} allowedRole="CUSTOMER" />} />
       <Route path="/order-tracking" element={<ProtectedRoute element={<OrderTracking />} allowedRole="CUSTOMER" />} />

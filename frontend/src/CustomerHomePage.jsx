@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, useDeferredValue } from 'react';
 import { CustomerLayout } from './CustomerLayout';
 import { ProductList } from './ProductList';
 import { ProductCardSkeleton } from './components/Skeleton';
@@ -6,14 +6,14 @@ import './assets/styles.css';
 
 export default function CustomerHomePage() {
   const [allProducts, setAllProducts] = useState([]);
-  const [products, setProducts] = useState([]);
   const [cartCount, setCartCount] = useState(0);
   const [username, setUsername] = useState('Guest');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const deferredSearchTerm = useDeferredValue(searchTerm);
   const productsCache = useRef(null);
-  const cartCountCache = useRef(0);
+  const cartCountCache = useRef({ username: null, count: 0 });
 
   const getAuthHeaders = () => {
     const token = localStorage.getItem('authToken');
@@ -23,7 +23,6 @@ export default function CustomerHomePage() {
   const fetchProducts = useCallback(async () => {
     if (productsCache.current) {
       setAllProducts(productsCache.current);
-      setProducts(productsCache.current);
       return;
     }
 
@@ -41,7 +40,6 @@ export default function CustomerHomePage() {
       const productList = Array.isArray(data.products) ? data.products : [];
       productsCache.current = productList;
       setAllProducts(productList);
-      setProducts(productList);
       setUsername(data.user?.name || 'Guest');
     } catch (err) {
       console.error(err);
@@ -53,6 +51,11 @@ export default function CustomerHomePage() {
 
   const fetchCartCount = useCallback(async () => {
     if (username === 'Guest') return;
+    if (cartCountCache.current.username === username && cartCountCache.current.count !== null) {
+      setCartCount(cartCountCache.current.count);
+      return;
+    }
+
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/items/count?username=${username}`, {
         credentials: 'include',
@@ -60,7 +63,7 @@ export default function CustomerHomePage() {
       });
       if (res.ok) {
         const count = await res.json();
-        cartCountCache.current = count;
+        cartCountCache.current = { username, count };
         setCartCount(count);
       }
     } catch (e) {}
@@ -75,7 +78,7 @@ export default function CustomerHomePage() {
   }, [username, fetchCartCount]);
 
   const filteredProducts = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
+    const normalizedSearch = deferredSearchTerm.trim().toLowerCase();
 
     return allProducts.filter((product) => {
       const searchableText = [
@@ -90,17 +93,12 @@ export default function CustomerHomePage() {
 
       return !normalizedSearch || searchableText.includes(normalizedSearch);
     });
-  }, [allProducts, searchTerm]);
-
-  useEffect(() => {
-    setProducts(filteredProducts);
-  }, [filteredProducts]);
+  }, [allProducts, deferredSearchTerm]);
 
   const handleAddToCart = useCallback(async (productId) => {
-    // Optimistic update
     const newCount = cartCount + 1;
-    setCartCount(newCount);
-    cartCountCache.current = newCount;
+    setCartCount((prev) => prev + 1);
+    cartCountCache.current = { username, count: newCount };
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/add`, {
@@ -111,16 +109,14 @@ export default function CustomerHomePage() {
       });
       
       if (!res.ok) {
-        // Revert on failure
         const revertedCount = newCount - 1;
         setCartCount(revertedCount);
-        cartCountCache.current = revertedCount;
+        cartCountCache.current = { username, count: revertedCount };
       }
     } catch (e) {
-      // Revert on error
       const revertedCount = newCount - 1;
       setCartCount(revertedCount);
-      cartCountCache.current = revertedCount;
+      cartCountCache.current = { username, count: revertedCount };
     }
   }, [cartCount, username]);
 

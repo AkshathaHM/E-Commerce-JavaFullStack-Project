@@ -70,7 +70,6 @@ export default function AdminLogin() {
     <AuthLayout
       title="Admin login"
       subtitle="Sign in with your admin credentials."
-      notice={<span className="auth-card__notice-text">Only registered admin users may continue from this page.</span>}
       footer={
         <p className="auth-footer-copy">
           Need a customer account? <Link to="/" className="form-link">User login</Link>

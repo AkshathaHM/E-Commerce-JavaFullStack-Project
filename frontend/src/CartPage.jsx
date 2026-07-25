@@ -349,7 +349,7 @@ const CartPage = () => {
             const trackingId = `SS-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
             const successOrder = {
-              orderId: rzpRes.razorpay_order_id,
+              orderId: verifyPayload?.orderId || rzpRes.razorpay_order_id,
               paymentId: rzpRes.razorpay_payment_id,
               amount: Number(subtotal).toFixed(2),
               paymentStatus: 'Paid',
