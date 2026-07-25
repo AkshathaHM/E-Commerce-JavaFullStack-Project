@@ -9,11 +9,19 @@
   -moz-osx-font-smoothing: grayscale;
 
   --bg: #f5f7fb;
-  --surface: #ffffff;
-  --card: #ffffff;
+  --white: rgb(255 255 255);
+  --surface: var(--white);
+  --card: #f8fafc;
+  --surface-alt: #eff6ff;
   --text: #111827;
-  --text2: #6b7280;
-  --border: #d1d5db;
+  --text-secondary: #4b5563;
+  --text2: #4b5563;
+  --heading: #0f172a;
+  --button-text: var(--white);
+  --footer-text: #0f172a;
+  --input-bg: #f1f5f9;
+  --input-text: #111827;
+  --input-border: #d1d5db;
   --primary: #0ea5e9;
   --primary2: #2563eb;
   --shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
@@ -21,12 +29,18 @@
 
 [data-theme='dark'] {
   --bg: #081526;
-  --surface: #101827;
+  --surface: #1f2937;
   --card: #111827;
   --text: #ffffff;
-  --text2: #94a3b8;
-  --border: #334155;
-  --primary: #0ea5e9;
+  --text-secondary: #cbd5e1;
+  --text2: #cbd5e1;
+  --heading: #ffffff;
+  --button-text: #ffffff;
+  --footer-text: #ffffff;
+  --input-bg: #1f2937;
+  --input-text: #ffffff;
+  --input-border: #374151;
+  --primary: #38bdf8;
   --primary2: #0284c7;
   --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
 }

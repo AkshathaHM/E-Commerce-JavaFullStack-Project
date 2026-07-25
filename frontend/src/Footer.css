@@ -36,7 +36,7 @@
   margin: 0;
   font-size: 2rem;
   font-weight: 800;
-  color: white;
+  color: var(--footer-text);
 }
 
 .footer-brand-subtitle,
@@ -64,7 +64,7 @@
   border: 1px solid rgba(255,255,255,0.12);
   background: rgba(255,255,255,0.06);
   padding: 14px 18px;
-  color: white;
+  color: var(--text);
 }
 
 .newsletter-button {
@@ -91,7 +91,7 @@
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
-  color: white;
+  color: var(--footer-text);
 }
 
 .footer-section ul {
@@ -120,7 +120,7 @@
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 999px;
   background: rgba(255,255,255,0.05);
-  color: #e2e8f0;
+  color: var(--footer-text);
   padding: 10px 16px;
   cursor: pointer;
 }

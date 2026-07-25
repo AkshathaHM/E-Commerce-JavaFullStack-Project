@@ -30,7 +30,7 @@
   border-radius: 50%;
   border: none;
   background: rgba(255,255,255,0.08);
-  color: #ffffff;
+  color: var(--text);
   font-size: 1.2rem;
   cursor: pointer;
 }
@@ -71,7 +71,7 @@
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,0.12);
   background: rgba(255,255,255,0.05);
-  color: #f8fafc;
+  color: var(--input-text);
   outline: none;
 }
 
@@ -100,7 +100,7 @@
 .primary-button,
 .form-button {
   background: linear-gradient(135deg, #3cc5ff, #0091c8);
-  color: white;
+  color: var(--button-text);
   border: none;
   border-radius: 999px;
   padding: 12px 18px;
@@ -111,24 +111,24 @@
 .secondary-action-btn,
 .secondary-button {
   background: rgba(255,255,255,0.08);
-  color: white;
+  color: var(--button-text);
   border: 1px solid rgba(255,255,255,0.14);
 }
 
 .product-outline-btn {
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.14);
-  color: white;
+  color: var(--text);
 }
 
 .add-to-cart-btn {
   background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: white;
+  color: var(--button-text);
 }
 
 .product-delete-btn {
   background: linear-gradient(135deg, #ef4444, #c53030);
-  color: white;
+  color: var(--button-text);
 }
 
 .product-search {
@@ -148,7 +148,7 @@
   width: 100%;
   border: none;
   background: transparent;
-  color: white;
+  color: var(--text);
   outline: none;
 }
 
@@ -164,7 +164,7 @@
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,0.12);
   background: rgba(255,255,255,0.05);
-  color: white;
+  color: var(--text);
 }
 
 @media (max-width: 1024px) {

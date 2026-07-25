@@ -114,7 +114,7 @@ img {
 .cart-item,
 .order-card,
 .dashboard-panel {
-  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -127,27 +127,7 @@ img {
 .product-outline-btn,
 .add-to-cart-btn,
 .product-delete-btn,
-.order-card-action,
-.checkout-button,
-.retry-payment-button,
-.back-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  min-height: 52px;
-  padding: 0 20px;
-  border: none;
-  border-radius: 14px;
-  font-size: 17px;
-  font-weight: 600;
-  cursor: pointer;
-  background: linear-gradient(90deg, #38bdf8, #0ea5e9);
-  color: #ffffff;
-  box-shadow: 0 10px 24px rgba(14,165,233,0.35);
-  transition: transform var(--transition), box-shadow var(--transition), background-color var(--transition), border-color var(--transition), color var(--transition);
-}
-
+READONLY
 .button:hover,
 .form-button:hover,
 .primary-action-btn:hover,
@@ -182,8 +162,8 @@ img {
 .form-button,
 .primary-action-btn,
 .add-to-cart-btn {
-  background: linear-gradient(90deg, #38bdf8, #0ea5e9);
-  color: #ffffff;
+  background: linear-gradient(90deg, var(--primary), var(--primary2));
+  color: var(--button-text);
   box-shadow: 0 10px 24px rgba(14,165,233,0.35);
 }
 
@@ -200,7 +180,7 @@ img {
 .product-outline-btn {
   background: rgba(255,255,255,0.08);
   color: var(--text);
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(209,213,219,0.5);
 }
 
 .button--secondary,
@@ -215,48 +195,13 @@ img {
 .order-card-action--ghost {
   background: rgba(255,255,255,0.05);
   color: var(--text);
-  border-color: rgba(255,255,255,0.1);
+  border-color: rgba(209,213,219,0.35);
 }
 
 .product-delete-btn,
 .order-card-action--danger {
   background: linear-gradient(135deg, var(--danger), #c53030);
-  color: white;
-}
-
-.form-button.secondary,
-.secondary-button {
-  background: rgba(255,255,255,0.08);
-  color: var(--text);
-}
-
-.form-input,
-.auth-input,
-.auth-select,
-.product-search input,
-.product-toolbar__controls select,
-.otp-input-box,
-.modal-form input,
-.modal-form textarea,
-.modal-form select,
-.modern-form-field input,
-.modern-form-field textarea,
-.modern-form-field select {
-  width: 100%;
-  min-height: 52px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.05);
-  color: var(--text);
-  outline: none;
-  transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition);
-}
-
-input::placeholder,
-textarea::placeholder,
-select option {
-  color: rgba(229, 231, 235, 0.55);
+  color: var(--button-text);
 }
 
 .form-input,
@@ -303,7 +248,7 @@ select option {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  color: #e2e8f0;
+  color: var(--text);
   font-size: 0.95rem;
   font-weight: 600;
 }
@@ -427,17 +372,7 @@ select option {
   width: min(560px, 100%);
 }
 
-.auth-card {
-  width: 100%;
-  max-width: 560px;
-  padding: 40px;
-  border-radius: 24px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  position: relative;
-}
-
+READONLY
 .auth-card__brand {
   display: flex;
   align-items: center;
@@ -451,14 +386,14 @@ select option {
 
 .auth-brand-label {
   margin: 0;
-  color: #ffffff;
+  color: var(--heading);
   font-size: 1.75rem;
   font-weight: 700;
 }
 
 .auth-card__title {
   margin: 0;
-  color: #ffffff;
+  color: var(--heading);
   font-size: clamp(2rem, 4vw, 2.4rem);
   font-weight: 700;
 }
@@ -529,7 +464,7 @@ select option {
   border-radius: 999px;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.12);
-  color: #ffffff;
+  color: var(--text);
   font-weight: 700;
 }
 
@@ -603,7 +538,7 @@ select option {
   place-items: center;
   border-radius: 50%;
   background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: white;
+  color: var(--button-text);
   font-size: 2.2rem;
 }
 
@@ -663,7 +598,7 @@ select option {
   font-size: 1.45rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: #ffffff;
+  color: var(--heading);
 }
 
 .logo-text:hover,
@@ -712,7 +647,7 @@ select option {
   place-items: center;
   border-radius: 50%;
   background: var(--danger);
-  color: white;
+  color: var(--button-text);
   font-size: 0.75rem;
   font-weight: 800;
 }
@@ -905,7 +840,7 @@ select option {
 .customer-nav-link:hover,
 .customer-nav-link:focus-visible {
   background: linear-gradient(135deg, rgba(60,197,255,0.95), rgba(0,145,200,0.95));
-  color: white;
+  color: var(--button-text);
 }
 
 .home-hero,
@@ -1033,7 +968,7 @@ select option {
 
 .product-name {
   margin: 0;
-  color: #ffffff;
+  color: var(--text);
   font-size: 1.05rem;
 }
 
@@ -1097,7 +1032,7 @@ select option {
   margin-top: 20px;
   border: none;
   background: linear-gradient(135deg, var(--brand), var(--brand-dark));
-  color: white;
+  color: var(--button-text);
   padding: 14px 20px;
   border-radius: 999px;
   cursor: pointer;
@@ -1188,7 +1123,7 @@ select option {
 
 .item-info h3 {
   margin: 0;
-  color: #ffffff;
+  color: var(--heading);
 }
 
 .item-info p {
@@ -1258,7 +1193,7 @@ select option {
 }
 
 .summary-row.total {
-  color: white;
+  color: var(--heading);
   font-weight: 800;
   font-size: 1rem;
 }
@@ -1266,7 +1201,7 @@ select option {
 .checkout-button {
   width: 100%;
   background: linear-gradient(135deg, var(--brand), var(--brand-dark));
-  color: white;
+  color: var(--button-text);
 }
 
 .payment-progress-state,
@@ -1308,7 +1243,7 @@ select option {
   width: 100%;
   border: none;
   background: var(--brand);
-  color: white;
+  color: var(--button-text);
 }
 
 .cart-page.empty {
@@ -1337,7 +1272,7 @@ select option {
   border-radius: 999px;
   border: none;
   background: linear-gradient(135deg, var(--brand), var(--brand-dark));
-  color: white;
+  color: var(--button-text);
 }
 
 .latest-order-status-banner {
@@ -1353,7 +1288,7 @@ select option {
 }
 
 .latest-order-status-banner strong {
-  color: white;
+  color: var(--heading);
 }
 
 .latest-order-status-banner small {
@@ -1401,7 +1336,7 @@ select option {
 }
 
 .order-detail-row strong {
-  color: white;
+  color: var(--heading);
 }
 
 .order-card-actions {
@@ -1553,7 +1488,7 @@ select option {
 }
 
 .tracking-history-list strong {
-  color: white;
+  color: var(--heading);
 }
 
 .dashboard-content {

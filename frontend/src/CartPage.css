@@ -109,7 +109,7 @@
   align-items: flex-start;
   gap: 16px;
   padding: 16px;
-  background: #fff;
+  background: var(--card);
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
@@ -243,7 +243,7 @@
 }
 
 .checkout-section {
-  background: #fff;
+  background: var(--card);
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 24px;
@@ -288,7 +288,7 @@
   width: 100%;
   padding: 14px 16px;
   background: linear-gradient(135deg, #00ABE4, #0078a0);
-  color: #fff;
+  color: var(--button-text);
   border: none;
   border-radius: 8px;
   font-size: 15px;
@@ -335,7 +335,7 @@
   padding: 10px 14px;
   cursor: pointer;
   background: #00abe4;
-  color: white;
+  color: var(--button-text);
   font-weight: 600;
   font-size: 13px;
   width: 100%;
@@ -399,7 +399,7 @@
 .cart-page.empty button {
   padding: 12px 28px;
   background: #00ABE4;
-  color: white;
+  color: var(--button-text);
   border: none;
   border-radius: 8px;
   font-size: 15px;
@@ -544,7 +544,7 @@
 
 .success-card {
   width: 100%;
-  background: linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%);
+  background: var(--surface);
   border-radius: 30px;
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12);
   padding: 36px 32px;
@@ -617,7 +617,7 @@
 
 .success-button.primary {
   background: #0078d4;
-  color: #fff;
+  color: var(--button-text);
   box-shadow: 0 14px 24px rgba(0, 120, 212, 0.18);
 }
 
@@ -629,7 +629,7 @@
 
 .success-button.tertiary {
   background: #00abe4;
-  color: #fff;
+  color: var(--button-text);
 }
 
 .success-button:hover {
@@ -661,7 +661,7 @@
 
 .tracking-card {
   width: min(680px, 100%);
-  background: #fff;
+  background: var(--surface);
   border-radius: 28px;
   padding: 28px 28px 24px;
   box-shadow: 0 32px 60px rgba(15, 23, 42, 0.18);
@@ -673,7 +673,7 @@
   top: 18px;
   right: 18px;
   border: none;
-  background: #f8fafc;
+  background: var(--surface);
   color: #1f2937;
   width: 36px;
   height: 36px;
@@ -707,7 +707,7 @@
 }
 
 .tracking-summary div {
-  background: #f8fbff;
+  background: var(--surface-alt);
   padding: 16px;
   border: 1px solid #e2ecf7;
   border-radius: 16px;
@@ -732,7 +732,7 @@
   padding: 16px;
   border-radius: 16px;
   border: 1px solid #e5e7eb;
-  background: #f9fafb;
+  background: var(--surface-alt);
 }
 
 .tracking-step.completed {
@@ -845,7 +845,7 @@
 
 .success-button.primary {
   background: #0078d4;
-  color: #fff;
+  color: var(--button-text);
 }
 
 .success-button.secondary {
