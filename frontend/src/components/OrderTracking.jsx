@@ -116,7 +116,7 @@ export default function OrderTracking() {
   const orderHistory = useMemo(() => getOrderHistoryEntries(displayOrder.orderId), [displayOrder.orderId]);
   const currentStepLabel = getStatusLabel(status);
   const isCancelled = status === 'cancelled';
-  const estimatedDelivery = useMemo(() => getExpectedDelivery(displayOrder.createdAt), [displayOrder.createdAt]);
+  const estimatedDelivery = useMemo(() => getExpectedDelivery(displayOrder.createdAt, status), [displayOrder.createdAt, status]);
 
   if (loading) {
     return (

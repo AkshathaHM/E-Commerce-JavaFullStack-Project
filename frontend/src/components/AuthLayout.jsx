@@ -12,6 +12,10 @@ export default function AuthLayout({ title, subtitle, notice, children, footer }
 
           <div className="auth-card__brand">
             <Logo showBrandText={false} />
+            <div className="auth-brand-stack">
+              <h2 className="auth-brand-label">SalesSavvy</h2>
+              <p className="auth-brand-tagline">Secure shopping and admin access</p>
+            </div>
           </div>
 
           <div className="auth-card__intro">

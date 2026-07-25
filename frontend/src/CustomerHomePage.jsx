@@ -26,26 +26,15 @@ export default function CustomerHomePage() {
   };
 
   const fetchProducts = useCallback(async () => {
-    if (productsCache.current) {
-      setAllProducts(productsCache.current);
-      return;
-    }
-
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/products`, {
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
-      });
-      if (!res.ok) {
-        throw new Error('Unable to load products');
-      }
-      const data = await res.json();
-      const productList = Array.isArray(data.products) ? data.products : [];
+      const { cachedFetch } = await import('./utils/apiClient');
+      const data = await cachedFetch('products_all', `${import.meta.env.VITE_API_URL}/api/products`, { credentials: 'include', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() } }, 30000).catch((e) => { throw e; });
+      const productList = Array.isArray(data?.products) ? data.products : (Array.isArray(data) ? data : []);
       productsCache.current = productList;
       setAllProducts(productList);
-      const activeUsername = data.user?.name || data.user?.username || localStorage.getItem('username') || 'Guest';
+      const activeUsername = data?.user?.name || data?.user?.username || localStorage.getItem('username') || 'Guest';
       setUsername(activeUsername);
     } catch (err) {
       console.error(err);
@@ -173,7 +162,7 @@ export default function CustomerHomePage() {
               <p>Browse curated essentials, enjoy a smoother checkout, and keep track of every delivery from one place.</p>
             </div>
             <div className="home-hero-actions">
-              <button type="button" className="primary-action-btn" onClick={handleOpenProfileModal}>My Profile</button>
+              {/* Profile accessible only via profile dropdown now; remove dashboard button for customer */}
             </div>
           </div>
         </section>

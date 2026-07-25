@@ -44,6 +44,7 @@
   --overlay: rgba(15, 23, 42, 0.24);
   --shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
   --focus-ring: rgba(56,189,248,0.16);
+    --btn-foreground: #000000; /* Light theme button foreground for contrast */
 }
 
 [data-theme='dark'] {
@@ -58,6 +59,7 @@
   --text-muted: #9ca3af;
   --heading: #ffffff;
   --button-text: #ffffff;
+    --btn-foreground: #ffffff;
   --footer-text: #ffffff;
   --input-bg: #1f2937;
   --input-text: #ffffff;

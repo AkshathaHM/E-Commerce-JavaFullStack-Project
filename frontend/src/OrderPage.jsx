@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { CustomerLayout } from './CustomerLayout';
 import { OrderCardSkeleton } from './components/Skeleton';
 import { getDerivedOrderStatus, getExpectedDelivery, getOrderHistoryEntries, getStatusLabel, ORDER_STATUS_SEQUENCE } from './utils/orderStatus';
+import { cachedFetch } from './utils/apiClient';
 import StatusBadge from './components/StatusBadge';
 import TrackingTimeline from './components/TrackingTimeline';
 import './assets/styles.css';
@@ -96,10 +97,7 @@ const OrderCard = memo(function OrderCard({ order, onTrackOrder, onCancelOrder, 
             loading="lazy"
             onError={fallbackImage}
           />
-          <div className="order-product-caption">
-            <span>{order.category}</span>
-            <strong>{order.quantity} item{order.quantity === 1 ? '' : 's'}</strong>
-          </div>
+          {/* Removed extra caption for a cleaner card — details are shown below */}
         </div>
 
         <div className="order-details">
@@ -157,23 +155,18 @@ export default function OrderPage() {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders?page=${nextPage}&size=5`, {
+      const cacheKey = `orders_page_${nextPage}`;
+      const data = await cachedFetch(cacheKey, `${import.meta.env.VITE_API_URL}/api/orders?page=${nextPage}&size=5`, {
         credentials: 'include',
-        headers: {
-          ...getAuthHeaders(),
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const fallback = await response.text();
-        throw new Error(fallback || 'Unable to load orders.');
-      }
-
-      const data = await response.json();
+        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+      }, 30000);
       const productList = Array.isArray(data?.orders) ? data.orders : (Array.isArray(data?.products) ? data.products : []);
       const nextOrders = productList.map(normalizeOrderPayload);
-      setOrders((currentOrders) => append ? [...currentOrders, ...nextOrders] : nextOrders);
+      setOrders((currentOrders) => {
+        const result = append ? [...currentOrders, ...nextOrders] : nextOrders;
+        try { setCache(cacheKey, result, 30000); } catch {};
+        return result;
+      });
       setHasNextPage(Boolean(data?.hasNext));
       setPage(nextPage);
       setUsername(data?.username || 'Guest');
@@ -266,7 +259,7 @@ export default function OrderPage() {
   };
 
   const activeTrackingLabel = useMemo(() => getStatusLabel(trackingStatus), [trackingStatus]);
-  const expectedDelivery = useMemo(() => getExpectedDelivery(selectedOrder?.orderDate || new Date().toISOString()), [selectedOrder?.orderDate]);
+  const expectedDelivery = useMemo(() => getExpectedDelivery(selectedOrder?.orderDate || new Date().toISOString(), trackingStatus), [selectedOrder?.orderDate, trackingStatus]);
   const orderHistory = useMemo(() => getOrderHistoryEntries(selectedOrder?.orderId || 'N/A'), [selectedOrder?.orderId]);
 
   const handleCancelOrder = (order) => {

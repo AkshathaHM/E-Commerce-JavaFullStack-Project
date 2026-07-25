@@ -6,12 +6,13 @@ const LoadingButton = ({
   loadingText,
   className = 'form-button',
   disabled,
+  type = 'button',
   ...props
 }) => {
   const isDisabled = disabled || isLoading;
 
   return (
-    <button {...props} className={`${className}${isLoading ? ' is-loading' : ''}`} disabled={isDisabled}>
+    <button {...props} type={type} className={`${className}${isLoading ? ' is-loading' : ''}`} disabled={isDisabled}>
       {isLoading ? (
         <span className="btn-content">
           <span className="button-spinner" aria-hidden="true" />

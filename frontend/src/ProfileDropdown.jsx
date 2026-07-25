@@ -85,9 +85,15 @@ export function ProfileDropdown({ username, showOrders = true, showCart = true, 
               type="button"
               className={`dropdown-link${isLinkActive('profile') ? ' active' : ''}`}
               onClick={() => {
-                setIsOpen(false);
-                navigate('/profile');
-              }}
+                  setIsOpen(false);
+                  // open profile modal via global event so we keep it as a popup
+                  try {
+                    window.dispatchEvent(new CustomEvent('openProfileModal', { detail: {} }));
+                  } catch (e) {
+                    // fallback to route navigation
+                    navigate('/profile');
+                  }
+                }}
             >
               <span className="dropdown-link__icon">👤</span>
               <span>View Profile</span>

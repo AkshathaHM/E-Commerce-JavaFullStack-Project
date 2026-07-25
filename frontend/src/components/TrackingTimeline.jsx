@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 const defaultSteps = [
   { key: 'placed', label: 'Order Placed', detail: 'We have received your order.' },
@@ -22,7 +22,7 @@ const normalizeStatus = (status) => {
   return 'placed';
 };
 
-export default function TrackingTimeline({ currentStatus, steps = defaultSteps }) {
+function TrackingTimeline({ currentStatus, steps = defaultSteps }) {
   const normalized = normalizeStatus(currentStatus);
   const currentIndex = steps.findIndex((step) => step.key === normalized);
   const safeIndex = currentIndex >= 0 ? currentIndex : steps.length - 1;
@@ -30,14 +30,18 @@ export default function TrackingTimeline({ currentStatus, steps = defaultSteps }
   return (
     <div className="tracking-timeline" aria-label="Order tracking timeline">
       {steps.map((step, index) => {
-        const isCompleted = index < safeIndex;
+        // If order is delivered, treat delivered step as completed as well (show ticks for all steps)
+        const isDelivered = normalized === 'delivered';
+        const isCompleted = index < safeIndex || (isDelivered && index <= safeIndex);
         const isActive = index === safeIndex;
+        // don't show 'active' styling when the step is already completed (e.g., delivered)
+        const showActive = isActive && !isCompleted;
         const isCancelled = normalized === 'cancelled' && step.key === 'cancelled';
 
         return (
           <div key={step.key} className={`timeline-step-wrapper ${isCompleted ? 'timeline-step-wrapper--complete' : ''} ${isCancelled ? 'timeline-step-wrapper--cancelled' : ''}`}>
-            <div className={`timeline-step ${isCompleted ? 'timeline-step--complete' : ''} ${isActive ? 'timeline-step--active' : ''} ${isCancelled ? 'timeline-step--cancelled' : ''}`}>
-              <div className="timeline-icon">
+            <div className={`timeline-step ${isCompleted ? 'timeline-step--complete' : ''} ${showActive ? 'timeline-step--active' : ''} ${isCancelled ? 'timeline-step--cancelled' : ''}`}>
+              <div className="timeline-icon" aria-hidden>
                 {isCompleted ? '✓' : isCancelled ? '✕' : index + 1}
               </div>
             </div>
@@ -51,3 +55,5 @@ export default function TrackingTimeline({ currentStatus, steps = defaultSteps }
     </div>
   );
 }
+
+export default memo(TrackingTimeline);

@@ -12,7 +12,7 @@
   width: min(100%, 1120px);
   background: var(--card);
   border-radius: 28px;
-  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+  box-shadow: var(--shadow);
   padding: 32px;
   animation: fadeInUp 0.45s ease;
 }
@@ -48,16 +48,16 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #f8fafc;
-  color: #334155;
+  background: var(--card);
+  color: var(--text);
   font-size: 1.35rem;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 24px rgba(2,6,23,0.06);
 }
 
 .order-tracking-card__eyebrow {
   margin: 0 0 8px;
-  color: #64748b;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.18em;
   font-size: 0.78rem;
@@ -66,7 +66,7 @@
 
 .order-tracking-card h2 {
   margin: 0 0 8px;
-  color: #0f172a;
+  color: var(--heading);
   font-size: clamp(1.35rem, 2vw, 1.8rem);
 }
 
@@ -140,7 +140,7 @@
   gap: 16px;
   padding: 20px 22px;
   border-radius: 22px;
-  background: linear-gradient(135deg, #f8fbff 0%, #eef6ff 100%);
+  background: var(--surface-alt);
   margin-bottom: 20px;
 }
 
@@ -150,7 +150,7 @@
 
 .tracking-hero__copy {
   margin: 0;
-  color: #475569;
+  color: var(--text-secondary);
   line-height: 1.6;
 }
 
@@ -162,15 +162,15 @@
 }
 
 .tracking-pill {
-  background: var(--surface);
-  border: 1px solid #dbeafe;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 12px 14px;
 }
 
 .tracking-pill span {
   display: block;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.74rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -178,7 +178,7 @@
 }
 
 .tracking-pill strong {
-  color: #0f172a;
+  color: var(--text);
   font-size: 0.95rem;
 }
 
@@ -189,8 +189,8 @@
 }
 
 .tracking-panel {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 20px;
 }
@@ -205,7 +205,7 @@
 
 .tracking-panel__header h3 {
   margin: 0;
-  color: #0f172a;
+  color: var(--heading);
   font-size: 1rem;
 }
 
@@ -215,8 +215,8 @@
   gap: 6px;
   padding: 6px 10px;
   border-radius: 999px;
-  background: #ecfeff;
-  color: #0f766e;
+  background: var(--info-bg);
+  color: var(--brand-dark);
   font-size: 0.8rem;
   font-weight: 700;
 }
@@ -230,14 +230,14 @@
 
 .tracking-status-banner > div {
   background: var(--card);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 12px 14px;
 }
 
 .tracking-status-banner span {
   display: block;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.76rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -245,7 +245,7 @@
 }
 
 .tracking-status-banner strong {
-  color: #0f172a;
+  color: var(--text);
 }
 
 .order-tracking-details-grid {
@@ -257,14 +257,14 @@
 
 .order-tracking-details-grid > div {
   background: var(--card);
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 14px;
 }
 
 .order-tracking-details-grid span {
   display: block;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -298,7 +298,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 0;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
 }
 
 .tracking-history-list li:last-child {
@@ -369,11 +369,11 @@
   top: 44px;
   bottom: -14px;
   width: 2px;
-  background: #e2e8f0;
+  background: var(--border);
 }
 
 .timeline-step-wrapper--complete:not(:last-child)::after {
-  background: linear-gradient(180deg, #22c55e, #2563eb);
+  background: linear-gradient(180deg, var(--success), var(--success));
 }
 
 .timeline-step {
@@ -389,7 +389,12 @@
 }
 
 .timeline-step--complete {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background: linear-gradient(135deg, var(--success), #16a34a);
+  color: var(--button-text);
+}
+
+.timeline-step--cancelled {
+  background: linear-gradient(135deg, var(--danger), #ef4444);
   color: var(--button-text);
 }
 
@@ -410,13 +415,13 @@
 
 .timeline-label {
   font-size: 0.95rem;
-  color: #0f172a;
+  color: var(--heading);
   font-weight: 700;
 }
 
 .timeline-detail {
   margin-top: 4px;
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 

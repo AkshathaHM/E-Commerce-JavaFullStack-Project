@@ -36,14 +36,27 @@ export function getStatusLabel(status) {
   return 'Order Placed';
 }
 
-export function getExpectedDelivery(createdAt) {
+export function getExpectedDelivery(createdAt, status = '') {
   const createdTime = new Date(createdAt || new Date().toISOString()).getTime();
   if (Number.isNaN(createdTime)) {
     return new Date();
   }
 
+  const normalized = normalizeStatusText(status);
+  // Map status to estimated remaining days
+  const remainingDaysMap = {
+    placed: 4,
+    confirmed: 3,
+    packed: 3,
+    shipped: 2,
+    out_for_delivery: 1,
+    delivered: 0,
+    cancelled: 0,
+  };
+
+  const days = remainingDaysMap[normalized] ?? 4;
   const delivery = new Date(createdTime);
-  delivery.setDate(delivery.getDate() + 4);
+  delivery.setDate(delivery.getDate() + days);
   return delivery;
 }
 

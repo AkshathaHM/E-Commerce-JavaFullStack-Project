@@ -103,6 +103,9 @@ export default function AdminLogin() {
           }}
           error={fieldErrors.password}
         />
+        <div className="auth-footer-row">
+          <Link to="/forgot-password" state={{ returnTo: '/admin' }} className="form-link">Forgot password?</Link>
+        </div>
         <PrimaryButton type="submit" isLoading={isSigningIn} loadingText="Admin Login..." disabled={isSubmitDisabled}>
           Admin Login
         </PrimaryButton>

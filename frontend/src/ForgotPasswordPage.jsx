@@ -15,6 +15,8 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const location = useLocation();
   const isSubmitDisabled = !username.trim() || !newPassword.trim() || !confirmPassword.trim() || isSubmitting;
   const navigate = useNavigate();
@@ -61,7 +63,9 @@ export default function ForgotPasswordPage() {
 
       if (response.ok) {
         setShowToast(true);
-        navigate(returnTo, { replace: true });
+        setSuccess(true);
+        setSuccessMessage('Your password has been reset successfully. You may now sign in with your new password.');
+        // keep on this page and present a success state instead of immediate redirect
       } else {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.error || data.message || 'Failed to reset password.');
@@ -76,7 +80,8 @@ export default function ForgotPasswordPage() {
   return (
     <AuthLayout
       title="Reset your password"
-      subtitle="Enter your username and set a secure new password."
+      subtitle="Create a fresh password for your SalesSavvy account in just a few seconds."
+      notice="Use the username linked to your account and choose a strong password you can remember."
       footer={
         <p className="auth-footer-copy">
           Remembered your password? <Link to={returnTo} className="form-link">Back to login</Link>
@@ -85,7 +90,18 @@ export default function ForgotPasswordPage() {
     >
       <Toast message="✅ Password reset successful" show={showToast} />
       {error && <div className="auth-alert auth-alert--error">{error}</div>}
-      <form onSubmit={handleSubmit} className="auth-form">
+
+      {success ? (
+        <div className="forgot-success-card">
+          <h3 className="auth-success-message">{successMessage}</h3>
+          <p className="auth-success-sub">You can now return to the login screen to sign in.</p>
+          <div className="auth-success-actions">
+            <Link to={returnTo} className="form-link">Back to login</Link>
+            <button type="button" className="form-button" onClick={() => { setSuccess(false); setUsername(''); setNewPassword(''); setConfirmPassword(''); }}>Reset another account</button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="auth-form">
         <InputField
           id="forgotUsername"
           label="Username"
@@ -124,6 +140,7 @@ export default function ForgotPasswordPage() {
           Reset Password
         </PrimaryButton>
       </form>
+      )}
     </AuthLayout>
   );
 }

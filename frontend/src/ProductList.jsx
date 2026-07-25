@@ -35,7 +35,7 @@ export const ProductList = React.memo(({ products, onAddToCart, error }) => {
       </div>
       <div className="product-grid">
         {products.map((product) => (
-          <ProductCard key={product.product_id} product={product} onAddToCart={onAddToCart} />
+          <ProductCard key={product.product_id || product.id || product.productId} product={product} onAddToCart={onAddToCart} />
         ))}
       </div>
     </div>
@@ -47,7 +47,7 @@ ProductList.displayName = 'ProductList';
 const ProductCard = React.memo(({ product, onAddToCart }) => {
   const imageUrl = product.images?.[0] && (product.images[0].startsWith("http") || product.images[0].startsWith("data:image/"))
     ? product.images[0]
-    : "/images/no-image.png";
+    : (product.imageUrl || product.image || "/images/no-image.png");
 
   return (
     <div className="product-card">
@@ -72,7 +72,7 @@ const ProductCard = React.memo(({ product, onAddToCart }) => {
             <button
               type="button"
               className="add-to-cart-btn"
-              onClick={() => onAddToCart(product.product_id)}
+              onClick={() => onAddToCart(product.product_id || product.id || product.productId)}
               aria-label={`Add ${product.name} to cart`}
             >
               Add to Cart

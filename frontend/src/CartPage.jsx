@@ -4,6 +4,8 @@ import { CustomerLayout } from "./CustomerLayout";
 import { Toast } from "./Toast";
 import { useNavigate } from "react-router-dom";
 import { CartItemSkeleton } from "./components/Skeleton";
+import CartItem from "./components/CartItem";
+import { getCache, setCache, clearCache } from './utils/cache';
 import { getPaymentErrorDetails } from "./utils/paymentFlow";
 import { getDerivedOrderStatus, getStatusLabel } from "./utils/orderStatus";
 
@@ -118,6 +120,16 @@ const CartPage = () => {
       return;
     }
 
+    // try cache first to avoid network round-trip
+    const cached = getCache('cart_items');
+    if (cached) {
+      setCartItems(cached.items || []);
+      setUsername(cached.username || 'Guest');
+      setSubtotal(cached.subtotal || '0.00');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     fetchCartItems();
   }, []);
@@ -168,6 +180,9 @@ const CartPage = () => {
       setCartItems(formatted);
       setUsername(data?.username || "Guest");
 
+      // cache cart for short duration
+      try { setCache('cart_items', { items: formatted, username: data?.username || 'Guest', subtotal: calc }, 20000); } catch {}
+
       const calc = formatted
         .reduce((sum, item) => sum + Number(item.total_price), 0)
         .toFixed(2);
@@ -198,12 +213,18 @@ const CartPage = () => {
       });
 
       if (res.ok || res.status === 204) {
-        setCartItems((prev) => prev.filter((i) => getItemId(i) !== id));
+        setCartItems((prev) => {
+          const next = prev.filter((i) => getItemId(i) !== id);
+          // update cache
+          try { setCache('cart_items', { items: next, username, subtotal: (Number(subtotal) - Number((cartItems.find((i) => getItemId(i) === id) || {}).total_price || 0)).toFixed(2) }, 20000); } catch(e){}
+          return next;
+        });
 
         const removed = cartItems.find((i) => getItemId(i) === id);
         if (removed) {
           const newSub = (Number(subtotal) - Number(removed.total_price)).toFixed(2);
-          setSubtotal(newSub > 0 ? newSub : "0.00");
+          const final = newSub > 0 ? newSub : "0.00";
+          setSubtotal(final);
         }
       } else {
         throw new Error(await res.text() || "Remove failed");
@@ -244,13 +265,24 @@ const CartPage = () => {
       setSubtotal((prev) => {
         const diff = Number(item.price_per_unit) * delta;
         const next = (Number(prev) + diff).toFixed(2);
-        return next > 0 ? next : "0.00";
+        const final = next > 0 ? next : "0.00";
+        // update cache with new values
+        try {
+          const nextItems = cartItems.map((i) => getItemId(i) === productId ? { ...i, quantity: newQty, total_price: (Number(i.price_per_unit) * newQty).toFixed(2) } : i);
+          setCache('cart_items', { items: nextItems, username, subtotal: final }, 20000);
+        } catch (e) {}
+        return final;
       });
     } catch (err) {
       console.error("Qty update failed:", err);
       alert("Could not update quantity. Please try again.");
     }
   };
+
+  // stable callbacks for child components
+  const handleIncrease = useCallback((id) => handleQuantityChange(id, +1), [cartItems]);
+  const handleDecrease = useCallback((id) => handleQuantityChange(id, -1), [cartItems]);
+  const handleRemove = useCallback((id) => handleRemoveItem(id), [cartItems]);
 
   const handleCheckout = async () => {
     if (checkoutLoading) return;
@@ -522,45 +554,16 @@ const CartPage = () => {
           )}
 
           <div className="cart-items">
-            {cartItems.map((item, index) => {
-              const itemId = getItemId(item) || index;
-              const imageUrl = getDisplayImageUrl(item);
-              const title = getDisplayName(item);
-              const description = getDisplayDescription(item);
-
-              return (
-                <div key={itemId} className="cart-item">
-                  <img
-                    src={imageUrl?.startsWith?.("http") ? imageUrl : "/images/no-image.png"}
-                    alt={title}
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.src = "/images/no-image.png";
-                    }}
-                  />
-                  <div className="item-details">
-                    <div className="item-info">
-                      <h3>{title}</h3>
-                      <p>{description}</p>
-                    </div>
-
-                    <div className="item-actions">
-                      <div className="quantity-controls">
-                        <button onClick={() => handleQuantityChange(itemId, -1)} disabled={item.quantity <= 1}>−</button>
-                        <span className="quantity-display">{item.quantity}</span>
-                        <button onClick={() => handleQuantityChange(itemId, +1)}>+</button>
-                      </div>
-
-                      <span className="price">₹{item.total_price}</span>
-
-                      <button className="remove-btn" onClick={() => handleRemoveItem(itemId)}>
-                        🗑
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {cartItems.map((item, index) => (
+              <CartItem
+                key={getItemId(item) || index}
+                item={item}
+                onIncrease={handleIncrease}
+                onDecrease={handleDecrease}
+                onRemove={handleRemove}
+                getItemId={getItemId}
+              />
+            ))}
           </div>
         </div>
 

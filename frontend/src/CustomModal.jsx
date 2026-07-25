@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { FiEye, FiEyeOff, FiMail, FiMapPin, FiPhone, FiShield, FiUser, FiLock } from "react-icons/fi";
 import { Toast } from "./Toast";
+import InputField from "./components/InputField";
+import PrimaryButton from "./components/PrimaryButton";
 import "./assets/modalStyles.css";
 
 const toSafeString = (value) => String(value ?? "").trim();
@@ -9,6 +11,18 @@ const toSafeLower = (value) => toSafeString(value).toLowerCase();
 const isTruthy = (value) => value === true || value === "true" || value === "TRUE";
 
 const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loading, onUpdateProduct, onDeleteProduct, onRefreshProducts, onCreateProduct, productManagementView, busyAction }) => {
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose && onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className={`modal-content ${modalType === "manageProducts" ? "product-management-modal" : modalType === "addProduct" ? "product-form-modal" : ""}`} onClick={(e) => e.stopPropagation()}>
@@ -91,7 +105,26 @@ const CustomModal = ({ modalType, onClose, onSubmit, response, modalData, loadin
 
 const ProfileViewModal = ({ onClose, modalData, loading }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const profile = modalData || {};
+
+  const [editData, setEditData] = useState({
+    username: profile.username || profile.name || '',
+    email: profile.email || '',
+    mobileNumber: profile.mobileNumber || '',
+    address: profile.address || '',
+  });
+
+  useEffect(() => {
+    setEditData({
+      username: profile.username || profile.name || '',
+      email: profile.email || '',
+      mobileNumber: profile.mobileNumber || '',
+      address: profile.address || '',
+    });
+  }, [profile]);
 
   const hasProfileData = Boolean(
     profile.username || profile.name || profile.email || profile.mobileNumber || profile.address || profile.role
@@ -99,18 +132,89 @@ const ProfileViewModal = ({ onClose, modalData, loading }) => {
 
   const formatRole = (value) => {
     const normalized = toSafeString(value).toUpperCase();
-    if (normalized === "ADMIN") return "Admin";
-    if (normalized === "CUSTOMER") return "Customer";
-    return toSafeString(value) || "Customer";
+    if (normalized === 'ADMIN') return 'Admin';
+    if (normalized === 'CUSTOMER') return 'Customer';
+    return toSafeString(value) || 'Customer';
   };
 
-  const profileFields = [
-    { label: "Username", value: profile.username || profile.name || "Not available", icon: <FiUser /> },
-    { label: "Email", value: profile.email || "Not available", icon: <FiMail /> },
-    { label: "Mobile Number", value: profile.mobileNumber || "Not available", icon: <FiPhone /> },
-    { label: "Address", value: profile.address || "Not available", icon: <FiMapPin /> },
-    { label: "Role", value: formatRole(profile.role), icon: <FiShield /> },
-  ];
+  const formatDate = (val) => {
+    if (!val) return '—';
+    try {
+      const d = new Date(val);
+      if (Number.isNaN(d.getTime())) return String(val);
+      return d.toLocaleString();
+    } catch (e) { return String(val); }
+  };
+
+  const handleChange = (field, value) => setEditData((prev) => ({ ...prev, [field]: value }));
+
+  const hasChanges = () => {
+    return (
+      editData.username !== (profile.username || profile.name || '') ||
+      editData.email !== (profile.email || '') ||
+      editData.mobileNumber !== (profile.mobileNumber || '') ||
+      editData.address !== (profile.address || '')
+    );
+  };
+
+  const handleSave = async () => {
+    setErrorMsg('');
+    if (!hasChanges()) {
+      setErrorMsg('No changes to save');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const payload = {
+        username: editData.username,
+        email: editData.email,
+        mobileNumber: editData.mobileNumber,
+        address: editData.address,
+      };
+
+      let url = `${import.meta.env.VITE_API_URL}/api/users/modify`;
+      let method = 'PUT';
+
+      // If current profile is admin, call admin modify to ensure permissions (admin endpoint requires userId)
+      if ((profile.role || '').toUpperCase() === 'ADMIN' && profile.userId) {
+        url = `${import.meta.env.VITE_API_URL}/admin/user/modify`;
+        method = 'PUT';
+        payload.userId = profile.userId;
+        payload.role = profile.role || 'ADMIN';
+      }
+
+      const res = await fetch(url, {
+        method,
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || data.message || 'Failed to save changes');
+      }
+
+      const updated = await res.json();
+      // update local view
+      setIsEditing(false);
+      if (onClose) {
+        // refresh: close and re-open to trigger parent fetch, or simply merge
+      }
+      // merge returned values into profile (best-effort)
+      Object.assign(profile, {
+        username: updated.username || editData.username,
+        email: updated.email || editData.email,
+        mobileNumber: updated.mobileNumber || editData.mobileNumber,
+        address: updated.address || editData.address,
+      });
+    } catch (err) {
+      setErrorMsg(err.message || 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="profile-details-shell">
@@ -127,15 +231,77 @@ const ProfileViewModal = ({ onClose, modalData, loading }) => {
         <div className="profile-modal-empty">No profile information available.</div>
       ) : (
         <div className="profile-details-list">
-          {profileFields.map((field) => (
-            <div key={field.label} className="profile-detail-item">
-              <div className="profile-detail-icon">{field.icon}</div>
-              <div className="profile-detail-content">
-                <span className="profile-detail-label">{field.label}</span>
-                <strong className="profile-detail-value">{field.value}</strong>
-              </div>
+          <div className="profile-detail-item">
+            <div className="profile-detail-icon"><FiUser /></div>
+            <div className="profile-detail-content">
+              <span className="profile-detail-label">Username</span>
+              {isEditing ? (
+                <InputField id="edit-username" value={editData.username} onChange={(e) => handleChange('username', e.target.value)} />
+              ) : (
+                <strong className="profile-detail-value">{profile.username || profile.name}</strong>
+              )}
             </div>
-          ))}
+          </div>
+
+          <div className="profile-detail-item">
+            <div className="profile-detail-icon"><FiMail /></div>
+            <div className="profile-detail-content">
+              <span className="profile-detail-label">Email</span>
+              {isEditing ? (
+                <InputField id="edit-email" value={editData.email} onChange={(e) => handleChange('email', e.target.value)} />
+              ) : (
+                <strong className="profile-detail-value">{profile.email}</strong>
+              )}
+            </div>
+          </div>
+
+          <div className="profile-detail-item">
+            <div className="profile-detail-icon"><FiPhone /></div>
+            <div className="profile-detail-content">
+              <span className="profile-detail-label">Mobile Number</span>
+              {isEditing ? (
+                <InputField id="edit-mobile" value={editData.mobileNumber} onChange={(e) => handleChange('mobileNumber', e.target.value)} />
+              ) : (
+                <strong className="profile-detail-value">{profile.mobileNumber}</strong>
+              )}
+            </div>
+          </div>
+
+          <div className="profile-detail-item">
+            <div className="profile-detail-icon"><FiMapPin /></div>
+            <div className="profile-detail-content">
+              <span className="profile-detail-label">Address</span>
+              {isEditing ? (
+                <InputField id="edit-address" value={editData.address} onChange={(e) => handleChange('address', e.target.value)} />
+              ) : (
+                <strong className="profile-detail-value">{profile.address}</strong>
+              )}
+            </div>
+          </div>
+
+          <div className="profile-detail-item">
+            <div className="profile-detail-icon"><FiShield /></div>
+            <div className="profile-detail-content">
+              <span className="profile-detail-label">Role</span>
+              <strong className="profile-detail-value">{formatRole(profile.role)}</strong>
+            </div>
+          </div>
+
+          <div className="profile-detail-item">
+            <div className="profile-detail-icon">📌</div>
+            <div className="profile-detail-content">
+              <span className="profile-detail-label">Status</span>
+              <strong className="profile-detail-value">{profile.enabled ? 'Active' : 'Inactive'}</strong>
+            </div>
+          </div>
+
+          <div className="profile-detail-item">
+            <div className="profile-detail-icon">🗓️</div>
+            <div className="profile-detail-content">
+              <span className="profile-detail-label">Joined</span>
+              <strong className="profile-detail-value">{formatDate(profile.createdAt)}</strong>
+            </div>
+          </div>
 
           <div className="profile-detail-item profile-detail-item--password">
             <div className="profile-detail-icon"><FiLock /></div>
@@ -144,17 +310,30 @@ const ProfileViewModal = ({ onClose, modalData, loading }) => {
                 <span className="profile-detail-label">Password</span>
                 <button type="button" className="profile-visibility-btn" onClick={() => setShowPassword((prev) => !prev)}>
                   {showPassword ? <FiEyeOff /> : <FiEye />}
-                  {showPassword ? "Hide" : "Show"}
+                  {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
-              <strong className="profile-detail-value">{showPassword ? "Password is masked for your security" : "********"}</strong>
+              <strong className="profile-detail-value">{showPassword ? 'Password is masked for your security' : '********'}</strong>
             </div>
           </div>
+
         </div>
       )}
 
+      {errorMsg && <div className="auth-alert auth-alert--error">{errorMsg}</div>}
+
       <div className="profile-details-footer">
-        <button type="button" className="primary-action-btn" onClick={onClose}>Close</button>
+        {isEditing ? (
+          <>
+            <PrimaryButton type="button" isLoading={saving} onClick={handleSave} className="form-button">{saving ? 'Saving...' : 'Save'}</PrimaryButton>
+            <button type="button" className="form-button secondary-button" onClick={() => { setIsEditing(false); setErrorMsg(''); setEditData({ username: profile.username || profile.name || '', email: profile.email || '', mobileNumber: profile.mobileNumber || '', address: profile.address || '' }); }}>Cancel</button>
+          </>
+        ) : (
+          <>
+            <button type="button" className="form-button" onClick={() => setIsEditing(true)}>Edit Profile</button>
+            <button type="button" className="form-button secondary-button" onClick={onClose}>Close</button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -400,16 +579,16 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
                     <div className="product-card-body">
                       <div className="product-card-heading">
                         <h3 className="product-name">{getDisplayName(product)}</h3>
-                        <span className="product-card-status">{product.status || "Active"}</span>
+                        <span className={`product-card-status ${((product.status||"") + "").toLowerCase().includes("inactive") ? 'product-card-status--inactive' : ''}`}>{product.status || "Active"}</span>
                       </div>
                       <p className="product-description">{getDisplayDescription(product)}</p>
                       <div className="admin-product-meta">
-                        <span><strong>ID</strong>{product.product_id || product.productId || product.id}</span>
-                        <span><strong>Category</strong>{product.category || product.categoryName || "—"}</span>
-                        <span><strong>Price</strong>₹{Number(product.price || product.amount || 0).toLocaleString()}</span>
-                        <span><strong>Stock</strong>{product.stock || product.quantity || 0}</span>
-                        <span><strong>Status</strong>{product.status || "Active"}</span>
-                        <span><strong>Brand</strong>{product.brand || product.manufacturer || "—"}</span>
+                        <span><strong>ID</strong><span className="meta-value">{product.product_id || product.productId || product.id}</span></span>
+                        <span><strong>Category</strong><span className="meta-value">{product.category || product.categoryName || "—"}</span></span>
+                        <span><strong>Price</strong><span className="meta-value">₹{Number(product.price || product.amount || 0).toLocaleString()}</span></span>
+                        <span><strong>Stock</strong><span className="meta-value">{product.stock || product.quantity || 0}</span></span>
+                        <span><strong>Status</strong><span className="meta-value">{product.status || "Active"}</span></span>
+                        <span><strong>Brand</strong><span className="meta-value">{product.brand || product.manufacturer || "—"}</span></span>
                       </div>
                     </div>
                     <div className="product-card-footer admin-product-actions">
