@@ -116,7 +116,7 @@ export default function RegistrationPage() {
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="Register a user or admin account for SalesSavvy."
+      subtitle="Register for SalesSavvy"
       footer={
         <p className="auth-footer-copy">
           Already have an account? <Link to="/" className="form-link">User login</Link>

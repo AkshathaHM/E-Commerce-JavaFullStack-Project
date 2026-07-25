@@ -79,9 +79,8 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthLayout
-      title="Reset your password"
-      subtitle="Create a fresh password for your SalesSavvy account in just a few seconds."
-      notice="Use the username linked to your account and choose a strong password you can remember."
+      title="Reset Password"
+      subtitle="Enter your username to reset password"
       footer={
         <p className="auth-footer-copy">
           Remembered your password? <Link to={returnTo} className="form-link">Back to login</Link>

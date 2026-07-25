@@ -126,9 +126,8 @@ export default function VerifyOtpPage() {
 
   return (
     <AuthLayout
-      title="Verify your email"
-      subtitle="Enter the 6-digit code sent to your inbox to complete verification."
-      notice="Expired codes can be resent instantly."
+      title="Verify Email"
+      subtitle="Enter the OTP sent to your email"
       footer={
         <p className="auth-footer-copy">
           <Link to="/" className="form-link">Back to login</Link>

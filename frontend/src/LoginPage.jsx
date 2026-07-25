@@ -68,12 +68,10 @@ export default function LoginPage() {
 
   return (
     <AuthLayout
-      title="User login"
-      subtitle="Sign in with your SalesSavvy username and password."
+      title="User Login"
+      subtitle="Sign in to your account"
       footer={
         <p className="auth-footer-copy">
-          Need admin access? <Link to="/admin" className="form-link">Admin login</Link>
-          <br />
           Don’t have an account? <Link to="/register" className="form-link">Create account</Link>
         </p>
       }

@@ -68,13 +68,11 @@ export default function AdminLogin() {
 
   return (
     <AuthLayout
-      title="Admin login"
-      subtitle="Sign in with your admin credentials."
+      title="Admin Login"
+      subtitle="Sign in with admin credentials"
       footer={
         <p className="auth-footer-copy">
           Need a customer account? <Link to="/" className="form-link">User login</Link>
-          <br />
-          Want to register? <Link to="/register" className="form-link">Create account</Link>
         </p>
       }
     >
