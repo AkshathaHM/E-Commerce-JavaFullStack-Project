@@ -11,14 +11,15 @@ import PrimaryButton from './components/PrimaryButton';
 import { Toast } from './Toast';
 import { getDashboardPath, setAuthSession } from './auth';
 
+const BASE_PATH = import.meta.env.BASE_URL || '/';
 const HERO_IMAGES = [
-  '/landing-images/shirts.jpg',
-  '/landing-images/pants.jpg',
-  '/landing-images/phone.jpg',
-  '/landing-images/phones.avif',
-  '/landing-images/tvs.webp',
-  '/landing-images/laps.jpg',
-  '/landing-images/Gemini_Generated_Image_9xwq8q9xwq8q9xwq.png',
+  `${BASE_PATH}landing-images/shirts.jpg`,
+  `${BASE_PATH}landing-images/pants.jpg`,
+  `${BASE_PATH}landing-images/phone.jpg`,
+  `${BASE_PATH}landing-images/phones.avif`,
+  `${BASE_PATH}landing-images/tvs.webp`,
+  `${BASE_PATH}landing-images/laps.jpg`,
+  `${BASE_PATH}landing-images/Gemini_Generated_Image_9xwq8q9xwq8q9xwq.png`,
 ];
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -56,10 +57,18 @@ export default function LandingPage() {
 
   useEffect(() => {
     const interval = window.setInterval(() => {
-      setCurrentImageIndex((index) => (index + 1) % HERO_IMAGES.length);
+      setCurrentImageIndex((prev) => (prev + 1) % HERO_IMAGES.length);
     }, 3000);
 
     return () => window.clearInterval(interval);
+  }, []);
+
+  // Preload hero images to avoid flicker or failed loads in some deploy bases
+  useEffect(() => {
+    HERO_IMAGES.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
   }, []);
 
   useEffect(() => {
