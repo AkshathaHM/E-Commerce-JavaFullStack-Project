@@ -58,7 +58,10 @@ const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
   const { theme } = useContext(ThemeContext);
   const [active, setActive] = useState(false);
   const [optimistic, setOptimistic] = useState(false);
-  const getId = (p) => p.product_id || p.id || p.productId;
+  const getId = (p) => {
+    const raw = p.product_id ?? p.id ?? p.productId;
+    return raw != null ? String(raw) : null;
+  };
   const productId = getId(product);
   const isAdded = productId ? addedProductIds?.has(productId) : false;
 

@@ -4,9 +4,9 @@ export function setCache(key, value, ttlMs = 30000) {
   const expires = Date.now() + ttlMs;
   try {
     const copy = typeof structuredClone === 'function' ? structuredClone(value) : JSON.parse(JSON.stringify(value));
-    store[key] = { value: copy, expires };
+    store[key] = { value: copy, expires, ttlMs, createdAt: Date.now() };
   } catch (e) {
-    store[key] = { value, expires };
+    store[key] = { value, expires, ttlMs, createdAt: Date.now() };
   }
 }
 
@@ -24,9 +24,15 @@ export function getCache(key) {
   }
 }
 
+export function getRawCacheEntry(key) {
+  const entry = store[key];
+  if (!entry || Date.now() > entry.expires) return null;
+  return entry;
+}
+
 export function clearCache(key) {
   if (key) delete store[key];
   else Object.keys(store).forEach(k => delete store[k]);
 }
 
-export default { getCache, setCache, clearCache };
+export default { getCache, getRawCacheEntry, setCache, clearCache };

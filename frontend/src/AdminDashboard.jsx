@@ -173,6 +173,7 @@ const AdminDashboard = () => {
     const cached = getCache(cacheKey) || modalCacheRef.current.products;
     if (cached && !preserveResponse) {
       setModalData(cached);
+      setLoading(false);
       return cached;
     }
 
@@ -197,18 +198,21 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
+    return null;
   };
 
-  const handleViewProfile = async () => {
+  const handleViewProfile = async (forceRefresh = false) => {
     const cacheKey = 'admin_profile';
     const cached = getCache(cacheKey);
+    const shouldShowLoading = !cached || forceRefresh;
+
     if (cached) {
       setModalData(cached);
     }
 
-    setLoading(true);
+    setLoading(shouldShowLoading);
     setResponse(null);
-    if (!cached) {
+    if (shouldShowLoading) {
       setModalData(null);
     }
     try {
@@ -216,7 +220,7 @@ const AdminDashboard = () => {
         method: 'GET',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-      }, 30000).catch(() => null);
+      }, 30000);
 
       if (!profile) return null;
       setCache(cacheKey, profile, 30000);
@@ -390,16 +394,20 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleViewAllUsers = async (data) => {
+  const handleViewAllUsers = async (forceRefresh = false) => {
     const cacheKey = 'admin_users';
     const cached = getCache(cacheKey) || modalCacheRef.current.users;
-    if (cached && !data?.forceRefresh) {
+    const shouldShowLoading = !cached || forceRefresh;
+
+    if (cached) {
       setModalData(cached);
-      return cached;
     }
-    setLoading(true);
+
+    setLoading(shouldShowLoading);
     setResponse(null);
-    setModalData(null);
+    if (shouldShowLoading) {
+      setModalData(null);
+    }
     try {
       const users = await cachedFetch(cacheKey, `${import.meta.env.VITE_API_URL}/admin/user/all`, {
         method: 'GET',
@@ -419,17 +427,28 @@ const AdminDashboard = () => {
     return null;
   };
 
-  const handleOverallRevenue = async (data) => {
-    setLoading(true);
+  const handleOverallRevenue = async (forceRefresh = false) => {
+    const cacheKey = 'admin_business_overall';
+    const cached = getCache(cacheKey);
+    const shouldShowLoading = !cached || forceRefresh;
+
+    if (cached) {
+      setModalData(cached);
+    }
+
+    setLoading(shouldShowLoading);
     setResponse(null);
-    setModalData(null);
+    if (shouldShowLoading) {
+      setModalData(null);
+    }
     try {
-      const revenue = await cachedFetch('admin_business_overall', `${import.meta.env.VITE_API_URL}/admin/business/overall`, {
+      const revenue = await cachedFetch(cacheKey, `${import.meta.env.VITE_API_URL}/admin/business/overall`, {
         method: 'GET',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       }, 30000);
 
+      setCache(cacheKey, revenue, 30000);
       setModalData(revenue);
     } catch (error) {
       setResponse(`Error: ${error.message}`);
@@ -438,18 +457,29 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDailySales = async (data) => {
-    setLoading(true);
+  const handleDailySales = async (data, forceRefresh = false) => {
+    const date = data.date || new Date().toISOString().split('T')[0];
+    const cacheKey = `admin_business_daily_${date}`;
+    const cached = getCache(cacheKey);
+    const shouldShowLoading = !cached || forceRefresh;
+
+    if (cached) {
+      setModalData(cached);
+    }
+
+    setLoading(shouldShowLoading);
     setResponse(null);
-    setModalData(null);
+    if (shouldShowLoading) {
+      setModalData(null);
+    }
     try {
-      const date = data.date || new Date().toISOString().split('T')[0];
-      const sales = await cachedFetch(`admin_business_daily_${date}`, `${import.meta.env.VITE_API_URL}/admin/business/daily?date=${date}`, {
+      const sales = await cachedFetch(cacheKey, `${import.meta.env.VITE_API_URL}/admin/business/daily?date=${date}`, {
         method: 'GET',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       }, 30000);
 
+      setCache(cacheKey, sales, 30000);
       setModalData(sales);
     } catch (error) {
       setResponse(`Error: ${error.message}`);
@@ -458,19 +488,30 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleMonthlySales = async (data) => {
-    setLoading(true);
+  const handleMonthlySales = async (data, forceRefresh = false) => {
+    const month = data.month || new Date().getMonth() + 1;
+    const year = data.year || new Date().getFullYear();
+    const cacheKey = `admin_business_monthly_${year}_${month}`;
+    const cached = getCache(cacheKey);
+    const shouldShowLoading = !cached || forceRefresh;
+
+    if (cached) {
+      setModalData(cached);
+    }
+
+    setLoading(shouldShowLoading);
     setResponse(null);
-    setModalData(null);
+    if (shouldShowLoading) {
+      setModalData(null);
+    }
     try {
-      const month = data.month || new Date().getMonth() + 1;
-      const year = data.year || new Date().getFullYear();
-      const sales = await cachedFetch(`admin_business_monthly_${year}_${month}`, `${import.meta.env.VITE_API_URL}/admin/business/monthly?month=${month}&year=${year}`, {
+      const sales = await cachedFetch(cacheKey, `${import.meta.env.VITE_API_URL}/admin/business/monthly?month=${month}&year=${year}`, {
         method: 'GET',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       }, 30000);
 
+      setCache(cacheKey, sales, 30000);
       setModalData(sales);
     } catch (error) {
       setResponse(`Error: ${error.message}`);
@@ -479,18 +520,29 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleYearlySales = async (data) => {
-    setLoading(true);
+  const handleYearlySales = async (data, forceRefresh = false) => {
+    const year = data.year || new Date().getFullYear();
+    const cacheKey = `admin_business_yearly_${year}`;
+    const cached = getCache(cacheKey);
+    const shouldShowLoading = !cached || forceRefresh;
+
+    if (cached) {
+      setModalData(cached);
+    }
+
+    setLoading(shouldShowLoading);
     setResponse(null);
-    setModalData(null);
+    if (shouldShowLoading) {
+      setModalData(null);
+    }
     try {
-      const year = data.year || new Date().getFullYear();
-      const sales = await cachedFetch(`admin_business_yearly_${year}`, `${import.meta.env.VITE_API_URL}/admin/business/yearly?year=${year}`, {
+      const sales = await cachedFetch(cacheKey, `${import.meta.env.VITE_API_URL}/admin/business/yearly?year=${year}`, {
         method: 'GET',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       }, 30000);
 
+      setCache(cacheKey, sales, 30000);
       setModalData(sales);
     } catch (error) {
       setResponse(`Error: ${error.message}`);

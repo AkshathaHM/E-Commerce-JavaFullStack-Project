@@ -30,9 +30,10 @@ const AdminProductsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const initialAction = location.state?.initialAction || "list";
+  const cachedProducts = getCache('admin_products');
 
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState(() => cachedProducts || []);
+  const [loading, setLoading] = useState(() => !cachedProducts);
   const [response, setResponse] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(initialAction === "add");
   const [editingProduct, setEditingProduct] = useState(null);
@@ -53,6 +54,7 @@ const AdminProductsPage = () => {
     const cached = getCache(cacheKey) || modalCacheRef.current.products;
     if (cached && !preserveResponse) {
       setProducts(cached);
+      setLoading(false);
       return cached;
     }
 
@@ -73,6 +75,7 @@ const AdminProductsPage = () => {
     } finally {
       setLoading(false);
     }
+    return null;
   };
 
   const handleAddProductSubmit = async (productData) => {

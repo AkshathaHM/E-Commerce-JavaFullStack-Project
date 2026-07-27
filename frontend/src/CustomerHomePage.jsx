@@ -1,23 +1,20 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef, useDeferredValue } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useDeferredValue, useRef } from 'react';
 import { CustomerLayout } from './CustomerLayout';
 import { ProductList } from './ProductList';
 import { ProductCardSkeleton } from './components/Skeleton';
 import CustomModal from './CustomModal';
 import { cachedFetch } from './utils/apiClient';
 import { getCache, setCache } from './utils/cache';
+import { useCart } from './CartContext';
 import './assets/styles.css';
 
 export default function CustomerHomePage() {
-  const [allProducts, setAllProducts] = useState(() => getCache('products_all') || []);
-  const [cartCount, setCartCount] = useState(() => getCache(`cart_count_${localStorage.getItem('username') || 'Guest'}`) || 0);
+  const { cartCount, addedProductIds, addProductToCart, incrementCartCount, setCartCount } = useCart();
+  const initialProducts = getCache('products_all') || [];
+  const [allProducts, setAllProducts] = useState(initialProducts);
   const [username, setUsername] = useState(localStorage.getItem('username') || 'Guest');
-  const [addedCartIds, setAddedCartIds] = useState(() => {
-    const key = `added_cart_products_${localStorage.getItem('username') || 'Guest'}`;
-    const stored = localStorage.getItem(key);
-    return new Set(stored ? JSON.parse(stored) : []);
-  });
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(() => !getCache('products_all'));
+  const [loading, setLoading] = useState(() => initialProducts.length === 0);
   const [error, setError] = useState('');
   const [profileModalType, setProfileModalType] = useState(null);
   const [profileModalData, setProfileModalData] = useState(null);
@@ -31,25 +28,40 @@ export default function CustomerHomePage() {
     return token ? { Authorization: `Bearer ${token}` } : {};
   }, []);
 
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
+  const fetchProducts = useCallback(async (forceReload = false) => {
+    const cacheKey = 'products_all';
+    const cachedProducts = getCache(cacheKey);
+    if (cachedProducts && !forceReload) {
+      setAllProducts(cachedProducts);
+      setLoading(false);
+    } else if (!cachedProducts) {
+      setLoading(true);
+    }
+
     setError('');
 
     try {
       const data = await cachedFetch(
-        'products_all',
+        cacheKey,
         `${import.meta.env.VITE_API_URL}/api/products`,
         { credentials: 'include', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() } },
         60000,
       );
 
       const productList = Array.isArray(data?.products) ? data.products : (Array.isArray(data) ? data : []);
-      setAllProducts(productList);
-      setUsername(data?.user?.name || data?.user?.username || localStorage.getItem('username') || 'Guest');
-      setCache('products_all', productList, 60000);
+      if (productList.length) {
+        setAllProducts(productList);
+        setCache(cacheKey, productList, 60000);
+      }
+
+      if (data?.user) {
+        setUsername(data.user.name || data.user.username || localStorage.getItem('username') || 'Guest');
+      }
     } catch (err) {
       console.error(err);
-      setError('Unable to load products right now.');
+      if (!cachedProducts) {
+        setError('Unable to load products right now.');
+      }
     } finally {
       setLoading(false);
     }
@@ -66,14 +78,13 @@ export default function CustomerHomePage() {
     const cachedCount = getCache(cacheKey);
     if (cachedCount !== null) {
       setCartCount(cachedCount);
-      return;
     }
 
     try {
       const data = await cachedFetch(cacheKey, `${import.meta.env.VITE_API_URL}/api/cart/items/count?username=${encodeURIComponent(activeUsername)}`, {
         credentials: 'include',
         headers: getAuthHeaders(),
-      }, 30000).catch(() => null);
+      }, 30000);
       if (data !== null && data !== undefined) {
         setCartCount(data);
         setCache(cacheKey, data, 30000);
@@ -81,7 +92,7 @@ export default function CustomerHomePage() {
     } catch (e) {
       console.warn('Cart count fetch failed', e);
     }
-  }, [getAuthHeaders, username]);
+  }, [getAuthHeaders, username, setCartCount]);
 
   useEffect(() => {
     fetchProducts();
@@ -90,12 +101,6 @@ export default function CustomerHomePage() {
   useEffect(() => {
     fetchCartCount();
   }, [fetchCartCount]);
-
-  useEffect(() => {
-    const key = `added_cart_products_${username || 'Guest'}`;
-    const stored = localStorage.getItem(key);
-    setAddedCartIds(new Set(stored ? JSON.parse(stored) : []));
-  }, [username]);
 
   const filteredProducts = useMemo(() => {
     const normalizedSearch = deferredSearchTerm.trim().toLowerCase();
@@ -116,14 +121,9 @@ export default function CustomerHomePage() {
   }, [allProducts, deferredSearchTerm]);
 
   const handleAddToCart = useCallback(async (productId) => {
-    if (!productId) return;
+    if (!productId) return false;
 
     const activeUsername = localStorage.getItem('username') || username || 'Guest';
-    setCartCount((prev) => {
-      const next = prev + 1;
-      cartCountCache.current = { username: activeUsername, count: next };
-      return next;
-    });
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/add`, {
@@ -134,22 +134,17 @@ export default function CustomerHomePage() {
       });
 
       if (!res.ok) {
-        setCartCount((prev) => Math.max(0, prev - 1));
         return false;
       }
 
-      setAddedCartIds((prev) => {
-        const next = new Set(prev);
-        next.add(productId);
-        localStorage.setItem(`added_cart_products_${activeUsername}`, JSON.stringify(Array.from(next)));
-        return next;
-      });
+      addProductToCart(productId);
+      incrementCartCount();
       return true;
     } catch (e) {
-      setCartCount((prev) => Math.max(0, prev - 1));
+      console.error('Add to cart failed:', e);
       return false;
     }
-  }, [getAuthHeaders, username]);
+  }, [getAuthHeaders, username, addProductToCart, incrementCartCount]);
 
   const handleOpenProfileModal = useCallback(async () => {
     setProfileModalType('viewProfile');
@@ -181,7 +176,7 @@ export default function CustomerHomePage() {
   const showSkeletons = loading && allProducts.length === 0;
 
   return (
-    <CustomerLayout cartCount={cartCount} username={username}>
+    <CustomerLayout username={username}>
       <div className="main-content">
         <section className="home-hero">
           <div className="home-hero-content">
@@ -218,7 +213,7 @@ export default function CustomerHomePage() {
             ))}
           </div>
         ) : (
-          <ProductList products={filteredProducts} onAddToCart={handleAddToCart} addedProductIds={addedCartIds} error={error} />
+          <ProductList products={filteredProducts} onAddToCart={handleAddToCart} addedProductIds={addedProductIds} error={error} />
         )}
       </div>
 

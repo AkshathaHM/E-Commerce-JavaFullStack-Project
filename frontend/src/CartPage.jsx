@@ -9,12 +9,15 @@ import { getCache, setCache, clearCache } from './utils/cache';
 import { cachedFetch, invalidateCache } from './utils/apiClient';
 import { getPaymentErrorDetails } from "./utils/paymentFlow";
 import { getDerivedOrderStatus, getStatusLabel } from "./utils/orderStatus";
+import { useCart } from './CartContext';
 
 const CartPage = () => {
-  const [cartItems, setCartItems] = useState([]);
-  const [subtotal, setSubtotal] = useState("0.00");
-  const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(true);
+  const { cartItems: sharedCartItems, updateCartState, removeProductFromCart } = useCart();
+  const cachedCart = getCache('cart_items');
+  const [cartItems, setCartItems] = useState(() => cachedCart?.items || []);
+  const [subtotal, setSubtotal] = useState(() => cachedCart?.subtotal || '0.00');
+  const [username, setUsername] = useState(() => cachedCart?.username || '');
+  const [loading, setLoading] = useState(() => !cachedCart);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showPaymentToast, setShowPaymentToast] = useState(false);
   const [paymentSuccessData, setPaymentSuccessData] = useState(null);
@@ -127,15 +130,18 @@ const CartPage = () => {
       setUsername(cached.username || 'Guest');
       setSubtotal(cached.subtotal || '0.00');
       setLoading(false);
-      fetchCartItems();
-      return;
     }
 
-    setLoading(true);
-    fetchCartItems();
-  }, []);
+    if (sharedCartItems.length) {
+      setCartItems(sharedCartItems);
+      const calc = sharedCartItems.reduce((sum, item) => sum + Number(item.total_price || 0), 0).toFixed(2);
+      setSubtotal(calc);
+    }
 
-  const fetchCartItems = async () => {
+    fetchCartItems();
+  }, [fetchCartItems, sharedCartItems]);
+
+  const fetchCartItems = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -143,7 +149,7 @@ const CartPage = () => {
       const data = await cachedFetch('cart_items', `${import.meta.env.VITE_API_URL}/api/cart/items`, {
         credentials: 'include',
         headers: { ...getAuthHeaders() },
-      }, 20000).catch(() => null);
+      }, 20000);
 
       if (!data) {
         setCartItems([]);
@@ -175,6 +181,7 @@ const CartPage = () => {
       setCartItems(formatted);
       setUsername(data?.username || 'Guest');
       setSubtotal(calc);
+      updateCartState(formatted);
 
       try { setCache('cart_items', { items: formatted, username: data?.username || 'Guest', subtotal: calc }, 20000); } catch {}
     } catch (err) {
@@ -186,7 +193,7 @@ const CartPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getAuthHeaders, getDisplayImageUrl, getDisplayDescription, getDisplayName, updateCartState]);
 
   // Remove item
   const handleRemoveItem = useCallback(async (productId) => {
@@ -208,6 +215,8 @@ const CartPage = () => {
           const newSubtotal = removed ? Math.max(0, Number(subtotal) - Number(removed.total_price)).toFixed(2) : subtotal;
           try { setCache('cart_items', { items: next, username, subtotal: newSubtotal }, 20000); } catch (e) {}
           setSubtotal(newSubtotal);
+          updateCartState(next);
+          removeProductFromCart(id);
           return next;
         });
       } else {
@@ -243,6 +252,7 @@ const CartPage = () => {
       const newSubtotal = nextItems.reduce((sum, item) => sum + Number(item.total_price), 0).toFixed(2);
       try { setCache('cart_items', { items: nextItems, username, subtotal: newSubtotal }, 20000); } catch (e) {}
       setSubtotal(newSubtotal);
+      updateCartState(nextItems);
       return nextItems;
     });
 
@@ -447,7 +457,7 @@ const CartPage = () => {
 
   if (loading) {
     return (
-      <CustomerLayout cartCount="0" username={username || 'Guest'}>
+      <CustomerLayout username={username || 'Guest'}>
         <div className="cart-container">
           <div className="cart-page">
             <div className="cart-header">
@@ -475,7 +485,7 @@ const CartPage = () => {
 
   if (error) {
     return (
-      <CustomerLayout cartCount="0" username={username || 'Guest'}>
+      <CustomerLayout username={username || 'Guest'}>
         <div className="cart-page empty">
           <h2>{error}</h2>
           <p>Please log in to access your cart items.</p>
@@ -487,7 +497,7 @@ const CartPage = () => {
 
   if (cartItems.length === 0) {
     return (
-      <CustomerLayout cartCount="0" username={username || 'Guest'}>
+      <CustomerLayout username={username || 'Guest'}>
         <div className="cart-page empty">
           <h2>Your Cart is Empty</h2>
           <p>Start adding some awesome products!</p>
@@ -501,7 +511,7 @@ const CartPage = () => {
   }
 
   return (
-    <CustomerLayout cartCount={totalItems} username={username}>
+    <CustomerLayout username={username}>
       <Toast
         message={toastMessage || "Payment successful!"}
         show={showPaymentToast}

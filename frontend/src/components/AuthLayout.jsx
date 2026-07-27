@@ -1,9 +1,10 @@
+import React from 'react';
 import PropTypes from 'prop-types';
 import Logo from '../Logo';
 import AuthCard from './AuthCard';
 import ThemeToggleButton from '../ThemeToggleButton';
 
-export default function AuthLayout({ title, subtitle, notice, children, footer }) {
+function AuthLayout({ title, subtitle, notice, children, footer }) {
   return (
     <div className="auth-page">
       <div className="auth-page__container">
@@ -39,3 +40,5 @@ AuthLayout.propTypes = {
   children: PropTypes.node.isRequired,
   footer: PropTypes.node,
 };
+
+export default React.memo(AuthLayout);

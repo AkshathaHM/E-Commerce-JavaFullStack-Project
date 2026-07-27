@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { CustomerLayout } from './CustomerLayout';
 import { cachedFetch } from './utils/apiClient';
 import { getAuthHeaders } from './auth';
+import { getCache, setCache } from './utils/cache';
 
 export default function ProfilePage() {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const initialProfile = getCache('profile_data') || null;
+  const [profile, setProfile] = useState(initialProfile);
+  const [loading, setLoading] = useState(() => !initialProfile);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 

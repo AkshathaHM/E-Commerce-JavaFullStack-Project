@@ -147,15 +147,23 @@ export default function OrderPage() {
   }, []);
 
   const fetchOrders = useCallback(async (nextPage = 0, append = false) => {
-    if (!append) {
+    const cacheKey = `orders_page_${nextPage}`;
+    const cachedPage = getCache(cacheKey);
+
+    if (cachedPage && !append) {
+      setOrders(Array.isArray(cachedPage) ? cachedPage : cachedPage || []);
+      setLoading(false);
+      setError(null);
+    } else if (!cachedPage && !append) {
       setLoading(true);
       setError(null);
-    } else {
+    }
+
+    if (append && !cachedPage) {
       setIsLoadingMore(true);
     }
 
     try {
-      const cacheKey = `orders_page_${nextPage}`;
       const data = await cachedFetch(cacheKey, `${import.meta.env.VITE_API_URL}/api/orders?page=${nextPage}&size=5`, {
         credentials: 'include',
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
@@ -172,7 +180,9 @@ export default function OrderPage() {
       setUsername(data?.username || 'Guest');
       setError(null);
     } catch (err) {
-      setError(err.message || 'Unable to load orders.');
+      if (!cachedPage) {
+        setError(err.message || 'Unable to load orders.');
+      }
     } finally {
       setLoading(false);
       setIsLoadingMore(false);

@@ -571,10 +571,10 @@ button.button--ghost:hover,
 
 .theme-toggle {
   position: absolute;
-  top: 22px;
-  right: 22px;
-  width: 42px;
-  height: 42px;
+  top: 18px;
+  right: 18px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -582,12 +582,17 @@ button.button--ghost:hover,
   background: var(--card);
   border: 1px solid var(--border);
   cursor: pointer;
-  transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+  transition: color 0.25s ease, transform 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
   color: var(--text);
 }
 
+.theme-toggle svg {
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
 .theme-toggle:hover {
-  transform: rotate(180deg);
+  transform: scale(1.05);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.04);
 }
 
 .password-toggle {
@@ -673,6 +678,57 @@ button.button--ghost:hover,
 .auth-page__container,
 .auth-page__panel {
   width: min(560px, 100%);
+}
+
+.auth-card {
+  padding: 32px;
+  border-radius: var(--radius-sm);
+  max-width: 560px;
+  width: min(100%, 560px);
+  margin: 0 auto;
+  background: var(--card);
+}
+
+.app-loading-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.app-loading-spinner {
+  width: 42px;
+  height: 42px;
+  border: 4px solid rgba(15, 23, 42, 0.12);
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: app-spin 950ms linear infinite;
+}
+
+@keyframes app-spin {
+  to { transform: rotate(360deg); }
+}
+
+.auth-card--error-boundary {
+  text-align: center;
+  padding: 36px;
+}
+
+@media (max-width: 900px) {
+  .auth-card {
+    padding: 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .auth-card {
+    padding: 24px;
+  }
 }
 
 .auth-card__brand {

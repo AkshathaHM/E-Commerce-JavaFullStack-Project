@@ -3,9 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { CartIcon } from './CartIcon';
 import { ProfileDropdown } from './ProfileDropdown';
 import ThemeToggleButton from './ThemeToggleButton';
+import { useCart } from './CartContext';
 
 export const CustomerHeader = memo(function CustomerHeader({ cartCount = 0, username = 'Guest' }) {
   const navigate = useNavigate();
+  const { cartCount: sharedCartCount } = useCart();
+  const effectiveCartCount = typeof sharedCartCount === 'number' ? sharedCartCount : cartCount;
+  const effectiveUsername = username || localStorage.getItem('username') || 'Guest';
 
   return (
     <header className="app-header app-header--customer">
@@ -27,7 +31,7 @@ export const CustomerHeader = memo(function CustomerHeader({ cartCount = 0, user
           <ThemeToggleButton />
           <CartIcon count={cartCount} />
           <ProfileDropdown
-            username={username}
+            username={effectiveUsername}
             variant="customer"
             menuItems={[
               { id: 'profile', label: 'View Profile', icon: '👤', to: '/profile' },

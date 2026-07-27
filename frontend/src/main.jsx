@@ -4,7 +4,13 @@ import './index.css'
 import './components/OrderTracking.css'
 import App from './App.jsx'
 
-createRoot(document.getElementById('root')).render(
+const container = document.getElementById('root')
+if (!container) {
+  throw new Error('Root element not found')
+}
+
+const root = createRoot(container)
+root.render(
   <StrictMode>
     <App />
   </StrictMode>,

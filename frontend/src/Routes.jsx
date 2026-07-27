@@ -58,6 +58,7 @@ const AppRoutes = () => {
       <Route path="/admin" element={<PublicRoute element={<Suspense fallback={pageFallback}><AdminLogin /></Suspense>} />} />
       <Route path="/admindashboard" element={<ProtectedRoute element={<Suspense fallback={pageFallback}><AdminDashboard /></Suspense>} allowedRole="ADMIN" />} />
       <Route path="/admin/products" element={<ProtectedRoute element={<Suspense fallback={pageFallback}><AdminProductsPage /></Suspense>} allowedRole="ADMIN" />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };
