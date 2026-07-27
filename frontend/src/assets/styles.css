@@ -960,16 +960,17 @@ button.button--ghost:hover,
 }
 
 .auth-hero-panel {
-  background: linear-gradient(180deg, rgba(56,189,248,0.12), rgba(30,58,138,0.95));
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(9, 17, 31, 0.96));
+  border: 1px solid rgba(96, 165, 250, 0.18);
   border-radius: 34px;
   padding: 32px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   gap: 24px;
   color: var(--text);
   min-height: 540px;
+  max-width: 420px;
 }
 
 .auth-hero-panel h2 {
@@ -984,11 +985,28 @@ button.button--ghost:hover,
   line-height: 1.8;
 }
 
-.auth-hero-panel img {
+.auth-hero-panel__illustration {
   width: 100%;
   border-radius: 28px;
   object-fit: cover;
   box-shadow: 0 28px 65px rgba(0, 0, 0, 0.22);
+  min-height: 240px;
+}
+
+.panel-copy {
+  margin-top: 0;
+  color: rgba(255,255,255,0.75);
+}
+
+.panel-feature-list {
+  margin: 20px 0 0;
+  padding-left: 20px;
+  color: rgba(255,255,255,0.75);
+  list-style: disc;
+}
+
+.panel-feature-list li {
+  margin-bottom: 10px;
 }
 
 @media (min-width: 1024px) {
@@ -1168,6 +1186,27 @@ button.button--ghost:hover,
   color: var(--text2);
   font-size: 0.95rem;
   text-align: center;
+}
+
+.auth-footer-row {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.button-link {
+  background: transparent;
+  border: none;
+  color: var(--brand);
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.button-link:hover,
+.button-link:focus-visible {
+  color: color-mix(in srgb, var(--brand) 80%, #000 20%);
 }
 
 .otp-verification-card {
@@ -1484,7 +1523,9 @@ button.button--ghost:hover,
 }
 
 .landing-header__button-icon {
-  display: none;
+  display: inline-flex;
+  margin-right: 0.7rem;
+  font-size: 0.95rem;
 }
 
 .landing-hero {
@@ -1509,13 +1550,6 @@ button.button--ghost:hover,
   pointer-events: none;
   will-change: opacity, transform;
 }
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0;
-  transform: scale(1.02);
-  transition: opacity 1.2s ease, transform 10s ease;
-}
 
 .landing-hero__bg--active {
   opacity: 1;
@@ -1525,9 +1559,15 @@ button.button--ghost:hover,
 .landing-hero__overlay {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 20%, rgba(255,255,255,0.08), transparent 25%),
-    linear-gradient(180deg, rgba(10,12,18,0.24), rgba(10,12,18,0.92));
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.58), rgba(0, 0, 0, 0.86));
   pointer-events: none;
+}
+
+.landing-hero__bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
 }
 
 .landing-hero__content {

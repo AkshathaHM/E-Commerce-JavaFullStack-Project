@@ -3,8 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { FaUserPlus, FaSignInAlt, FaUserShield } from 'react-icons/fa';
 import ThemeToggleButton from './ThemeToggleButton';
 
-export function LandingHeader() {
+export function LandingHeader({ onOpenModal }) {
   const navigate = useNavigate();
+  const openModal = (type, fallbackPath) => {
+    if (typeof onOpenModal === 'function') {
+      onOpenModal(type);
+      return;
+    }
+
+    navigate(fallbackPath);
+  };
 
   return (
     <header className="landing-header">
@@ -24,15 +32,15 @@ export function LandingHeader() {
         </button>
 
         <div className="landing-header__actions">
-          <button type="button" className="landing-header__button" onClick={() => navigate('/register')}>
+          <button type="button" className="landing-header__button" onClick={() => openModal('signup', '/register')}>
             <FaUserPlus className="landing-header__button-icon" />
             Sign Up
           </button>
-          <button type="button" className="landing-header__button" onClick={() => navigate('/login')}>
+          <button type="button" className="landing-header__button" onClick={() => openModal('signin', '/login')}>
             <FaSignInAlt className="landing-header__button-icon" />
             Sign In
           </button>
-          <button type="button" className="landing-header__button" onClick={() => navigate('/admin')}>
+          <button type="button" className="landing-header__button" onClick={() => openModal('admin', '/admin')}>
             <FaUserShield className="landing-header__button-icon" />
             Admin Sign In
           </button>
