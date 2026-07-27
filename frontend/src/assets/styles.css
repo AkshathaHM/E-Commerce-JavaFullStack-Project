@@ -1162,68 +1162,6 @@ button[type="submit"]:focus-visible {
   }
 }
 
-.auth-card__brand {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 24px;
-}
-
-.auth-card--auth-layout .auth-card__brand {
-  margin-bottom: 28px;
-}
-
-.auth-brand-shell {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  color: var(--text);
-  text-decoration: none;
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-}
-
-.auth-brand-shell:hover .brand-name,
-.auth-brand-shell:hover .auth-admin-badge {
-  color: var(--brand);
-}
-
-.auth-brand-name-group {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-}
-
-.auth-admin-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--brand);
-  color: var(--on-brand, #fff);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.auth-brand-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.auth-brand-label {
-  margin: 0;
-  color: var(--heading);
-  font-size: 1.75rem;
-  font-weight: 700;
-}
-
 .auth-brand-tagline {
   margin: 0;
   color: var(--text2);
@@ -1649,40 +1587,52 @@ button[type="submit"]:focus-visible {
   gap: 12px;
 }
 
-/* enforce logo stays left and actions are pushed to extreme right */
-.brand-shell,
-.logo-container {
-  flex: 0 0 auto;
-}
+  .landing-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text);
+    font-weight: 700;
+    text-decoration: none;
+  }
 
-.header-actions,
-.app-header__actions,
-.landing-header__actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
+  .landing-brand .brand-logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+  }
 
-/* ensure theme toggle remains visually far-right */
-.theme-switch {
-  margin-left: 8px;
-}
+  .landing-brand .brand-name {
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+  }
 
-.landing-header__button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 20px;
-  min-width: 120px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  background: var(--brand);
-  color: var(--button-text);
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-}
+  /* enforce logo stays left and actions are pushed to extreme right */
+  .brand-shell,
+  .logo-container {
+    flex: 0 0 auto;
+  }
+
+  .header-actions,
+  .app-header__actions,
+  .landing-header__actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  /* ensure theme toggle remains visually far-right */
+  .theme-switch {
+    margin-left: 8px;
+  }
+
+  .landing-header__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 18px;
+    min-width: 110px;
 
 .landing-header__button:hover {
   background: color-mix(in srgb, var(--brand) 75%, #000 25%);
@@ -1846,13 +1796,13 @@ button[type="submit"]:focus-visible {
   box-shadow: 0 0 0 4px rgba(255,255,255,0.14);
 }
 
-@media (max-width: 860px) {
+@media (max-width: 980px) {
   .landing-header__inner,
   .app-header__inner,
   .header-content,
   .landing-hero__content {
-    padding-left: 18px;
-    padding-right: 18px;
+    padding-left: 20px;
+    padding-right: 20px;
   }
 
   .landing-header__actions,
@@ -1862,13 +1812,22 @@ button[type="submit"]:focus-visible {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 860px) {
   .landing-header__inner,
   .app-header__inner,
   .header-content {
     flex-direction: column;
     align-items: stretch;
-    padding: 20px 18px;
+    padding: 18px 18px;
+  }
+
+  .landing-header__inner {
+    gap: 14px;
+  }
+
+  .landing-brand {
+    justify-content: space-between;
+    width: 100%;
   }
 
   .landing-header__actions,
@@ -1886,8 +1845,53 @@ button[type="submit"]:focus-visible {
     max-width: 100%;
   }
 
+  .landing-header__button {
+    min-width: auto;
+    padding: 12px 16px;
+  }
+
   .landing-hero__content {
     padding: 48px 18px;
+  }
+}
+
+@media (max-width: 640px) {
+  .landing-header__inner {
+    padding: 16px 16px;
+  }
+
+  .landing-brand {
+    gap: 10px;
+  }
+
+  .landing-brand .brand-logo {
+    width: 34px;
+    height: 34px;
+  }
+
+  .landing-brand .brand-name {
+    font-size: 0.95rem;
+  }
+
+  .landing-header__button {
+    padding: 10px 16px;
+  }
+}
+
+@media (max-width: 520px) {
+  .landing-header__inner {
+    padding: 14px 14px;
+  }
+
+  .landing-header__actions,
+  .app-header__actions,
+  .header-actions {
+    gap: 8px;
+  }
+
+  .landing-header__button {
+    font-size: 0.95rem;
+    padding: 10px 14px;
   }
 }
 

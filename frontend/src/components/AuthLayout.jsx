@@ -62,30 +62,7 @@ function AuthLayout({ title, subtitle, notice, children, footer, onClose, varian
       <div className="auth-page__container" ref={dialogRef}>
         <div className="auth-page__content">
           <AuthCard className="auth-card--auth-layout auth-card--popup">
-            <div className="auth-card__brand">
-              <button
-                type="button"
-                className="brand-shell auth-brand-shell"
-                onClick={() => navigate(brandTarget)}
-                aria-label="Go to SalesSavvy homepage"
-              >
-                <img
-                  src="/logo.png"
-                  alt="SalesSavvy"
-                  className="brand-logo"
-                  onError={(event) => {
-                    event.currentTarget.onerror = null;
-                    event.currentTarget.src = '/images/no-image.png';
-                  }}
-                />
-                <div className="auth-brand-name-group">
-                  <span className="brand-name">SalesSavvy</span>
-                  {variant === 'admin' && <span className="admin-badge auth-admin-badge">Admin</span>}
-                </div>
-              </button>
-            </div>
-
-            <div className="auth-card__intro">
+              <div className="auth-card__intro">
               <h1 className="auth-card__title">{title}</h1>
               <p className="auth-card__subtitle">{subtitle}</p>
               {notice && <div className="auth-card__notice">{notice}</div>}

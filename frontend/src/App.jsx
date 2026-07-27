@@ -3,7 +3,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import AppRoutes from './Routes';
 import './assets/styles.css';
 import { ThemeProvider } from './ThemeContext';
-import { clearAuthSession, isSessionExpired } from './auth';
+import { clearAuthSession, isAuthenticated, isSessionExpired } from './auth';
 import ErrorBoundary from './ErrorBoundary';
 import { cachedFetch } from './utils/apiClient';
 import { getCache, setCache } from './utils/cache';
@@ -18,6 +18,11 @@ function AppWrapper() {
   const [userProfile, setUserProfile] = useState(() => getCache('profile_me') || null);
 
   const updateProfile = useCallback(async () => {
+    if (!isAuthenticated()) {
+      clearAuthSession();
+      return;
+    }
+
     try {
       const data = await cachedFetch(
         'profile_me',
@@ -35,6 +40,13 @@ function AppWrapper() {
   }, []);
 
   const handler = useCallback(async (detail) => {
+    if (!isAuthenticated()) {
+      clearAuthSession();
+      setModalType(null);
+      detail?.onComplete?.();
+      return;
+    }
+
     const cached = getCache('profile_me');
     setModalType('viewProfile');
     if (cached) {
