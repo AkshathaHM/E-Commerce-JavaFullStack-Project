@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { HiMoon, HiSun } from 'react-icons/hi';
+import { FaMoon, FaSun } from 'react-icons/fa';
 import { ThemeContext } from './ThemeContext';
 
 export default function ThemeToggleButton() {
@@ -14,7 +14,7 @@ export default function ThemeToggleButton() {
       aria-label="Toggle theme"
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      {isDark ? <HiSun size={22} color="currentColor" /> : <HiMoon size={22} color="currentColor" />}
+      {isDark ? <FaSun size={20} color="currentColor" /> : <FaMoon size={20} color="currentColor" />}
     </button>
   );
 }

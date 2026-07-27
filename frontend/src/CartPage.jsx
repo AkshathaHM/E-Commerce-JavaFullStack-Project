@@ -114,35 +114,10 @@ const CartPage = () => {
   }, []);
 
   // Fetch cart items
-  useEffect(() => {
-    if (!authTokenExists()) {
-      setError('Please log in to view your cart.');
-      setLoading(false);
-      setCartItems([]);
-      setUsername('Guest');
-      setSubtotal('0.00');
-      return;
+  const fetchCartItems = useCallback(async ({ showLoading = true } = {}) => {
+    if (showLoading) {
+      setLoading(true);
     }
-
-    const cached = getCache('cart_items');
-    if (cached) {
-      setCartItems(cached.items || []);
-      setUsername(cached.username || 'Guest');
-      setSubtotal(cached.subtotal || '0.00');
-      setLoading(false);
-    }
-
-    if (sharedCartItems.length) {
-      setCartItems(sharedCartItems);
-      const calc = sharedCartItems.reduce((sum, item) => sum + Number(item.total_price || 0), 0).toFixed(2);
-      setSubtotal(calc);
-    }
-
-    fetchCartItems();
-  }, [fetchCartItems, sharedCartItems]);
-
-  const fetchCartItems = useCallback(async () => {
-    setLoading(true);
     setError(null);
 
     try {
@@ -195,6 +170,33 @@ const CartPage = () => {
     }
   }, [getAuthHeaders, getDisplayImageUrl, getDisplayDescription, getDisplayName, updateCartState]);
 
+  useEffect(() => {
+    if (!authTokenExists()) {
+      setError('Please log in to view your cart.');
+      setLoading(false);
+      setCartItems([]);
+      setUsername('Guest');
+      setSubtotal('0.00');
+      return;
+    }
+
+    const cached = getCache('cart_items');
+    if (cached) {
+      setCartItems(cached.items || []);
+      setUsername(cached.username || 'Guest');
+      setSubtotal(cached.subtotal || '0.00');
+      setLoading(false);
+    }
+
+    if (sharedCartItems.length) {
+      setCartItems(sharedCartItems);
+      const calc = sharedCartItems.reduce((sum, item) => sum + Number(item.total_price || 0), 0).toFixed(2);
+      setSubtotal(calc);
+    }
+
+    fetchCartItems({ showLoading: !cached });
+  }, [fetchCartItems, sharedCartItems]);
+
   // Remove item
   const handleRemoveItem = useCallback(async (productId) => {
     const id = productId;
@@ -209,16 +211,15 @@ const CartPage = () => {
       });
 
       if (res.ok || res.status === 204) {
-        setCartItems((prev) => {
-          const next = prev.filter((i) => getItemId(i) !== id);
-          const removed = prev.find((i) => getItemId(i) === id);
-          const newSubtotal = removed ? Math.max(0, Number(subtotal) - Number(removed.total_price)).toFixed(2) : subtotal;
-          try { setCache('cart_items', { items: next, username, subtotal: newSubtotal }, 20000); } catch (e) {}
-          setSubtotal(newSubtotal);
-          updateCartState(next);
-          removeProductFromCart(id);
-          return next;
-        });
+        const nextItems = cartItems.filter((i) => getItemId(i) !== id);
+        const removed = cartItems.find((i) => getItemId(i) === id);
+        const newSubtotal = removed ? Math.max(0, Number(subtotal) - Number(removed.total_price)).toFixed(2) : subtotal;
+
+        setCartItems(nextItems);
+        setSubtotal(newSubtotal);
+        updateCartState(nextItems);
+        removeProductFromCart(id);
+        try { setCache('cart_items', { items: nextItems, username, subtotal: newSubtotal }, 20000); } catch (e) {}
       } else {
         throw new Error(await res.text() || "Remove failed");
       }
@@ -226,53 +227,46 @@ const CartPage = () => {
       console.error("Remove failed:", err);
       alert("Could not remove item. Please try again.");
     }
-  }, [getAuthHeaders, username, subtotal]);
+  }, [cartItems, getAuthHeaders, username, subtotal, updateCartState, removeProductFromCart]);
 
   // Update quantity
   const handleQuantityChange = useCallback(async (productId, delta) => {
-    let requestedQuantity = null;
+    const item = cartItems.find((i) => getItemId(i) === productId);
+    if (!item) return;
 
-    setCartItems((prev) => {
-      const item = prev.find((i) => getItemId(i) === productId);
-      if (!item) return prev;
+    const newQty = item.quantity + delta;
+    if (newQty <= 0) {
+      await handleRemoveItem(productId);
+      return;
+    }
 
-      const newQty = item.quantity + delta;
-      if (newQty <= 0) {
-        handleRemoveItem(productId);
-        return prev;
-      }
+    const nextItems = cartItems.map((i) =>
+      getItemId(i) === productId
+        ? { ...i, quantity: newQty, total_price: (Number(i.price_per_unit) * newQty).toFixed(2) }
+        : i
+    );
+    const newSubtotal = nextItems.reduce((sum, item) => sum + Number(item.total_price), 0).toFixed(2);
 
-      requestedQuantity = newQty;
-      const nextItems = prev.map((i) =>
-        getItemId(i) === productId
-          ? { ...i, quantity: newQty, total_price: (Number(i.price_per_unit) * newQty).toFixed(2) }
-          : i
-      );
-
-      const newSubtotal = nextItems.reduce((sum, item) => sum + Number(item.total_price), 0).toFixed(2);
-      try { setCache('cart_items', { items: nextItems, username, subtotal: newSubtotal }, 20000); } catch (e) {}
-      setSubtotal(newSubtotal);
-      updateCartState(nextItems);
-      return nextItems;
-    });
-
-    if (requestedQuantity === null) return;
+    setCartItems(nextItems);
+    setSubtotal(newSubtotal);
+    updateCartState(nextItems);
+    try { setCache('cart_items', { items: nextItems, username, subtotal: newSubtotal }, 20000); } catch (e) {}
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/update`, {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ username, productId, quantity: requestedQuantity }),
+        body: JSON.stringify({ username, productId, quantity: newQty }),
       });
 
       if (!res.ok) throw new Error(await res.text() || "Update failed");
     } catch (err) {
       console.error("Qty update failed:", err);
       alert("Could not update quantity. Please try again.");
-      fetchCartItems();
+      fetchCartItems({ showLoading: false });
     }
-  }, [cartItems, getAuthHeaders, handleRemoveItem]);
+  }, [cartItems, getAuthHeaders, handleRemoveItem, username, updateCartState]);
 
   // stable callbacks for child components
   const handleIncrease = useCallback((id) => handleQuantityChange(id, +1), [handleQuantityChange]);

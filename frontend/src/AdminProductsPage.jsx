@@ -285,11 +285,10 @@ const AdminProductsPage = () => {
 
           <div className="manage-products-header">
             <div>
-              <p className="section-eyebrow">Product management</p>
               <h2>Product Management</h2>
             </div>
             <div className="manage-products-header__actions">
-              <button type="button" className="secondary-action-btn" onClick={() => navigate('/admindashboard')}>Back to Dashboard</button>
+              <button type="button" className="back-link" onClick={() => navigate('/admindashboard')}>← Back to Dashboard</button>
               {!isFormOpen && (
                 <button type="button" className="primary-action-btn" onClick={openAddForm}>Add Product</button>
               )}
@@ -363,8 +362,7 @@ const AdminProductsPage = () => {
               <div className="modal-content modal-content--nested" onClick={(e) => e.stopPropagation()}>
                 <form onSubmit={submitForm} className="modern-product-form">
                   <div className="modern-product-form__header">
-                    <h3>{editingProduct ? "Update Product" : "Add Product"}</h3>
-                    <button type="button" className="secondary-action-btn" onClick={closeForm}>Close</button>
+                    <h3 className="section-title">{editingProduct ? "Update Product" : "Add Product"}</h3>
                   </div>
 
                   <div className="modern-product-form__grid">

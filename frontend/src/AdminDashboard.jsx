@@ -36,7 +36,7 @@ const AdminDashboard = () => {
     { title: "Daily Sales", description: "Daily revenue report", team: "Analytics", modalType: "dailySales", icon: "📅" },
     { title: "Monthly Sales", description: "Monthly revenue report", team: "Analytics", modalType: "monthlySales", icon: "🗓️" },
     { title: "Yearly Sales", description: "Yearly revenue report", team: "Analytics", modalType: "yearlySales", icon: "🏆" },
-    { title: "Order Management", description: "View all orders", team: "Order Management", modalType: "orders", icon: "📦" },
+    { title: "Orders", description: "Browse current order statuses", team: "Order Management", modalType: "orders", icon: "📦" },
   ], []);
 
   const navigate = useNavigate();

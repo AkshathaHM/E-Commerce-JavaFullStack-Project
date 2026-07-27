@@ -150,7 +150,6 @@ button,
 .product-delete-btn,
 .checkout-button,
 .retry-payment-button,
-.back-button,
 .order-card-action,
 .product-empty-state__button,
 .newsletter-button,
@@ -175,6 +174,36 @@ button,
   cursor: pointer;
   transition: transform var(--transition), box-shadow var(--transition), background-color var(--transition), color var(--transition), border-color var(--transition);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+.back-button,
+.back-link {
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: auto;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  color: var(--brand);
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: none;
+}
+
+.back-button:hover,
+.back-link:hover {
+  text-decoration: underline;
+  transform: none;
+}
+
+.back-button:focus-visible,
+.back-link:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 3px;
 }
 
 button:hover,
@@ -489,7 +518,50 @@ button.button--ghost:hover,
 
 .modal-form,
 .modern-product-form {
+  gap: 24px;
+}
+
+.modern-product-form__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modern-product-form__header .section-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--heading);
+}
+
+.modal-content.modal-content--nested .modern-product-form__header .section-title {
+  font-size: 1.4rem;
+  line-height: 1.02;
+}
+
+.modal-content.modal-content--nested .modern-product-form__header .section-title {
+  font-size: 1.4rem;
+}
+
+.modern-product-form__footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
   gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.modern-product-form__footer .secondary-action-btn,
+.modern-product-form__footer .primary-action-btn {
+  min-height: 46px;
+  padding: 12px 24px;
+  border-radius: 18px;
+  font-size: 0.96rem;
 }
 
 .form-input:focus,
@@ -571,10 +643,10 @@ button.button--ghost:hover,
 
 .theme-toggle {
   position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 40px;
-  height: 40px;
+  top: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -584,6 +656,7 @@ button.button--ghost:hover,
   cursor: pointer;
   transition: color 0.25s ease, transform 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
   color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .theme-toggle svg {
@@ -591,8 +664,8 @@ button.button--ghost:hover,
 }
 
 .theme-toggle:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.04);
+  transform: scale(1.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
 }
 
 .password-toggle {
@@ -984,36 +1057,48 @@ button.button--ghost:hover,
   display: inline-flex;
   align-items: center;
   gap: 14px;
+  padding: 0;
   border: none;
   background: transparent;
   color: var(--text);
   cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.brand-shell:hover {
+  transform: translateY(-1px);
+}
+
+.brand-shell:hover .brand-name {
+  color: var(--brand);
 }
 
 .brand-logo,
 .logo-image,
 .logo-mark,
 .brand-badge {
-  width: 52px;
-  height: 52px;
-  min-width: 52px;
-  border-radius: 18px;
-  background: var(--brand-soft);
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 50%;
+  background: var(--surface-alt);
   border: 1px solid var(--border);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--brand);
-  font-weight: 800;
-  box-shadow: none;
+  color: var(--text);
+  font-weight: 700;
+  font-size: 1.1rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
 }
 
 [data-theme='dark'] .brand-logo,
 [data-theme='dark'] .logo-image,
 [data-theme='dark'] .logo-mark,
 [data-theme='dark'] .brand-badge {
-  background: rgba(56, 189, 248, 0.16);
-  color: #e0f2fe;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
 }
 
 .logo-text,
@@ -1611,27 +1696,33 @@ button.button--ghost:hover,
   box-shadow: none;
 }
 
-.manage-products-shell .product-delete-btn {
-  background: linear-gradient(135deg, var(--danger), #b91c1c);
-  color: var(--button-text);
-  border: 1px solid transparent;
-  box-shadow: none;
-}
+  .manage-products-shell .modern-product-form__footer .primary-action-btn {
+    background: linear-gradient(135deg, var(--success), #15803d);
+    color: var(--button-text);
+    border: 1px solid transparent;
+    box-shadow: none;
+  }
 
-.manage-products-shell .product-view-btn:hover {
-  filter: brightness(0.97);
-}
+  .manage-products-shell .modern-product-form__footer .secondary-action-btn {
+    background: var(--surface-alt);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
 
-.manage-products-shell .add-to-cart-btn:hover,
-.manage-products-shell .primary-action-btn:hover {
-  filter: brightness(0.97);
-}
+  .manage-products-shell .product-delete-btn {
+    background: linear-gradient(135deg, var(--danger), #b91c1c);
+    color: var(--button-text);
+    border: 1px solid transparent;
+    box-shadow: none;
+  }
 
-.manage-products-shell .product-delete-btn:hover {
-  filter: brightness(0.97);
-}
+  .manage-products-shell .product-view-btn:hover {
+    filter: brightness(0.97);
+  }
 
-.manage-products-shell .admin-product-meta {
+  .manage-products-shell .add-to-cart-btn:hover,
+  .manage-products-shell .primary-action-btn:hover,
+  .manage-products-shell .modern-product-form__footer .primary-action-btn:hover {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
@@ -3213,6 +3304,7 @@ button.button--ghost:hover,
 
 .product-detail-modal,
 .delete-confirm-modal {
+  position: relative;
   width: min(95vw, 900px);
   max-height: 95vh;
   overflow-y: auto;
@@ -3221,6 +3313,7 @@ button.button--ghost:hover,
   color: var(--text);
   border-radius: 28px;
   padding: 24px;
+  animation: modalPop .22s cubic-bezier(.2,.9,.3,1);
 }
 
 .product-detail-modal__gallery img {

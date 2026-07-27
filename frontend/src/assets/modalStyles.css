@@ -2,7 +2,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: var(--overlay);
+  background: rgba(10, 14, 28, 0.78);
   display: grid;
   place-items: center;
   z-index: 1400;
@@ -11,9 +11,11 @@
 
 /* Nested overlays rendered inside other modals (product edit, confirm dialogs) */
 .modal-overlay--nested {
-  position: absolute; /* position inside parent modal */
+  position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.35);
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.44);
   display: grid;
   place-items: center;
   z-index: 1600;
@@ -59,15 +61,15 @@
 
 /* Nested modal content for forms opened inside product management */
 .modal-content.modal-content--nested {
-  width: 90vw;
-  max-width: 900px;
+  width: 88vw;
+  max-width: 760px;
   /* nested form should be slightly shorter than viewport to keep parent visible */
-  min-height: 55vh;
-  max-height: 80vh;
+  min-height: 50vh;
+  max-height: 75vh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 28px;
-  border-radius: 16px;
+  padding: 24px 22px;
+  border-radius: 20px;
 }
 
 /* Ensure nested modal inner container is centered and scrolls internally while parent stays fixed */
@@ -78,20 +80,22 @@
 
 .modal-close-btn {
   position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 40px;
-  height: 40px;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 1px solid var(--border);
-  background: var(--card);
+  background: linear-gradient(135deg, var(--surface-alt), var(--surface));
   color: var(--text);
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   cursor: pointer;
+  box-shadow: var(--shadow);
 }
 
 .modal-close-btn:hover {
-  filter: brightness(0.95);
+  transform: translateY(-1px);
+  filter: brightness(0.98);
 }
 
 .modal-form,
