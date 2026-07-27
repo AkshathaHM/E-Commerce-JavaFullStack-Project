@@ -17,8 +17,7 @@ export function LandingHeader({ onOpenModal }) {
   return (
     <header className="landing-header">
       <div className="landing-header__inner">
-        <button type="button" className="brand-shell landing-brand" onClick={() => navigate('/')}
-          aria-label="Go to SalesSavvy homepage">
+        <button type="button" className="brand-shell landing-brand" onClick={() => navigate('/')} aria-label="Go to SalesSavvy homepage">
           <img
             src="/logo.png"
             alt="SalesSavvy"
@@ -31,7 +30,7 @@ export function LandingHeader({ onOpenModal }) {
           <span className="brand-name">SalesSavvy</span>
         </button>
 
-        <div className="landing-header__actions">
+        <div className="header-actions landing-header__actions">
           <button type="button" className="landing-header__button" onClick={() => openModal('signup', '/register')}>
             <FaUserPlus className="landing-header__button-icon" />
             Sign Up

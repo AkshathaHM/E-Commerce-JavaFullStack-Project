@@ -106,10 +106,24 @@ a {
   font-weight: 500;
   color: var(--primary);
   text-decoration: none;
+  background: transparent;
 }
 
-a:hover {
+a:hover,
+a:focus,
+a:active,
+a:focus-visible {
   color: var(--primary2);
+  text-decoration: underline;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+  border-radius: 0;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 button {

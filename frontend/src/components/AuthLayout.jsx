@@ -1,19 +1,66 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
 import AuthCard from './AuthCard';
-import ThemeToggleButton from '../ThemeToggleButton';
-function AuthLayout({ title, subtitle, notice, children, footer, sidePanel, onClose, variant }) {
+function AuthLayout({ title, subtitle, notice, children, footer, onClose, variant }) {
   const navigate = useNavigate();
   const handleClose = onClose || (() => navigate(variant === 'admin' ? '/admin' : '/'));
   const brandTarget = variant === 'admin' ? '/admin' : '/';
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    if (!dialogRef.current) return undefined;
+
+    const focusableSelectors = [
+      'a[href]',
+      'button:not([disabled])',
+      'input:not([disabled]):not([type="hidden"])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])',
+    ];
+
+    const container = dialogRef.current;
+    const focusableElements = Array.from(container.querySelectorAll(focusableSelectors.join(',')));
+    const firstFocusable = focusableElements[0];
+    const lastFocusable = focusableElements[focusableElements.length - 1];
+
+    if (firstFocusable) {
+      firstFocusable.focus();
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        handleClose();
+        return;
+      }
+
+      if (event.key !== 'Tab' || focusableElements.length === 0) {
+        return;
+      }
+
+      if (event.shiftKey) {
+        if (document.activeElement === firstFocusable) {
+          event.preventDefault();
+          lastFocusable.focus();
+        }
+      } else {
+        if (document.activeElement === lastFocusable) {
+          event.preventDefault();
+          firstFocusable.focus();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleClose]);
 
   return (
     <div className="auth-page" role="dialog" aria-modal="true">
       <div className="auth-page__overlay" onClick={handleClose} aria-hidden="true" />
-      <ThemeToggleButton className="auth-theme-toggle" />
-      <div className="auth-page__container">
-        <div className={`auth-page__content${sidePanel ? ' auth-page__content--with-side' : ''}`}>
+      <div className="auth-page__container" ref={dialogRef}>
+        <div className="auth-page__content">
           <AuthCard className="auth-card--auth-layout auth-card--popup">
             <button type="button" className="auth-modal-close" onClick={handleClose} aria-label="Close auth modal">
               ×
@@ -50,7 +97,6 @@ function AuthLayout({ title, subtitle, notice, children, footer, sidePanel, onCl
             {children}
             {footer && <div className="auth-card__footer">{footer}</div>}
           </AuthCard>
-          {sidePanel && <div className="auth-hero-panel">{sidePanel}</div>}
         </div>
       </div>
     </div>
@@ -63,7 +109,6 @@ AuthLayout.propTypes = {
   notice: PropTypes.string,
   children: PropTypes.node.isRequired,
   footer: PropTypes.node,
-  sidePanel: PropTypes.node,
   onClose: PropTypes.func,
   variant: PropTypes.oneOf(['customer', 'admin']),
 };
@@ -72,7 +117,6 @@ AuthLayout.defaultProps = {
   subtitle: '',
   notice: '',
   footer: null,
-  sidePanel: null,
   onClose: null,
   variant: 'customer',
 };

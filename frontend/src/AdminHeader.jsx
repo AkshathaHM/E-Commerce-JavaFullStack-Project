@@ -27,7 +27,7 @@ export const AdminHeader = memo(function AdminHeader({ username = 'Admin' }) {
           </div>
         </button>
 
-        <div className="app-header__actions">
+        <div className="app-header__actions header-actions">
           <ProfileDropdown
             username={username}
             variant="admin"

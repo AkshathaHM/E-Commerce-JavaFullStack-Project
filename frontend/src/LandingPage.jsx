@@ -221,30 +221,6 @@ export default function LandingPage() {
   const isSigninSubmitDisabled = !signin.identifier.trim() || !signin.password.trim() || isSubmitting;
   const isAdminSubmitDisabled = !adminLogin.username.trim() || !adminLogin.password.trim() || isAdminSubmitting;
 
-  const authSidePanel = (
-    <div className="auth-hero-panel">
-      <div>
-        <p className="section-eyebrow">SalesSavvy access</p>
-        <h2 className="panel-title">
-          {activeModal === 'signup' ? 'Join the smartest shopping experience' : activeModal === 'signin' ? 'Welcome back to SalesSavvy' : 'Admin portal access'}
-        </h2>
-        <p className="panel-copy">
-          Secure your account instantly and enjoy curated fashion, fast checkout, and exclusive offers.
-        </p>
-        <ul className="panel-feature-list">
-          <li>Real-time orders and status updates</li>
-          <li>Access curated collections and latest deals</li>
-          <li>Secure login with modern styling</li>
-        </ul>
-      </div>
-      <img
-        src="/landing-images/phones.avif"
-        alt="SalesSavvy premium shopping experience"
-        className="auth-hero-panel__illustration"
-      />
-    </div>
-  );
-
   return (
     <div className="landing-page">
       <LandingHeader onOpenModal={openModal} />
@@ -294,7 +270,6 @@ export default function LandingPage() {
           }
           variant={activeModal === 'admin' ? 'admin' : 'customer'}
           onClose={closeModal}
-          sidePanel={authSidePanel}
           footer={
             activeModal === 'signup' ? (
               <p className="auth-footer-copy">

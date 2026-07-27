@@ -27,7 +27,7 @@ export const CustomerHeader = memo(function CustomerHeader({ cartCount = 0, user
           <span className="brand-name">SalesSavvy</span>
         </button>
 
-        <div className="app-header__actions">
+        <div className="app-header__actions header-actions">
           <CartIcon count={effectiveCartCount} />
           <ProfileDropdown
             username={effectiveUsername}
