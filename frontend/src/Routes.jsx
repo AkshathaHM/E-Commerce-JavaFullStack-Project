@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from "react";
 import { Navigate, Routes, Route } from "react-router-dom";
+const LandingPage = lazy(() => import('./LandingPage'));
 const LoginPage = lazy(() => import("./LoginPage"));
 const RegistrationPage = lazy(() => import("./RegistrationPage"));
 const ForgotPasswordPage = lazy(() => import("./ForgotPasswordPage"));
@@ -43,7 +44,8 @@ const pageFallback = (
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<PublicRoute element={<Suspense fallback={pageFallback}><LoginPage /></Suspense>} />} />
+      <Route path="/" element={<PublicRoute element={<Suspense fallback={pageFallback}><LandingPage /></Suspense>} />} />
+      <Route path="/login" element={<PublicRoute element={<Suspense fallback={pageFallback}><LoginPage /></Suspense>} />} />
       <Route path="/register" element={<PublicRoute element={<Suspense fallback={pageFallback}><RegistrationPage /></Suspense>} />} />
       <Route path="/verify-otp" element={<PublicRoute element={<Suspense fallback={pageFallback}><VerifyOtpPage /></Suspense>} />} />
       <Route path="/forgot-password" element={<PublicRoute element={<Suspense fallback={pageFallback}><ForgotPasswordPage /></Suspense>} />} />

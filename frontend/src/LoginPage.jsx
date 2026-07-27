@@ -71,7 +71,7 @@ export default function LoginPage() {
 
   return (
     <AuthLayout
-      title="User Login"
+      title="Sign In"
       subtitle="Sign in to your account"
       footer={
         <p className="auth-footer-copy">
@@ -107,8 +107,8 @@ export default function LoginPage() {
         <div className="auth-footer-row">
           <Link to="/forgot-password" className="form-link">Forgot password?</Link>
         </div>
-        <PrimaryButton type="submit" isLoading={isSigningIn} loadingText="Logging in..." disabled={isSubmitDisabled}>
-          Login
+        <PrimaryButton type="submit" isLoading={isSigningIn} loadingText="Signing in..." disabled={isSubmitDisabled}>
+          Sign In
         </PrimaryButton>
       </form>
     </AuthLayout>

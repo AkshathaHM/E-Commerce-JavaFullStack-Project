@@ -69,11 +69,11 @@ export default function AdminLogin() {
 
   return (
     <AuthLayout
-      title="Admin Login"
+      title="Admin Sign In"
       subtitle="Sign in with admin credentials"
       footer={
         <p className="auth-footer-copy">
-          Need a customer account? <Link to="/" className="form-link">User login</Link>
+          Need a customer account? <Link to="/login" className="form-link">User Sign In</Link>
         </p>
       }
     >
@@ -105,8 +105,8 @@ export default function AdminLogin() {
         <div className="auth-footer-row">
           <Link to="/forgot-password" state={{ returnTo: '/admin' }} className="form-link">Forgot password?</Link>
         </div>
-        <PrimaryButton type="submit" isLoading={isSigningIn} loadingText="Admin Login..." disabled={isSubmitDisabled}>
-          Admin Login
+        <PrimaryButton type="submit" isLoading={isSigningIn} loadingText="Signing in..." disabled={isSubmitDisabled}>
+          Sign In
         </PrimaryButton>
       </form>
     </AuthLayout>
