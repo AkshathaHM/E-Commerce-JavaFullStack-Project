@@ -14,10 +14,12 @@ import { useCart } from './CartContext';
 const CartPage = () => {
   const { cartItems: sharedCartItems, updateCartState, removeProductFromCart } = useCart();
   const cachedCart = getCache('cart_items');
-  const [cartItems, setCartItems] = useState(() => cachedCart?.items || []);
-  const [subtotal, setSubtotal] = useState(() => cachedCart?.subtotal || '0.00');
   const [username, setUsername] = useState(() => cachedCart?.username || '');
   const [loading, setLoading] = useState(() => !cachedCart);
+  const subtotal = useMemo(() => {
+    const total = sharedCartItems.reduce((sum, item) => sum + Number(item.total_price || 0), 0);
+    return total.toFixed(2);
+  }, [sharedCartItems]);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showPaymentToast, setShowPaymentToast] = useState(false);
   const [paymentSuccessData, setPaymentSuccessData] = useState(null);
@@ -33,6 +35,7 @@ const CartPage = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const checkoutAttemptRef = useRef(0);
   const razorpayScriptRef = useRef(null);
+  const hasFetchedCartRef = useRef(false);
   const navigate = useNavigate();
 
   const getAuthHeaders = useCallback(() => {
@@ -40,7 +43,7 @@ const CartPage = () => {
     return token ? { Authorization: `Bearer ${token}` } : {};
   }, []);
 
-  const totalItems = useMemo(() => cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0), [cartItems]);
+  const totalItems = useMemo(() => sharedCartItems.reduce((sum, item) => sum + (item.quantity || 0), 0), [sharedCartItems]);
   const shipping = "370.00";
 
   const loadRazorpayScript = async () => {
@@ -129,9 +132,8 @@ const CartPage = () => {
       }, 20000);
 
       if (!data) {
-        setCartItems([]);
+        updateCartState([]);
         setUsername('Guest');
-        setSubtotal('0.00');
         return;
       }
 
@@ -155,153 +157,144 @@ const CartPage = () => {
 
       const calc = formatted.reduce((sum, item) => sum + Number(item.total_price), 0).toFixed(2);
 
-      setCartItems(formatted);
       setUsername(data?.username || 'Guest');
-      setSubtotal(calc);
       updateCartState(formatted);
 
       try { setCache('cart_items', { items: formatted, username: data?.username || 'Guest', subtotal: calc }, 20000); } catch {}
     } catch (err) {
       console.error('Cart load error:', err);
       setError('Failed to load cart. Please try again.');
-      setCartItems([]);
+      updateCartState([]);
       setUsername('Guest');
-      setSubtotal('0.00');
     } finally {
       setLoading(false);
     }
   }, [getAuthHeaders, getDisplayImageUrl, getDisplayDescription, getDisplayName, updateCartState]);
 
   useEffect(() => {
+    if (hasFetchedCartRef.current) return;
+    hasFetchedCartRef.current = true;
+
     if (!authTokenExists()) {
       setError('Please log in to view your cart.');
       setLoading(false);
-      setCartItems([]);
       setUsername('Guest');
-      setSubtotal('0.00');
       return;
     }
 
     const cached = getCache('cart_items');
     if (cached) {
-      setCartItems(cached.items || []);
       setUsername(cached.username || 'Guest');
-      setSubtotal(cached.subtotal || '0.00');
       setLoading(false);
     }
 
-    if (sharedCartItems.length) {
-      setCartItems(sharedCartItems);
-      const calc = sharedCartItems.reduce((sum, item) => sum + Number(item.total_price || 0), 0).toFixed(2);
-      setSubtotal(calc);
-    }
-
     fetchCartItems({ showLoading: !cached });
-  }, [fetchCartItems, sharedCartItems]);
+  }, [fetchCartItems]);
 
   // Remove item
   const handleRemoveItem = useCallback(async (productId) => {
     const id = productId;
     if (!id) return false;
 
+    const previousItems = sharedCartItems;
+    const nextItems = previousItems.filter((i) => getItemId(i) !== id);
+    const removed = previousItems.find((i) => getItemId(i) === id);
+    const newSubtotal = nextItems.reduce((sum, item) => sum + Number(item.total_price || 0), 0).toFixed(2);
+
+    // Immediate UI update
     setDeleteLoading(true);
+    updateCartState(nextItems);
+    removeProductFromCart(id);
+    setConfirmDeleteItem(null);
+    setToastMessage(`${removed?.display_name || removed?.name || 'Item'} removed from cart.`);
+    setToastType('success');
+
+    try {
+      setCache('cart_items', { items: nextItems, username, subtotal: newSubtotal }, 20000);
+    } catch (e) {
+      console.warn('Unable to update cart cache after delete', e);
+    }
+
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/delete`, {
-        method: "DELETE",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        method: 'DELETE',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ username, productId: id }),
       });
 
       if (!res.ok && res.status !== 204) {
         const errorText = await res.text().catch(() => '');
         console.error('Cart delete response error:', res.status, errorText);
-        setToastMessage('Unable to delete the item. Please try again.');
-        setToastType('error');
-        return false;
-      }
-
-      const nextItems = cartItems.filter((i) => getItemId(i) !== id);
-      const removed = cartItems.find((i) => getItemId(i) === id);
-      const newSubtotal = nextItems.reduce((sum, item) => sum + Number(item.total_price || 0), 0).toFixed(2);
-
-      setCartItems(nextItems);
-      setSubtotal(newSubtotal);
-      updateCartState(nextItems);
-      removeProductFromCart(id);
-      setToastMessage(`${removed?.display_name || removed?.name || 'Item'} removed from cart.`);
-      setToastType('success');
-
-      try {
-        setCache('cart_items', { items: nextItems, username, subtotal: newSubtotal }, 20000);
-      } catch (e) {
-        console.warn('Unable to update cart cache after delete', e);
+        setToastMessage('Unable to delete the item on the server. Your cart is updated locally.');
+        setToastType('warning');
+        // Keep UI state local; server will reconcile on next refresh.
       }
 
       return true;
     } catch (err) {
       console.error('Remove failed:', err);
-      setToastMessage('Unable to remove the item. Please try again.');
-      setToastType('error');
-      return false;
+      setToastMessage('Unable to delete the item on the server. Your cart is updated locally.');
+      setToastType('warning');
+      return true;
     } finally {
       setDeleteLoading(false);
     }
-  }, [cartItems, getAuthHeaders, username, updateCartState, removeProductFromCart]);
+  }, [getAuthHeaders, username, updateCartState, removeProductFromCart, sharedCartItems]);
 
   // Update quantity
   const handleQuantityChange = useCallback(async (productId, delta) => {
-    const item = cartItems.find((i) => getItemId(i) === productId);
-    if (!item) return;
+    let updatedQuantity = null;
 
-    const currentQty = Number(item.quantity || 0);
-    const newQty = Math.max(1, currentQty + Number(delta || 0));
+    const nextItems = sharedCartItems.map((i) => {
+      if (getItemId(i) !== productId) return i;
+      const currentQty = Number(i.quantity || 0);
+      const newQty = Math.max(1, currentQty + Number(delta || 0));
+      if (updatedQuantity === null) {
+        updatedQuantity = newQty;
+      }
+      return {
+        ...i,
+        quantity: newQty,
+        total_price: (Number(i.price_per_unit || i.price || 0) * newQty).toFixed(2),
+      };
+    });
 
-    const nextItems = cartItems.map((i) =>
-      getItemId(i) === productId
-        ? { ...i, quantity: newQty, total_price: (Number(i.price_per_unit || i.price || 0) * newQty).toFixed(2) }
-        : i
-    );
+    if (updatedQuantity === null) return;
 
-    const newSubtotal = nextItems.reduce((sum, it) => sum + Number(it.total_price || 0), 0).toFixed(2);
-
-    // immediate UI update
-    setCartItems(nextItems);
-    setSubtotal(newSubtotal);
     updateCartState(nextItems);
-    try { setCache('cart_items', { items: nextItems, username, subtotal: newSubtotal }, 20000); } catch (e) {}
-
-    // async server update
     try {
+      // persist optimistic change to cache immediately
+      try { setCache('cart_items', { items: nextItems, username, subtotal: nextItems.reduce((s, it) => s + Number(it.total_price || 0), 0).toFixed(2) }, 20000); } catch (e) {}
+
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/update`, {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ username, productId, quantity: newQty }),
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ username, productId, quantity: updatedQuantity }),
       });
 
-      if (!res.ok) throw new Error(await res.text() || "Update failed");
+      if (!res.ok) throw new Error(await res.text() || 'Update failed');
     } catch (err) {
-      console.error("Qty update failed:", err);
+      console.error('Qty update failed:', err);
       setToastMessage('Could not update quantity. Re-syncing cart.');
       setToastType('error');
-      // revert or refetch authoritative state
       fetchCartItems({ showLoading: false });
     }
-  }, [cartItems, getAuthHeaders, handleRemoveItem, username, updateCartState]);
+  }, [getAuthHeaders, fetchCartItems, username, updateCartState]);
 
   // stable callbacks for child components
   const handleIncrease = useCallback((id) => handleQuantityChange(id, +1), [handleQuantityChange]);
   const handleDecrease = useCallback((id) => handleQuantityChange(id, -1), [handleQuantityChange]);
   const handleRemove = useCallback((id) => {
-    const item = cartItems.find((i) => getItemId(i) === id);
+    const item = sharedCartItems.find((i) => getItemId(i) === id);
     if (!item) {
       setToastMessage('Unable to identify the item to delete.');
       setToastType('error');
       return;
     }
     setConfirmDeleteItem({ id, name: item?.display_name || item?.name || 'this item' });
-  }, [cartItems, getItemId]);
+  }, [sharedCartItems, getItemId]);
 
   const confirmDelete = useCallback(async () => {
     if (!confirmDeleteItem?.id) return;
@@ -332,7 +325,7 @@ const CartPage = () => {
     try {
       const payload = {
         totalAmount: Number(subtotal),
-        cartItems: cartItems.map((item) => ({
+        cartItems: sharedCartItems.map((item) => ({
           productId: getItemId(item),
           quantity: item.quantity,
           price: Number(item.price_per_unit || item.price || item.unit_price || 0),
@@ -381,7 +374,7 @@ const CartPage = () => {
                 razorpay_payment_id: rzpRes.razorpay_payment_id,
                 razorpay_signature: rzpRes.razorpay_signature,
                 totalAmount: Number(subtotal),
-                cartItems: cartItems.map((item) => ({
+                cartItems: sharedCartItems.map((item) => ({
                   productId: getItemId(item),
                   quantity: item.quantity,
                   price: Number(item.price_per_unit || item.price || item.unit_price || 0),
@@ -418,9 +411,9 @@ const CartPage = () => {
               estimatedDelivery: formattedDeliveryDate,
               trackingCode: trackingId,
               totalAmount: Number(subtotal).toFixed(2),
-              name: cartItems[0]?.name || 'Order Items',
-              imageUrl: cartItems[0]?.image_url || '/images/no-image.png',
-              quantity: cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0),
+              name: sharedCartItems[0]?.name || 'Order Items',
+              imageUrl: sharedCartItems[0]?.image_url || '/images/no-image.png',
+              quantity: sharedCartItems.reduce((sum, item) => sum + (item.quantity || 0), 0),
               price: Number(subtotal).toFixed(2),
               deliveryCharges: '0.00',
               tax: '0.00',
@@ -433,8 +426,7 @@ const CartPage = () => {
             setShowPaymentToast(true);
             setPaymentError(null);
             setPaymentState("success");
-            setCartItems([]);
-            setSubtotal("0.00");
+            updateCartState([]);
             navigate('/order-success', { state: { order: successOrder }, replace: true });
           } catch (e) {
             console.error("Payment verification error:", e);
@@ -464,7 +456,7 @@ const CartPage = () => {
         timeout: 300,
         notes: {
           source: 'web-checkout',
-          cart_items: cartItems.length,
+          cart_items: sharedCartItems.length,
         },
       };
 
@@ -529,7 +521,7 @@ const CartPage = () => {
     );
   }
 
-  if (cartItems.length === 0) {
+  if (sharedCartItems.length === 0) {
     return (
       <CustomerLayout username={username || 'Guest'}>
         <div className="cart-page empty">
@@ -569,7 +561,7 @@ const CartPage = () => {
 
           <div className="cart-header">
             <h2>Shopping Cart</h2>
-            <p>{cartItems.length} item{cartItems.length !== 1 ? "s" : ""}</p>
+            <p>{sharedCartItems.length} item{sharedCartItems.length !== 1 ? "s" : ""}</p>
           </div>
 
           {latestOrderStatus && (
@@ -581,7 +573,7 @@ const CartPage = () => {
           )}
 
           <div className="cart-items">
-            {cartItems.map((item, index) => (
+            {sharedCartItems.map((item, index) => (
               <CartItem
                 key={getItemId(item) || index}
                 item={item}

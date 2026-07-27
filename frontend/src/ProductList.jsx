@@ -65,6 +65,13 @@ const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
   const productId = getId(product);
   const isAdded = productId ? addedProductIds?.has(productId) : false;
 
+  React.useEffect(() => {
+    if (!isAdded) {
+      setActive(false);
+      setOptimistic(false);
+    }
+  }, [isAdded]);
+
   const handleClick = useCallback(async (e) => {
     // prevent parent/card click handlers from triggering add-to-cart
     if (e && typeof e.stopPropagation === 'function') e.stopPropagation();

@@ -670,16 +670,16 @@ button.button--ghost:hover,
 
 /* Theme switch (sun / moon) */
 .theme-switch {
-  width: 66px;
-  height: 36px;
-  padding: 4px;
+  width: 160px;
+  height: 44px;
+  padding: 6px 12px;
   border-radius: 999px;
   background: var(--surface-alt);
   border: 1px solid var(--border);
   display: inline-flex;
   align-items: center;
   position: relative;
-  justify-content: flex-start;
+  justify-content: center;
 }
 
 .theme-switch .theme-switch-track {
@@ -689,30 +689,28 @@ button.button--ghost:hover,
   background: transparent;
 }
 
-.theme-switch .theme-switch-thumb {
-  position: relative;
+.theme-switch .theme-switch-inner {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--card);
+  gap: 10px;
   color: var(--text);
-  margin-left: 4px;
-  transition: transform 0.22s cubic-bezier(.2,.9,.3,1), background 0.2s ease, color 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  font-weight: 800;
 }
 
-.theme-switch--dark { justify-content: flex-end; }
-.theme-switch--dark .theme-switch-thumb { margin-left: 0; margin-right: 4px; }
+.theme-switch .theme-switch-icon { display: inline-flex; align-items:center; justify-content:center; }
+.theme-switch .theme-switch-text { font-size: 0.78rem; letter-spacing: 0.08em; }
+
+.theme-switch--dark { background: var(--brand); color: var(--on-brand, #fff); }
+.theme-switch--dark .theme-switch-text { color: var(--on-brand, #fff); }
+.theme-switch--light { background: var(--surface-alt); color: var(--text); }
+.theme-switch--light .theme-switch-text { color: var(--text); }
 
 .theme-switch:focus-visible { outline: 3px solid rgba(0,171,228,0.18); outline-offset: 3px; }
 
 /* Ensure small size on mobile */
 @media (max-width: 480px) {
-  .theme-switch { width: 56px; height: 32px; }
-  .theme-switch .theme-switch-thumb { width: 24px; height: 24px; }
+  .theme-switch { width: 120px; height: 36px; padding: 4px 8px; }
+  .theme-switch .theme-switch-text { font-size: 0.7rem; }
 }
 
 .password-toggle {
@@ -793,20 +791,43 @@ button.button--ghost:hover,
   justify-content: center;
   padding: 32px 20px;
   background: radial-gradient(circle at top left, rgba(60,197,255,0.24), transparent 28%), var(--bg);
+  box-sizing: border-box;
 }
 
 .auth-page__container,
 .auth-page__panel {
-  width: min(560px, 100%);
+  width: min(720px, 100%);
+  max-width: 760px;
+  padding: 0 16px;
+  box-sizing: border-box;
 }
 
 .auth-card {
   padding: 32px;
   border-radius: var(--radius-sm);
-  max-width: 560px;
-  width: min(100%, 560px);
+  max-width: 680px;
+  width: min(100%, 680px);
   margin: 0 auto;
   background: var(--card);
+  box-shadow: var(--shadow);
+  display: block;
+  visibility: visible;
+}
+
+@media (min-width: 1024px) {
+  .auth-page {
+    padding: 48px 32px;
+  }
+
+  .auth-page__container,
+  .auth-page__panel {
+    padding: 0;
+  }
+
+  .auth-card {
+    width: min(100%, 680px);
+    max-width: 680px;
+  }
 }
 
 .app-loading-screen {
@@ -3414,6 +3435,19 @@ button.button--ghost:hover,
   .header,
   .auth-page {
     padding: 16px 18px;
+  }
+
+  .auth-page__container,
+  .auth-page__panel {
+    width: min(100%, 100%);
+    max-width: 100%;
+    padding: 0 12px;
+  }
+
+  .auth-card {
+    max-width: 100%;
+    width: 100%;
+    padding: 24px;
   }
 
   .profile-grid {

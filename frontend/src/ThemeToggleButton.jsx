@@ -11,13 +11,17 @@ export default function ThemeToggleButton() {
       type="button"
       className={`theme-toggle theme-switch ${isDark ? 'theme-switch--dark' : 'theme-switch--light'}`}
       onClick={toggleTheme}
+      role="switch"
+      aria-checked={isDark}
       aria-label="Toggle theme"
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      <span className="theme-switch-track" aria-hidden />
-      <span className="theme-switch-thumb" aria-hidden>
-        {isDark ? <FaSun size={14} /> : <FaMoon size={14} />}
-      </span>
+      <div className="theme-switch-inner">
+        <span className="theme-switch-icon" aria-hidden>
+          {isDark ? <FaSun size={18} /> : <FaMoon size={18} />}
+        </span>
+        <span className="theme-switch-text" aria-hidden>{isDark ? 'DARK MODE' : 'LIGHT MODE'}</span>
+      </div>
     </button>
   );
 }

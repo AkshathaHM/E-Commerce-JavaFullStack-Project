@@ -1,6 +1,6 @@
 {
-  "rewrites": [
-    { "source": "/favicon.ico", "destination": "/logo.png" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "^/(.*)$", "dest": "/index.html" }
   ]
 }

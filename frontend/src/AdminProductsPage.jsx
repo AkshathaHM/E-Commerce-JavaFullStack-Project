@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import AdminProductCard from './components/AdminProductCard';
 import { useNavigate, useLocation } from "react-router-dom";
 import { AdminHeader } from "./AdminHeader";
 import "./assets/styles.css";
@@ -106,6 +107,16 @@ const AdminProductsPage = () => {
   const handleUpdateProductSubmit = async (data) => {
     setLoading(true);
     setResponse(null);
+    // Optimistic update: apply changes locally first
+    const prev = products;
+    const id = Number(data.productId || data.id || 0);
+    const next = (Array.isArray(prev) ? prev : []).map((p) => {
+      const pid = Number(p.product_id || p.productId || p.id || 0);
+      if (pid === id) return { ...p, ...data };
+      return p;
+    });
+    setProducts(next);
+    try { setCache('admin_products', next, 30000); } catch (e) {}
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/products/update`, {
         method: 'PUT',
@@ -119,9 +130,15 @@ const AdminProductsPage = () => {
         return true;
       }
       const err = await res.text();
+      // rollback
+      setProducts(prev);
+      try { setCache('admin_products', prev, 30000); } catch (er) {}
       setResponse(`❌ Failed to update product: ${err}`);
       return false;
     } catch (e) {
+      // rollback
+      setProducts(prev);
+      try { setCache('admin_products', prev, 30000); } catch (er) {}
       setResponse(`❌ Failed to update product: ${e.message}`);
       return false;
     } finally { setLoading(false); }
@@ -179,9 +196,9 @@ const AdminProductsPage = () => {
     return urls.filter(Boolean);
   };
 
-  const openAddForm = () => { setViewingProduct(null); setConfirmDeleteProduct(null); setEditingProduct(null); setFormData(createEmptyProductForm()); setIsFormOpen(true); };
+  const openAddForm = React.useCallback(() => { setViewingProduct(null); setConfirmDeleteProduct(null); setEditingProduct(null); setFormData(createEmptyProductForm()); setIsFormOpen(true); }, []);
 
-  const openEditForm = (product) => {
+  const openEditForm = React.useCallback((product) => {
     setViewingProduct(null); setConfirmDeleteProduct(null); setEditingProduct(product);
     const cleanedDescription = stripHtml(product.description || product.desc || "");
     const images = extractImageUrls(product);
@@ -196,7 +213,11 @@ const AdminProductsPage = () => {
       imageUrls: images,
     });
     setIsFormOpen(true);
-  };
+  }, []);
+
+  const handleViewProduct = React.useCallback((product) => { setViewingProduct(product); }, []);
+  const handleEditProduct = React.useCallback((product) => { openEditForm(product); }, [openEditForm]);
+  const handleDeleteProduct = React.useCallback((product) => { setConfirmDeleteProduct(product); }, []);
 
   const closeForm = () => { setIsFormOpen(false); setEditingProduct(null); setFormData(createEmptyProductForm()); };
 
@@ -253,8 +274,23 @@ const AdminProductsPage = () => {
 
   const handleDelete = async () => {
     if (!confirmDeleteProduct) return;
-    const success = await handleDeleteProductSubmit({ productId: Number(confirmDeleteProduct.product_id || confirmDeleteProduct.productId || confirmDeleteProduct.id) });
-    if (success) { setConfirmDeleteProduct(null); setViewingProduct(null); await fetchProducts({ forceRefresh: true }); }
+    const productIdNum = Number(confirmDeleteProduct.product_id || confirmDeleteProduct.productId || confirmDeleteProduct.id);
+    // Optimistic remove from UI
+    const prev = products;
+    const next = (Array.isArray(prev) ? prev : []).filter(p => Number(p.product_id || p.productId || p.id) !== productIdNum);
+    setProducts(next);
+    try { setCache('admin_products', next, 30000); } catch (e) {}
+    const success = await handleDeleteProductSubmit({ productId: productIdNum });
+    if (!success) {
+      // rollback
+      setProducts(prev);
+      try { setCache('admin_products', prev, 30000); } catch (e) {}
+      setToast({ show: true, message: 'Failed to delete product. Changes rolled back.', type: 'error' });
+    } else {
+      setConfirmDeleteProduct(null); setViewingProduct(null);
+      setToast({ show: true, message: 'Product deleted', type: 'success' });
+      await fetchProducts({ forceRefresh: true });
+    }
   };
 
   const getPreviewImage = (product) => {
@@ -335,41 +371,16 @@ const AdminProductsPage = () => {
               {filteredProducts.length > 0 ? (
                 <div className="product-grid">
                   {filteredProducts.map((product) => (
-                    <div key={product.product_id || product.productId || product.id} className="product-card">
-                      <div className="product-image-wrap">
-                        <img src={getPreviewImage(product)} alt={getDisplayName(product)} className="product-image" loading="lazy" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/images/no-image.png"; }} />
-                      </div>
-                      <div className="product-info">
-                        <div className="product-card-body">
-                          <div className="product-card-heading">
-                            <h3 className="product-name">{getDisplayName(product)}</h3>
-                            <span className={`product-card-status ${((product.status||"") + "").toLowerCase().includes("inactive") ? 'product-card-status--inactive' : ''}`}>{product.status || "Active"}</span>
-                          </div>
-                          <p className="product-description">{getDisplayDescription(product)}</p>
-                          <div className="admin-product-meta">
-                            <span><strong>ID</strong><span className="meta-value">{product.product_id || product.productId || product.id}</span></span>
-                            <span><strong>Category</strong><span className="meta-value">{product.category || product.categoryName || "—"}</span></span>
-                            <span><strong>Price</strong><span className="meta-value">₹{Number(product.price || product.amount || 0).toLocaleString()}</span></span>
-                            <span><strong>Stock</strong><span className="meta-value">{product.stock || product.quantity || 0}</span></span>
-                            <span><strong>Status</strong><span className="meta-value">{product.status || "Active"}</span></span>
-                            <span><strong>Brand</strong><span className="meta-value">{product.brand || product.manufacturer || "—"}</span></span>
-                          </div>
-                        </div>
-                        <div className="product-card-footer admin-product-actions">
-                          <button type="button" className="product-view-btn" onClick={() => setViewingProduct(product)}>View</button>
-                          <button
-                            type="button"
-                            className="add-to-cart-btn"
-                            onClick={() => openEditForm(product)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEditForm(product); } }}
-                            aria-label={`Update ${getDisplayName(product)}`}
-                          >
-                            Update
-                          </button>
-                          <button type="button" className="product-delete-btn" onClick={() => setConfirmDeleteProduct(product)}>Delete</button>
-                        </div>
-                      </div>
-                    </div>
+                    <AdminProductCard
+                      key={product.product_id || product.productId || product.id}
+                      product={product}
+                      onViewProduct={handleViewProduct}
+                      onEditProduct={handleEditProduct}
+                      onDeleteProduct={handleDeleteProduct}
+                      getPreviewImage={getPreviewImage}
+                      getDisplayName={getDisplayName}
+                      getDisplayDescription={getDisplayDescription}
+                    />
                   ))}
                 </div>
               ) : (

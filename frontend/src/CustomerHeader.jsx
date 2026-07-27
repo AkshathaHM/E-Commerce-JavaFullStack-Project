@@ -28,7 +28,6 @@ export const CustomerHeader = memo(function CustomerHeader({ cartCount = 0, user
         </button>
 
         <div className="app-header__actions">
-          <ThemeToggleButton />
           <CartIcon count={effectiveCartCount} />
           <ProfileDropdown
             username={effectiveUsername}
@@ -41,6 +40,7 @@ export const CustomerHeader = memo(function CustomerHeader({ cartCount = 0, user
               { id: 'logout', label: 'Logout', icon: '🚪', action: 'logout' },
             ]}
           />
+          <ThemeToggleButton />
         </div>
       </div>
     </header>

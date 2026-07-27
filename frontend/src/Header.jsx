@@ -24,9 +24,9 @@ export function Header({ cartCount, username }) {
         </div>
 
         <div className="header-actions">
-          <ThemeToggleButton />
           <CartIcon count={cartCount} />
           <ProfileDropdown username={username} />
+          <ThemeToggleButton />
         </div>
       </div>
     </header>

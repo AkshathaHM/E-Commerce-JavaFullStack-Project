@@ -57,6 +57,7 @@ export default function AdminLogin() {
       }
 
       setAuthSession(data.token || null, { username: data.username || username, role: 'ADMIN' });
+      try { const { setCache } = await import('./utils/cache'); setCache('profile_me', { username: data.username || username, role: 'ADMIN' }, 60000); } catch (e) {}
       setShowToast(true);
       navigate("/admindashboard", { state: { username: data.username || username }, replace: true });
     } catch (err) {

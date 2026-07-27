@@ -7,6 +7,7 @@ import InputField from "./components/InputField";
 import PasswordField from "./components/PasswordField";
 import PrimaryButton from "./components/PrimaryButton";
 import { getDashboardPath, setAuthSession } from "./auth";
+import { setCache } from './utils/cache';
 
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
@@ -58,6 +59,7 @@ export default function LoginPage() {
 
       setAuthSession(data.token || null, { username: data.username || identifier, role });
       setShowToast(true);
+      try { setCache('profile_me', { username: data.username || identifier, role }, 60000); } catch (e) {}
       navigate(getDashboardPath(role), { replace: true });
     } catch (err) {
       setError(err.message || "Unable to sign in. Please try again.");

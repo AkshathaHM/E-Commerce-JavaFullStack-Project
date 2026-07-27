@@ -28,7 +28,6 @@ export const AdminHeader = memo(function AdminHeader({ username = 'Admin' }) {
         </button>
 
         <div className="app-header__actions">
-          <ThemeToggleButton />
           <ProfileDropdown
             username={username}
             variant="admin"
@@ -41,6 +40,7 @@ export const AdminHeader = memo(function AdminHeader({ username = 'Admin' }) {
               { id: 'logout', label: 'Logout', icon: '🚪', action: 'logout' },
             ]}
           />
+          <ThemeToggleButton />
         </div>
       </div>
     </header>

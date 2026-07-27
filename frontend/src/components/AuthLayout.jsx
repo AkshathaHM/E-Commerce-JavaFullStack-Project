@@ -2,14 +2,12 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Logo from '../Logo';
 import AuthCard from './AuthCard';
-import ThemeToggleButton from '../ThemeToggleButton';
-
 function AuthLayout({ title, subtitle, notice, children, footer }) {
   return (
     <div className="auth-page">
       <div className="auth-page__container">
         <AuthCard className="auth-card--auth-layout">
-          <ThemeToggleButton />
+
 
           <div className="auth-card__brand">
             <Logo showBrandText={false} />

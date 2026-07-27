@@ -33,7 +33,9 @@ export function CartProvider({ children }) {
   const updateCache = useCallback((items) => {
     try {
       const subtotal = items.reduce((sum, item) => sum + Number(item.total_price || item.price || item.price_per_unit || 0) * Number(item.quantity || 1), 0).toFixed(2);
+      const count = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
       setCache('cart_items', { items, username, subtotal }, 20000);
+      try { setCache(`cart_count_${username}`, count, 20000); } catch (e) {}
     } catch (err) {
       console.warn('Cart cache update failed', err);
     }
@@ -47,11 +49,19 @@ export function CartProvider({ children }) {
   }, [updateCache]);
 
   const incrementCartCount = useCallback((amount = 1) => {
-    setCartCount((prev) => Math.max(0, prev + amount));
+    setCartCount((prev) => {
+      const next = Math.max(0, prev + amount);
+      try { setCache(`cart_count_${username}`, next, 20000); } catch (e) {}
+      return next;
+    });
   }, []);
 
   const decrementCartCount = useCallback((amount = 1) => {
-    setCartCount((prev) => Math.max(0, prev - amount));
+    setCartCount((prev) => {
+      const next = Math.max(0, prev - amount);
+      try { setCache(`cart_count_${username}`, next, 20000); } catch (e) {}
+      return next;
+    });
   }, []);
 
   const addProductToCart = useCallback((productId) => {
