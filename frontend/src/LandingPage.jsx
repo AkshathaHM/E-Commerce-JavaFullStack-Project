@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import './assets/styles.css';
 import { LandingHeader } from './LandingHeader';
 import { Footer } from './Footer';
 import AuthLayout from './components/AuthLayout';
 import InputField from './components/InputField';
 import PasswordField from './components/PasswordField';
+import OtpInput from './components/OtpInput';
 import PrimaryButton from './components/PrimaryButton';
 import { Toast } from './Toast';
 import { getDashboardPath, setAuthSession } from './auth';
@@ -36,8 +37,22 @@ export default function LandingPage() {
   const [signin, setSignin] = useState({ identifier: '', password: '' });
   const [signup, setSignup] = useState({ username: '', email: '', mobileNumber: '', address: '', role: 'CUSTOMER', password: '', confirmPassword: '', agreement: false });
   const [adminLogin, setAdminLogin] = useState({ username: '', password: '' });
+  const [forgotUsername, setForgotUsername] = useState('');
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [forgotSuccessMessage, setForgotSuccessMessage] = useState('');
+  const [otp, setOtp] = useState('');
+  const [verifyMessage, setVerifyMessage] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [countdown, setCountdown] = useState(180);
+  const [isExpired, setIsExpired] = useState(false);
+  const [isSuccessVerify, setIsSuccessVerify] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [modalMeta, setModalMeta] = useState({ email: '', role: 'CUSTOMER', message: '' });
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -53,10 +68,41 @@ export default function LandingPage() {
     return () => window.clearTimeout(timeout);
   }, [toastVisible]);
 
-  const openModal = (type) => {
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const pathnameModal = location.pathname === '/forgot-password' ? 'forgot-password' : location.pathname === '/verify-otp' ? 'verify-otp' : null;
+    const modal = params.get('modal') || pathnameModal || location.state?.modal;
+    const email = params.get('email') || location.state?.email || '';
+    const role = params.get('role') || location.state?.role || 'CUSTOMER';
+    const message = params.get('message') || location.state?.message || '';
+
+    if (modal === 'forgot-password') {
+      openModal('forgot-password', { email, role, message });
+    } else if (modal === 'verify-otp') {
+      openModal('verify-otp', { email, role, message });
+    }
+  }, [location.pathname, location.search, location.state]);
+
+  const openModal = (type, meta = {}) => {
+    if (location.pathname !== '/') {
+      navigate('/', { replace: true });
+    }
     setActiveModal(type);
     setAuthError('');
     setFieldErrors({});
+    setForgotUsername('');
+    setForgotNewPassword('');
+    setForgotConfirmPassword('');
+    setForgotSuccess(false);
+    setForgotSuccessMessage('');
+    setOtp('');
+    setVerifyMessage('');
+    setIsVerifying(false);
+    setCountdown(180);
+    setIsExpired(false);
+    setIsSuccessVerify(false);
+    setIsResending(false);
+    setModalMeta({ email: meta.email || '', role: meta.role || 'CUSTOMER', message: meta.message || '' });
   };
 
   const closeModal = () => {
@@ -65,11 +111,157 @@ export default function LandingPage() {
     setFieldErrors({});
     setIsSubmitting(false);
     setIsAdminSubmitting(false);
+    setForgotSuccess(false);
+    setIsSuccessVerify(false);
+    if (location.pathname === '/forgot-password' || location.pathname === '/verify-otp') {
+      navigate('/', { replace: true });
+    }
   };
 
   const showToast = (message) => {
     setToastMessage(message);
     setToastVisible(true);
+  };
+
+  useEffect(() => {
+    if (activeModal !== 'verify-otp' || isSuccessVerify) return undefined;
+    if (countdown <= 0) {
+      setIsExpired(true);
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [activeModal, countdown, isSuccessVerify]);
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+
+    setAuthError('');
+    const errors = {};
+
+    if (!forgotUsername.trim()) {
+      errors.username = 'Username is required.';
+    }
+    if (!forgotNewPassword.trim()) {
+      errors.newPassword = 'Password is required.';
+    } else if (forgotNewPassword.length < 8) {
+      errors.newPassword = 'Password must be at least 8 characters long.';
+    }
+    if (!forgotConfirmPassword.trim()) {
+      errors.confirmPassword = 'Confirm password is required.';
+    } else if (forgotNewPassword !== forgotConfirmPassword) {
+      errors.confirmPassword = 'Passwords do not match.';
+    }
+
+    if (Object.keys(errors).length) {
+      setFieldErrors(errors);
+      setAuthError('Please fix the highlighted fields.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: forgotUsername, newPassword: forgotNewPassword }),
+      });
+
+      if (response.ok) {
+        setForgotSuccess(true);
+        setForgotSuccessMessage('Your password has been reset successfully. You may now sign in with your new password.');
+        setShowToast('✅ Password reset successful');
+      } else {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || data.message || 'Failed to reset password.');
+      }
+    } catch (err) {
+      setAuthError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const verifyOtpRequest = async (otpCode) => {
+    setIsVerifying(true);
+    setAuthError('');
+    setVerifyMessage('');
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: modalMeta.email, otp: otpCode }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || 'OTP verification failed.');
+      }
+
+      setIsSuccessVerify(true);
+      setShowToast('✅ Verification successful');
+      setVerifyMessage('Your email has been verified. Redirecting to login...');
+      window.setTimeout(() => {
+        closeModal();
+      }, 1800);
+    } catch (err) {
+      setAuthError(err.message || 'Unable to verify the OTP.');
+      setIsSuccessVerify(false);
+      setOtp('');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleVerifyOtp = (event) => {
+    event.preventDefault();
+    if (otp.length !== 6) {
+      setAuthError('Please enter the 6-digit code.');
+      return;
+    }
+    verifyOtpRequest(otp);
+  };
+
+  const handleResendOtp = async () => {
+    if (!modalMeta.email.trim()) {
+      setAuthError('Unable to resend OTP without email.');
+      return;
+    }
+
+    setAuthError('');
+    setVerifyMessage('');
+    setIsResending(true);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/resend-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: modalMeta.email }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || 'Could not resend OTP.');
+      }
+
+      setCountdown(180);
+      setIsExpired(false);
+      setOtp('');
+      setIsVerifying(false);
+      setIsResending(false);
+      setVerifyMessage(data.message || 'OTP resent successfully.');
+      setShowToast('✅ OTP resent successfully');
+    } catch (err) {
+      setAuthError(err.message || 'Unable to resend the OTP.');
+      setIsResending(false);
+    }
   };
 
   const handleSignIn = async (e) => {
@@ -260,13 +452,27 @@ export default function LandingPage() {
 
       {activeModal && (
         <AuthLayout
-          title={activeModal === 'signup' ? 'Create your account' : activeModal === 'signin' ? 'Sign In' : 'Admin Sign In'}
+          title={
+            activeModal === 'signup'
+              ? 'Create your account'
+              : activeModal === 'signin'
+              ? 'Sign In'
+              : activeModal === 'admin'
+              ? 'Admin Sign In'
+              : activeModal === 'forgot-password'
+              ? 'Reset Password'
+              : 'Verify Email'
+          }
           subtitle={
             activeModal === 'signup'
               ? 'Register for SalesSavvy'
               : activeModal === 'signin'
               ? 'Sign in to your account'
-              : 'Sign in with admin credentials'
+              : activeModal === 'admin'
+              ? 'Sign in with admin credentials'
+              : activeModal === 'forgot-password'
+              ? 'Reset your account password securely'
+              : 'Enter the verification code sent to your email'
           }
           variant={activeModal === 'admin' ? 'admin' : 'customer'}
           onClose={closeModal}
@@ -279,9 +485,17 @@ export default function LandingPage() {
               <p className="auth-footer-copy">
                 Don’t have an account? <button type="button" className="form-link button-link" onClick={() => openModal('signup')}>Create account</button>
               </p>
-            ) : (
+            ) : activeModal === 'admin' ? (
               <p className="auth-footer-copy">
                 Need a customer account? <button type="button" className="form-link button-link" onClick={() => openModal('signin')}>User Sign In</button>
+              </p>
+            ) : activeModal === 'forgot-password' ? (
+              <p className="auth-footer-copy">
+                Remembered your password? <button type="button" className="form-link button-link" onClick={() => openModal('signin')}>Back to login</button>
+              </p>
+            ) : (
+              <p className="auth-footer-copy">
+                Need to sign in instead? <button type="button" className="form-link button-link" onClick={() => openModal('signin')}>Back to login</button>
               </p>
             )
           }
@@ -444,7 +658,7 @@ export default function LandingPage() {
                 error={fieldErrors.password}
               />
               <div className="auth-footer-row">
-                <button type="button" className="form-link button-link" onClick={() => { closeModal(); navigate('/forgot-password'); }}>
+                <button type="button" className="form-link button-link" onClick={() => openModal('forgot-password')}>
                   Forgot password?
                 </button>
               </div>
@@ -452,6 +666,109 @@ export default function LandingPage() {
                 Admin Sign In
               </PrimaryButton>
             </form>
+          )}
+
+          {activeModal === 'forgot-password' && (
+            <>
+              {forgotSuccess ? (
+                <div className="forgot-success-card">
+                  <h3 className="auth-card__title">Password reset successful</h3>
+                  <p className="auth-success-sub">You can now sign in with your new password.</p>
+                  <div className="auth-success-actions">
+                    <button type="button" className="form-link button-link" onClick={() => openModal('signin')}>
+                      Back to login
+                    </button>
+                    <button
+                      type="button"
+                      className="form-button"
+                      onClick={() => {
+                        setForgotSuccess(false);
+                        setForgotUsername('');
+                        setForgotNewPassword('');
+                        setForgotConfirmPassword('');
+                      }}
+                    >
+                      Reset another account
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleForgotPassword} className="auth-form">
+                  <InputField
+                    id="forgotUsername"
+                    label="Username"
+                    placeholder="Enter your username"
+                    value={forgotUsername}
+                    onChange={(e) => {
+                      setForgotUsername(e.target.value);
+                      if (fieldErrors.username) setFieldErrors((prev) => ({ ...prev, username: '' }));
+                    }}
+                    error={fieldErrors.username}
+                  />
+                  <PasswordField
+                    id="forgotNewPassword"
+                    label="New Password"
+                    placeholder="Create a new password"
+                    value={forgotNewPassword}
+                    onChange={(e) => {
+                      setForgotNewPassword(e.target.value);
+                      if (fieldErrors.newPassword) setFieldErrors((prev) => ({ ...prev, newPassword: '' }));
+                    }}
+                    error={fieldErrors.newPassword}
+                  />
+                  <PasswordField
+                    id="forgotConfirmPassword"
+                    label="Confirm Password"
+                    placeholder="Re-enter new password"
+                    value={forgotConfirmPassword}
+                    onChange={(e) => {
+                      setForgotConfirmPassword(e.target.value);
+                      if (fieldErrors.confirmPassword) setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
+                    }}
+                    error={fieldErrors.confirmPassword}
+                  />
+                  <PrimaryButton type="submit" isLoading={isSubmitting} loadingText="Resetting..." disabled={isSubmitting || !forgotUsername.trim() || !forgotNewPassword.trim() || !forgotConfirmPassword.trim()}>
+                    Reset Password
+                  </PrimaryButton>
+                </form>
+              )}
+            </>
+          )}
+
+          {activeModal === 'verify-otp' && (
+            <div className="otp-verification-card auth-card--secondary">
+              <div className="otp-card-header">
+                <p className="otp-helper-text">We’ve sent a 6-digit verification code to</p>
+                <div className="otp-email-pill">{modalMeta.email || 'your email address'}</div>
+                <p className="otp-helper-text">Check your inbox and spam folder. The code expires in 3 minutes.</p>
+              </div>
+              {isSuccessVerify ? (
+                <div className="otp-success-state">
+                  <div className="otp-success-icon">✓</div>
+                  <h2 className="auth-card__title">Verified successfully</h2>
+                  <p className="otp-helper-text">Your email is now confirmed. Redirecting...</p>
+                </div>
+              ) : (
+                <form onSubmit={handleVerifyOtp} className="auth-form">
+                  <div className="form-group">
+                    <label className="form-label">Enter OTP</label>
+                    <OtpInput value={otp} onChange={setOtp} length={6} disabled={isVerifying} />
+                  </div>
+                  <div className="otp-countdown-box">
+                    <span className={`otp-countdown-label ${isExpired ? 'expired' : ''}`}>Expires in</span>
+                    <span className="otp-countdown-value">{isExpired ? '00:00' : `${String(Math.floor(countdown / 60)).padStart(2, '0')}:${String(countdown % 60).padStart(2, '0')}`}</span>
+                  </div>
+                  <div className="otp-actions">
+                    <PrimaryButton type="submit" isLoading={isVerifying} loadingText="Verifying..." disabled={otp.length !== 6 || isVerifying}>
+                      Verify OTP
+                    </PrimaryButton>
+                    <PrimaryButton type="button" variant="secondary" isLoading={isResending} loadingText="Resending..." onClick={handleResendOtp}>
+                      Resend OTP
+                    </PrimaryButton>
+                  </div>
+                </form>
+              )}
+            </div>
           )}
         </AuthLayout>
       )}

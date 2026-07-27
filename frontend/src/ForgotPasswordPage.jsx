@@ -82,6 +82,7 @@ export default function ForgotPasswordPage() {
       title="Reset Password"
       subtitle="Enter your username to reset password"
       variant="customer"
+      showClose={false}
       footer={
         <p className="auth-footer-copy">
           Remembered your password? <Link to={returnTo} className="form-link">Back to login</Link>

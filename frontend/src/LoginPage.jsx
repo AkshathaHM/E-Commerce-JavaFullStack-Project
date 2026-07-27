@@ -76,6 +76,7 @@ export default function LoginPage() {
       title="Sign In"
       subtitle="Sign in to your account"
       variant="customer"
+      showClose={false}
       footer={
         <p className="auth-footer-copy">
           Don’t have an account? <Link to="/register" className="form-link">Create account</Link>

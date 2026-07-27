@@ -31,15 +31,15 @@ export function LandingHeader({ onOpenModal }) {
         </button>
 
         <div className="header-actions landing-header__actions">
-          <button type="button" className="landing-header__button" onClick={() => openModal('signup', '/register')}>
+          <button type="button" className="landing-header__button" onClick={() => openModal('signup')}>
             <FaUserPlus className="landing-header__button-icon" />
             Sign Up
           </button>
-          <button type="button" className="landing-header__button" onClick={() => openModal('signin', '/login')}>
+          <button type="button" className="landing-header__button" onClick={() => openModal('signin')}>
             <FaSignInAlt className="landing-header__button-icon" />
             Sign In
           </button>
-          <button type="button" className="landing-header__button" onClick={() => openModal('admin', '/admin')}>
+          <button type="button" className="landing-header__button" onClick={() => openModal('admin')}>
             <FaUserShield className="landing-header__button-icon" />
             Admin Sign In
           </button>

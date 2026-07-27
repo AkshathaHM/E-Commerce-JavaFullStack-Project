@@ -95,17 +95,16 @@ export function Footer() {
       </div>
 
       <div className="footer-bottom">
-        <p>© 2026 SalesSavvy. All rights reserved.</p>
-        <div className="footer-legal-links">
-          <a href="#" onClick={(event) => event.preventDefault()}>
-            Accessibility
-          </a>
-          <a href="#" onClick={(event) => event.preventDefault()}>
-            Cookies
-          </a>
-          <a href="#" onClick={(event) => event.preventDefault()}>
-            Security
-          </a>
+        <p className="footer-copy">© 2026 SalesSavvy</p>
+        <div className="footer-center-brand">
+          <div className="footer-brand-logo-text" role="img" aria-label="SalesSavvy brand">
+            <span className="footer-brand-word footer-brand-word--sales" aria-hidden="true">
+              <span>S</span><span>a</span><span>l</span><span>e</span><span>s</span>
+            </span>
+            <span className="footer-brand-word footer-brand-word--savvy" aria-hidden="true">
+              <span>S</span><span>a</span><span>v</span><span>v</span><span>y</span>
+            </span>
+          </div>
         </div>
       </div>
     </footer>

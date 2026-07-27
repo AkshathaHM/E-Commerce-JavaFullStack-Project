@@ -3,8 +3,6 @@ import { Navigate, Routes, Route } from "react-router-dom";
 const LandingPage = lazy(() => import('./LandingPage'));
 const LoginPage = lazy(() => import("./LoginPage"));
 const RegistrationPage = lazy(() => import("./RegistrationPage"));
-const ForgotPasswordPage = lazy(() => import("./ForgotPasswordPage"));
-const VerifyOtpPage = lazy(() => import("./VerifyOtpPage"));
 const CustomerHomePage = lazy(() => import('./CustomerHomePage'));
 const CartPage = lazy(() => import('./CartPage'));
 const OrderPage = lazy(() => import('./OrderPage'));
@@ -47,8 +45,8 @@ const AppRoutes = () => {
       <Route path="/" element={<PublicRoute element={<Suspense fallback={pageFallback}><LandingPage /></Suspense>} />} />
       <Route path="/login" element={<PublicRoute element={<Suspense fallback={pageFallback}><LoginPage /></Suspense>} />} />
       <Route path="/register" element={<PublicRoute element={<Suspense fallback={pageFallback}><RegistrationPage /></Suspense>} />} />
-      <Route path="/verify-otp" element={<PublicRoute element={<Suspense fallback={pageFallback}><VerifyOtpPage /></Suspense>} />} />
-      <Route path="/forgot-password" element={<PublicRoute element={<Suspense fallback={pageFallback}><ForgotPasswordPage /></Suspense>} />} />
+      <Route path="/verify-otp" element={<PublicRoute element={<Suspense fallback={pageFallback}><LandingPage /></Suspense>} />} />
+      <Route path="/forgot-password" element={<PublicRoute element={<Suspense fallback={pageFallback}><LandingPage /></Suspense>} />} />
       <Route path="/customerhome" element={<ProtectedRoute element={<Suspense fallback={pageFallback}><CustomerHomePage /></Suspense>} allowedRole="CUSTOMER" />} />
       <Route path="/UserCartPage" element={<ProtectedRoute element={<Suspense fallback={pageFallback}><CartPage /></Suspense>} allowedRole="CUSTOMER" />} />
       <Route path="/orders" element={<ProtectedRoute element={<Suspense fallback={pageFallback}><OrderPage /></Suspense>} allowedRole="CUSTOMER" />} />
