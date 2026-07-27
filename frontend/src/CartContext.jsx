@@ -22,7 +22,7 @@ export function CartProvider({ children }) {
   const cachedCart = getCache('cart_items');
 
   const [cartItems, setCartItems] = useState(() => cachedCart?.items || []);
-  const [cartCount, setCartCount] = useState(() => (cachedCart?.items || []).reduce((sum, item) => sum + (item.quantity || 0), 0));
+  const [cartCount, setCartCount] = useState(() => (cachedCart?.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0));
   const [addedProductIds, setAddedProductIds] = useState(() => {
     const key = `added_cart_products_${username}`;
     const stored = localStorage.getItem(key);
@@ -32,7 +32,7 @@ export function CartProvider({ children }) {
 
   const updateCache = useCallback((items) => {
     try {
-      const subtotal = items.reduce((sum, item) => sum + Number(item.total_price || item.price || item.price_per_unit || 0) * (item.quantity || 1), 0).toFixed(2);
+      const subtotal = items.reduce((sum, item) => sum + Number(item.total_price || item.price || item.price_per_unit || 0) * Number(item.quantity || 1), 0).toFixed(2);
       setCache('cart_items', { items, username, subtotal }, 20000);
     } catch (err) {
       console.warn('Cart cache update failed', err);
@@ -40,7 +40,7 @@ export function CartProvider({ children }) {
   }, [username]);
 
   const updateCartState = useCallback((items) => {
-    const count = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    const count = items.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
     setCartItems(items);
     setCartCount(count);
     updateCache(items);

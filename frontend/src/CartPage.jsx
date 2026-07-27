@@ -25,10 +25,12 @@ const CartPage = () => {
   const [error, setError] = useState(null);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("success");
+  const [confirmDeleteItem, setConfirmDeleteItem] = useState(null);
   const [paymentState, setPaymentState] = useState("idle");
   const [sdkReady, setSdkReady] = useState(false);
   const [sdkError, setSdkError] = useState(null);
   const [latestOrderStatus, setLatestOrderStatus] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const checkoutAttemptRef = useRef(0);
   const razorpayScriptRef = useRef(null);
   const navigate = useNavigate();
@@ -200,8 +202,9 @@ const CartPage = () => {
   // Remove item
   const handleRemoveItem = useCallback(async (productId) => {
     const id = productId;
-    if (!id) return;
+    if (!id) return false;
 
+    setDeleteLoading(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/delete`, {
         method: "DELETE",
@@ -210,48 +213,65 @@ const CartPage = () => {
         body: JSON.stringify({ username, productId: id }),
       });
 
-      if (res.ok || res.status === 204) {
-        const nextItems = cartItems.filter((i) => getItemId(i) !== id);
-        const removed = cartItems.find((i) => getItemId(i) === id);
-        const newSubtotal = removed ? Math.max(0, Number(subtotal) - Number(removed.total_price)).toFixed(2) : subtotal;
-
-        setCartItems(nextItems);
-        setSubtotal(newSubtotal);
-        updateCartState(nextItems);
-        removeProductFromCart(id);
-        try { setCache('cart_items', { items: nextItems, username, subtotal: newSubtotal }, 20000); } catch (e) {}
-      } else {
-        throw new Error(await res.text() || "Remove failed");
+      if (!res.ok && res.status !== 204) {
+        const errorText = await res.text().catch(() => '');
+        console.error('Cart delete response error:', res.status, errorText);
+        setToastMessage('Unable to delete the item. Please try again.');
+        setToastType('error');
+        return false;
       }
+
+      const nextItems = cartItems.filter((i) => getItemId(i) !== id);
+      const removed = cartItems.find((i) => getItemId(i) === id);
+      const newSubtotal = nextItems.reduce((sum, item) => sum + Number(item.total_price || 0), 0).toFixed(2);
+
+      setCartItems(nextItems);
+      setSubtotal(newSubtotal);
+      updateCartState(nextItems);
+      removeProductFromCart(id);
+      setToastMessage(`${removed?.display_name || removed?.name || 'Item'} removed from cart.`);
+      setToastType('success');
+
+      try {
+        setCache('cart_items', { items: nextItems, username, subtotal: newSubtotal }, 20000);
+      } catch (e) {
+        console.warn('Unable to update cart cache after delete', e);
+      }
+
+      return true;
     } catch (err) {
-      console.error("Remove failed:", err);
-      alert("Could not remove item. Please try again.");
+      console.error('Remove failed:', err);
+      setToastMessage('Unable to remove the item. Please try again.');
+      setToastType('error');
+      return false;
+    } finally {
+      setDeleteLoading(false);
     }
-  }, [cartItems, getAuthHeaders, username, subtotal, updateCartState, removeProductFromCart]);
+  }, [cartItems, getAuthHeaders, username, updateCartState, removeProductFromCart]);
 
   // Update quantity
   const handleQuantityChange = useCallback(async (productId, delta) => {
     const item = cartItems.find((i) => getItemId(i) === productId);
     if (!item) return;
 
-    const newQty = item.quantity + delta;
-    if (newQty <= 0) {
-      await handleRemoveItem(productId);
-      return;
-    }
+    const currentQty = Number(item.quantity || 0);
+    const newQty = Math.max(1, currentQty + Number(delta || 0));
 
     const nextItems = cartItems.map((i) =>
       getItemId(i) === productId
-        ? { ...i, quantity: newQty, total_price: (Number(i.price_per_unit) * newQty).toFixed(2) }
+        ? { ...i, quantity: newQty, total_price: (Number(i.price_per_unit || i.price || 0) * newQty).toFixed(2) }
         : i
     );
-    const newSubtotal = nextItems.reduce((sum, item) => sum + Number(item.total_price), 0).toFixed(2);
 
+    const newSubtotal = nextItems.reduce((sum, it) => sum + Number(it.total_price || 0), 0).toFixed(2);
+
+    // immediate UI update
     setCartItems(nextItems);
     setSubtotal(newSubtotal);
     updateCartState(nextItems);
     try { setCache('cart_items', { items: nextItems, username, subtotal: newSubtotal }, 20000); } catch (e) {}
 
+    // async server update
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/update`, {
         method: "PUT",
@@ -263,7 +283,9 @@ const CartPage = () => {
       if (!res.ok) throw new Error(await res.text() || "Update failed");
     } catch (err) {
       console.error("Qty update failed:", err);
-      alert("Could not update quantity. Please try again.");
+      setToastMessage('Could not update quantity. Re-syncing cart.');
+      setToastType('error');
+      // revert or refetch authoritative state
       fetchCartItems({ showLoading: false });
     }
   }, [cartItems, getAuthHeaders, handleRemoveItem, username, updateCartState]);
@@ -271,7 +293,25 @@ const CartPage = () => {
   // stable callbacks for child components
   const handleIncrease = useCallback((id) => handleQuantityChange(id, +1), [handleQuantityChange]);
   const handleDecrease = useCallback((id) => handleQuantityChange(id, -1), [handleQuantityChange]);
-  const handleRemove = useCallback((id) => handleRemoveItem(id), [handleRemoveItem]);
+  const handleRemove = useCallback((id) => {
+    const item = cartItems.find((i) => getItemId(i) === id);
+    if (!item) {
+      setToastMessage('Unable to identify the item to delete.');
+      setToastType('error');
+      return;
+    }
+    setConfirmDeleteItem({ id, name: item?.display_name || item?.name || 'this item' });
+  }, [cartItems, getItemId]);
+
+  const confirmDelete = useCallback(async () => {
+    if (!confirmDeleteItem?.id) return;
+    const success = await handleRemoveItem(confirmDeleteItem.id);
+    if (success) {
+      setConfirmDeleteItem(null);
+    }
+  }, [confirmDeleteItem, handleRemoveItem]);
+
+  const cancelDelete = useCallback(() => setConfirmDeleteItem(null), []);
 
   const handleCheckout = async () => {
     if (checkoutLoading) return;
@@ -553,6 +593,21 @@ const CartPage = () => {
             ))}
           </div>
         </div>
+
+        {confirmDeleteItem && (
+          <div className="confirmation-popup-overlay" onClick={cancelDelete}>
+            <div className="confirmation-popup" onClick={(e) => e.stopPropagation()}>
+              <h3>Confirm Delete</h3>
+              <p>Are you sure you want to remove <strong>{confirmDeleteItem.name}</strong> from your cart?</p>
+              <div className="confirmation-buttons">
+                <button type="button" className="secondary-action-btn" onClick={cancelDelete}>No</button>
+                <button type="button" className="product-delete-btn" onClick={confirmDelete} disabled={deleteLoading}>
+                  {deleteLoading ? 'Deleting…' : 'Yes, remove it'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="checkout-section">
           <h2>Order Summary</h2>

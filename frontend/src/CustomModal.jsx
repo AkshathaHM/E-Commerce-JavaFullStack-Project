@@ -561,8 +561,6 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
         </div>
       </div>
 
-      {!isFormOpen ? (
-        <>
           <div className="product-toolbar">
             <label className="product-search">
               <span>🔎</span>
@@ -608,7 +606,15 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
                     </div>
                     <div className="product-card-footer admin-product-actions">
                       <button type="button" className="product-view-btn" onClick={() => setViewingProduct(product)}>View</button>
-                      <button type="button" className="add-to-cart-btn" onClick={() => openEditForm(product)}>Update</button>
+                      <button
+                        type="button"
+                        className="add-to-cart-btn"
+                        onClick={() => openEditForm(product)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEditForm(product); } }}
+                        aria-label={`Update ${getDisplayName(product)}`}
+                      >
+                        Update
+                      </button>
                       <button type="button" className="product-delete-btn" onClick={() => setConfirmDeleteProduct(product)}>Delete</button>
                     </div>
                   </div>
@@ -622,91 +628,91 @@ const ManageProductsForm = ({ onClose, response, modalData, loading, onUpdatePro
               <p>Try a different search term, update the stock filter, or add a new product.</p>
             </div>
           )}
-        </>
-      ) : (
-        <div className="modal-overlay modal-overlay--nested form-overlay" onClick={closeForm}>
-          <div className="modal-content modal-content--nested" onClick={(e) => e.stopPropagation()}>
-            <form onSubmit={handleSubmit} className="modern-product-form">
-              <div className="modern-product-form__header">
-                <h3>{editingProduct ? "Update Product" : "Add Product"}</h3>
-                <button type="button" className="secondary-action-btn" onClick={closeForm}>Close</button>
-              </div>
 
-              <div className="modern-product-form__grid">
-                <div className="modern-product-form__column">
-                  <label className="modern-form-field">
-                    <span>Product Name</span>
-                    <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Enter product name" required />
-                  </label>
-                  <label className="modern-form-field">
-                    <span>Category</span>
-                    <select name="categoryId" value={formData.categoryId} onChange={handleChange} required>
-                      <option value="">Select category</option>
-                      {CATEGORY_OPTIONS.map((category) => (
-                        <option key={category.value} value={category.value}>{category.label}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="modern-form-field">
-                    <span>Price</span>
-                    <input type="number" name="price" value={formData.price} onChange={handleChange} step="0.01" placeholder="0.00" required />
-                  </label>
-                  <label className="modern-form-field">
-                    <span>Stock</span>
-                    <input type="number" name="stock" value={formData.stock} onChange={handleChange} min="0" required />
-                  </label>
-                  <label className="modern-form-field">
-                    <span>Brand</span>
-                    <input type="text" name="brand" value={formData.brand} onChange={handleChange} placeholder="Brand name" />
-                  </label>
-                </div>
-                <div className="modern-product-form__column">
-                  <label className="modern-form-field">
-                    <span>Description</span>
-                    <textarea name="description" value={formData.description} onChange={handleChange} rows="4" placeholder="Describe the product" required />
-                  </label>
-                  <label className="modern-form-field">
-                    <span>Product Status</span>
-                    <select name="status" value={formData.status} onChange={handleChange}>
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
-                  </label>
-                  <label className="modern-form-field">
-                    <span>Images</span>
-                    <div className="image-input-row">
-                      <input type="text" placeholder="Add image URL" value={newImageUrl} onChange={(e) => setNewImageUrl(e.target.value)} />
-                      <button type="button" className="secondary-action-btn" onClick={handleAddImageUrl}>Add</button>
+          {isFormOpen && (
+            <div className="modal-overlay modal-overlay--nested form-overlay" onClick={closeForm}>
+              <div className="modal-content modal-content--nested" onClick={(e) => e.stopPropagation()}>
+                <form onSubmit={handleSubmit} className="modern-product-form">
+                  <div className="modern-product-form__header">
+                    <h3>{editingProduct ? "Update Product" : "Add Product"}</h3>
+                    <button type="button" className="secondary-action-btn" onClick={closeForm}>Close</button>
+                  </div>
+
+                  <div className="modern-product-form__grid">
+                    <div className="modern-product-form__column">
+                      <label className="modern-form-field">
+                        <span>Product Name</span>
+                        <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Enter product name" required />
+                      </label>
+                      <label className="modern-form-field">
+                        <span>Category</span>
+                        <select name="categoryId" value={formData.categoryId} onChange={handleChange} required>
+                          <option value="">Select category</option>
+                          {CATEGORY_OPTIONS.map((category) => (
+                            <option key={category.value} value={category.value}>{category.label}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="modern-form-field">
+                        <span>Price</span>
+                        <input type="number" name="price" value={formData.price} onChange={handleChange} step="0.01" placeholder="0.00" required />
+                      </label>
+                      <label className="modern-form-field">
+                        <span>Stock</span>
+                        <input type="number" name="stock" value={formData.stock} onChange={handleChange} min="0" required />
+                      </label>
+                      <label className="modern-form-field">
+                        <span>Brand</span>
+                        <input type="text" name="brand" value={formData.brand} onChange={handleChange} placeholder="Brand name" />
+                      </label>
                     </div>
-                    <div className="image-input-row">
-                      <input type="file" accept="image/*" onChange={handleFileChange} />
-                    </div>
-                  </label>
-                  {formData.imageUrls && formData.imageUrls.length > 0 && (
-                    <div className="image-preview-list">
-                      {formData.imageUrls.map((imageUrl, index) => (
-                        <div key={`${imageUrl}-${index}`} className="image-preview-item">
-                          <img src={imageUrl} alt={`Preview ${index + 1}`} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/images/no-image.png"; }} />
-                          <div className="image-preview-actions">
-                            <button type="button" className="image-remove-btn" onClick={() => handleRemoveImage(index)}>Remove</button>
-                          </div>
+                    <div className="modern-product-form__column">
+                      <label className="modern-form-field">
+                        <span>Description</span>
+                        <textarea name="description" value={formData.description} onChange={handleChange} rows="4" placeholder="Describe the product" required />
+                      </label>
+                      <label className="modern-form-field">
+                        <span>Product Status</span>
+                        <select name="status" value={formData.status} onChange={handleChange}>
+                          <option value="Active">Active</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                      </label>
+                      <label className="modern-form-field">
+                        <span>Images</span>
+                        <div className="image-input-row">
+                          <input type="text" placeholder="Add image URL" value={newImageUrl} onChange={(e) => setNewImageUrl(e.target.value)} />
+                          <button type="button" className="secondary-action-btn" onClick={handleAddImageUrl}>Add</button>
                         </div>
-                      ))}
+                        <div className="image-input-row">
+                          <input type="file" accept="image/*" onChange={handleFileChange} />
+                        </div>
+                      </label>
+                      {formData.imageUrls && formData.imageUrls.length > 0 && (
+                        <div className="image-preview-list">
+                          {formData.imageUrls.map((imageUrl, index) => (
+                            <div key={`${imageUrl}-${index}`} className="image-preview-item">
+                              <img src={imageUrl} alt={`Preview ${index + 1}`} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/images/no-image.png"; }} />
+                              <div className="image-preview-actions">
+                                <button type="button" className="image-remove-btn" onClick={() => handleRemoveImage(index)}>Remove</button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
+                  </div>
 
-              <div className="modern-product-form__footer">
-                <button type="button" className="secondary-action-btn" onClick={closeForm}>Cancel</button>
-                <button type="submit" className="primary-action-btn" disabled={loading}>
-                  {loading ? <span className="btn-loading">{editingProduct ? "Updating..." : "Saving..."}</span> : editingProduct ? "Update Product" : "Save Product"}
-                </button>
+                  <div className="modern-product-form__footer">
+                    <button type="button" className="secondary-action-btn" onClick={closeForm}>Cancel</button>
+                    <button type="submit" className="primary-action-btn" disabled={loading}>
+                      {loading ? <span className="btn-loading">{editingProduct ? "Updating..." : "Saving..."}</span> : editingProduct ? "Update Product" : "Save Product"}
+                    </button>
+                  </div>
+                </form>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </div>
+          )}
 
       {viewingProduct && (
         <div className="modal-overlay modal-overlay--nested" onClick={() => setViewingProduct(null)}>

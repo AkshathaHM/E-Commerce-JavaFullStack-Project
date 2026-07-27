@@ -200,6 +200,21 @@ const AdminProductsPage = () => {
 
   const closeForm = () => { setIsFormOpen(false); setEditingProduct(null); setFormData(createEmptyProductForm()); };
 
+  const handleBackToDashboard = () => {
+    // Close any open overlays/modals in this page
+    setIsFormOpen(false);
+    setViewingProduct(null);
+    setConfirmDeleteProduct(null);
+    setEditingProduct(null);
+
+    // Restore body scrolling in case an overlay left it hidden
+    try { document.body.style.overflow = ''; } catch (e) { /* ignore */ }
+
+    // Navigate to admin dashboard and ensure a clean transition
+    navigate('/admindashboard', { replace: true });
+    try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
+  };
+
   const handleAddImageUrl = () => {
     const url = (newImageUrl || '').trim(); if (!url) return; setFormData(prev => ({ ...prev, imageUrls: [url, ...prev.imageUrls] })); setNewImageUrl('');
   };
@@ -283,12 +298,12 @@ const AdminProductsPage = () => {
         <div className="manage-products-shell">
           <Toast show={toast.show} message={toast.message} type={toast.type} duration={2800} onClose={() => setToast({ show: false, message: '', type: 'success' })} />
 
-          <div className="manage-products-header">
+              <div className="manage-products-header">
             <div>
               <h2>Product Management</h2>
             </div>
             <div className="manage-products-header__actions">
-              <button type="button" className="back-link" onClick={() => navigate('/admindashboard')}>← Back to Dashboard</button>
+              <button type="button" className="back-link" onClick={handleBackToDashboard}>← Back to Dashboard</button>
               {!isFormOpen && (
                 <button type="button" className="primary-action-btn" onClick={openAddForm}>Add Product</button>
               )}
@@ -342,7 +357,15 @@ const AdminProductsPage = () => {
                         </div>
                         <div className="product-card-footer admin-product-actions">
                           <button type="button" className="product-view-btn" onClick={() => setViewingProduct(product)}>View</button>
-                          <button type="button" className="add-to-cart-btn" onClick={() => openEditForm(product)}>Update</button>
+                          <button
+                            type="button"
+                            className="add-to-cart-btn"
+                            onClick={() => openEditForm(product)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEditForm(product); } }}
+                            aria-label={`Update ${getDisplayName(product)}`}
+                          >
+                            Update
+                          </button>
                           <button type="button" className="product-delete-btn" onClick={() => setConfirmDeleteProduct(product)}>Delete</button>
                         </div>
                       </div>

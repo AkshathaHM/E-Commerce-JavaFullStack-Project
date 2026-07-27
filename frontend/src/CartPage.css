@@ -120,9 +120,54 @@
   transition: all 0.2s ease;
 }
 
-.cart-item:hover {
-  border-color: var(--primary2);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+.confirmation-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: grid;
+  place-items: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.confirmation-popup {
+  max-width: 420px;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.confirmation-popup h3 {
+  margin: 0 0 12px;
+  font-size: 1.3rem;
+}
+
+.confirmation-popup p {
+  margin: 0 0 24px;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.confirmation-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.confirmation-popup button {
+  min-width: 110px;
+}
+
+.confirmation-popup .secondary-action-btn,
+.confirmation-popup .product-delete-btn {
+  padding: 0.95rem 1.3rem;
 }
 
 .cart-item img {

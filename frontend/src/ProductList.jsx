@@ -115,6 +115,12 @@ const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
               type="button"
               className={`add-to-cart-btn ${(isAdded || active || optimistic) ? 'add-to-cart-btn--active' : ''}`}
               onClick={(e) => handleClick(e)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleClick(e);
+                }
+              }}
               aria-label={(isAdded || optimistic) ? `${product.name} is already in cart` : `Add ${product.name} to cart`}
               disabled={isAdded || optimistic}
             >
