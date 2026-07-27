@@ -54,11 +54,15 @@ dashboard-panel {
 }
 
 .auth-card {
-  padding: 32px;
+  padding: 24px;
   border-radius: var(--radius-sm);
-  max-width: 560px;
+  max-width: 520px;
   margin: 0 auto;
   background: var(--card);
+  /* compact popup behavior */
+  max-height: min(80vh, 720px);
+  display: flex;
+  flex-direction: column;
 }
 img {
   display: block;
@@ -1208,6 +1212,24 @@ button[type="submit"]:focus-visible {
   font-weight: 700;
 }
 
+/* inner scroll area for auth cards */
+.auth-card__scroll {
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(min(80vh, 720px) - 48px);
+}
+
+/* popup specific tweaks */
+.auth-card--popup {
+  padding: 20px;
+  max-width: 480px;
+  max-height: min(80vh, 640px);
+}
+
+.auth-card--auth-layout .auth-card__scroll {
+  padding: 0 0 8px 0;
+}
+
 .auth-card__subtitle,
 .form-footer,
 .auth-card__notice {
@@ -1268,8 +1290,9 @@ button[type="submit"]:focus-visible {
 
 .auth-footer-row {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   width: 100%;
+  margin-bottom: 8px;
 }
 
 .button-link,
