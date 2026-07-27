@@ -11,15 +11,15 @@ import PrimaryButton from './components/PrimaryButton';
 import { Toast } from './Toast';
 import { getDashboardPath, setAuthSession } from './auth';
 
-const BASE_PATH = import.meta.env.BASE_URL || '/';
+// Use Vite-safe URL resolution so images work in dev and when deployed to a subpath
 const HERO_IMAGES = [
-  `${BASE_PATH}landing-images/shirts.jpg`,
-  `${BASE_PATH}landing-images/pants.jpg`,
-  `${BASE_PATH}landing-images/phone.jpg`,
-  `${BASE_PATH}landing-images/phones.avif`,
-  `${BASE_PATH}landing-images/tvs.webp`,
-  `${BASE_PATH}landing-images/laps.jpg`,
-  `${BASE_PATH}landing-images/Gemini_Generated_Image_9xwq8q9xwq8q9xwq.png`,
+  new URL('/landing-images/shirts.jpg', import.meta.url).href,
+  new URL('/landing-images/pants.jpg', import.meta.url).href,
+  new URL('/landing-images/phone.jpg', import.meta.url).href,
+  new URL('/landing-images/phones.avif', import.meta.url).href,
+  new URL('/landing-images/tvs.webp', import.meta.url).href,
+  new URL('/landing-images/laps.jpg', import.meta.url).href,
+  new URL('/landing-images/Gemini_Generated_Image_9xwq8q9xwq8q9xwq.png', import.meta.url).href,
 ];
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -65,8 +65,14 @@ export default function LandingPage() {
 
   // Preload hero images to avoid flicker or failed loads in some deploy bases
   useEffect(() => {
+    const placeholder = new URL('/images/no-image.png', import.meta.url).href;
     HERO_IMAGES.forEach((src) => {
       const img = new Image();
+      img.onload = () => {};
+      img.onerror = () => {
+        // if a slide fails to load, replace with placeholder to avoid blank background
+        img.src = placeholder;
+      };
       img.src = src;
     });
   }, []);
