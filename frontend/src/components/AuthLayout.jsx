@@ -62,6 +62,9 @@ function AuthLayout({ title, subtitle, notice, children, footer, onClose, varian
       <div className="auth-page__container" ref={dialogRef}>
         <div className="auth-page__content">
           <AuthCard className="auth-card--auth-layout auth-card--popup">
+            <button type="button" className="auth-modal-close" onClick={handleClose} aria-label="Close auth modal">
+              ×
+            </button>
             <div className="auth-card__brand">
               <button
                 type="button"

@@ -10,6 +10,7 @@
   --radius-pill: 999px;
   --max-width: 1280px;
   --transition: 180ms ease;
+  --app-header-height: 72px;
 }
 
 html {
@@ -893,7 +894,8 @@ button[type="submit"]:focus-visible {
   inset: 0;
   display: grid;
   place-items: center;
-  padding: 20px;
+  /* push content below the fixed header to avoid overlap */
+  padding: calc(var(--app-header-height) + 20px) 20px 20px 20px;
   background: transparent;
   box-sizing: border-box;
   z-index: 999;
@@ -925,6 +927,8 @@ button[type="submit"]:focus-visible {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  /* allow clicks to pass through the container to the overlay when clicking outside the content */
+  pointer-events: none;
 }
 
 .auth-page__content {
@@ -934,6 +938,8 @@ button[type="submit"]:focus-visible {
   gap: 40px;
   align-items: center;
   justify-content: center;
+  /* ensure the interactive region receives pointer events */
+  pointer-events: auto;
 }
 
 .auth-card--popup {
@@ -951,6 +957,25 @@ button[type="submit"]:focus-visible {
   transform: translateY(24px);
   opacity: 0;
   animation: auth-card-slide-up 0.55s ease-out forwards;
+}
+
+.auth-modal-close {
+  position: absolute;
+  right: 14px;
+  top: 12px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 22px;
+  line-height: 1;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  z-index: 30;
+}
+
+.auth-modal-close:hover {
+  background: rgba(0,0,0,0.06);
 }
 
 .auth-card--popup::before,
@@ -1495,7 +1520,7 @@ button[type="submit"]:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
+  gap: 24px;
 }
 
 .brand-shell,
@@ -1605,7 +1630,7 @@ button[type="submit"]:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 24px;
   padding: 18px 24px;
 }
 
@@ -1622,6 +1647,26 @@ button[type="submit"]:focus-visible {
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
+}
+
+/* enforce logo stays left and actions are pushed to extreme right */
+.brand-shell,
+.logo-container {
+  flex: 0 0 auto;
+}
+
+.header-actions,
+.app-header__actions,
+.landing-header__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ensure theme toggle remains visually far-right */
+.theme-switch {
+  margin-left: 8px;
 }
 
 .landing-header__button {
