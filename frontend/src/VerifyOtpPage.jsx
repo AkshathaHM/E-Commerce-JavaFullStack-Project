@@ -13,7 +13,7 @@ export default function VerifyOtpPage() {
   const [role] = useState(location.state?.role || 'CUSTOMER');
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(location.state?.message || '');
   const [showToast, setShowToast] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);

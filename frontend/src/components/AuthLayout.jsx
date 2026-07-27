@@ -1,15 +1,23 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
 import Logo from '../Logo';
 import AuthCard from './AuthCard';
 import ThemeToggleButton from '../ThemeToggleButton';
-function AuthLayout({ title, subtitle, notice, children, footer, sidePanel }) {
+function AuthLayout({ title, subtitle, notice, children, footer, sidePanel, onClose }) {
+  const navigate = useNavigate();
+  const handleClose = onClose || (() => navigate('/'));
+
   return (
-    <div className="auth-page">
+    <div className="auth-page" role="dialog" aria-modal="true">
+      <div className="auth-page__overlay" onClick={handleClose} aria-hidden="true" />
       <ThemeToggleButton className="auth-theme-toggle" />
       <div className="auth-page__container">
         <div className={`auth-page__content${sidePanel ? ' auth-page__content--with-side' : ''}`}>
-          <AuthCard className="auth-card--auth-layout">
+          <AuthCard className="auth-card--auth-layout auth-card--popup">
+            <button type="button" className="auth-modal-close" onClick={handleClose} aria-label="Close auth modal">
+              ×
+            </button>
             <div className="auth-card__brand">
               <Logo showBrandText={false} />
               <div className="auth-brand-stack">
@@ -40,6 +48,16 @@ AuthLayout.propTypes = {
   notice: PropTypes.string,
   children: PropTypes.node.isRequired,
   footer: PropTypes.node,
+  sidePanel: PropTypes.node,
+  onClose: PropTypes.func,
+};
+
+AuthLayout.defaultProps = {
+  subtitle: '',
+  notice: '',
+  footer: null,
+  sidePanel: null,
+  onClose: null,
 };
 
 export default React.memo(AuthLayout);
