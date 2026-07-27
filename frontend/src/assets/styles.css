@@ -855,12 +855,34 @@ button.button--ghost:hover,
   position: relative;
   width: min(100%, 520px);
   max-width: 520px;
-  padding: 34px 30px 30px;
+  padding: 42px 32px 32px;
   margin: 0 auto;
-  background: rgba(15, 23, 42, 0.94);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.35);
-  border-radius: 30px;
+  background: rgba(6, 12, 24, 0.88);
+  border: 1px solid rgba(120, 145, 255, 0.16);
+  box-shadow: 0 32px 120px rgba(0, 0, 0, 0.32);
+  border-radius: 34px;
+  overflow: hidden;
+  backdrop-filter: blur(24px);
+  transform: translateY(24px);
+  opacity: 0;
+  animation: auth-card-slide-up 0.55s ease-out forwards;
+}
+
+.auth-card--popup::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.18), rgba(56, 189, 248, 0.02) 24%, transparent 45%);
+  pointer-events: none;
+}
+
+.auth-card--popup::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.18), transparent 36%);
+  opacity: 0.75;
+  pointer-events: none;
 }
 
 .auth-modal-close {
@@ -878,7 +900,18 @@ button.button--ghost:hover,
   font-size: 1.5rem;
   line-height: 1;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+@keyframes auth-card-slide-up {
+  from {
+    transform: translateY(32px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .auth-modal-close:hover {
@@ -897,17 +930,33 @@ button.button--ghost:hover,
 }
 
 .auth-card {
-  padding: 32px;
+  position: relative;
+  padding: 34px;
   border-radius: var(--radius-sm);
   max-width: 680px;
   width: min(100%, 680px);
   margin: 0 auto;
-  background: rgba(15, 23, 42, 0.84);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.22);
+  background: rgba(11, 17, 32, 0.82);
+  border: 1px solid rgba(96, 165, 250, 0.16);
+  box-shadow: 0 28px 95px rgba(0, 0, 0, 0.22);
   display: block;
   visibility: visible;
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(22px);
+}
+
+.auth-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at top left, rgba(96, 165, 250, 0.17), transparent 25%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.auth-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .auth-hero-panel {
@@ -1436,9 +1485,30 @@ button.button--ghost:hover,
 
 .landing-header__button-icon {
   display: none;
+}
+
+.landing-hero {
+  position: relative;
+  min-height: calc(100vh - 96px);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #05070b;
+}
+
 .landing-hero__bg {
   position: absolute;
   inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transform: scale(1.06);
+  transition: opacity 1.2s ease, transform 12s ease;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -1524,6 +1594,32 @@ button.button--ghost:hover,
   background: var(--brand);
   border-color: transparent;
   color: var(--button-text);
+}
+
+.landing-hero__pager {
+  position: absolute;
+  left: 50%;
+  bottom: 32px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 3;
+}
+
+.landing-hero__pager-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.72);
+  background: rgba(255,255,255,0.16);
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.landing-hero__pager-dot--active {
+  background: rgba(255,255,255,0.95);
+  transform: scale(1.2);
+  border-color: rgba(255,255,255,0.95);
 }
 
 @media (max-width: 860px) {

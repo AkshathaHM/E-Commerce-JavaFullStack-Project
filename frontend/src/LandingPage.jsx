@@ -48,6 +48,17 @@ export default function LandingPage() {
             Experience premium, savvy shopping with the latest styles and must-have tech essentials.
           </p>
         </div>
+        <div className="landing-hero__pager" aria-label="Landing slideshow navigation">
+          {HERO_IMAGES.map((_, index) => (
+            <button
+              key={index}
+              type="button"
+              className={`landing-hero__pager-dot${index === currentImageIndex ? ' landing-hero__pager-dot--active' : ''}`}
+              onClick={() => setCurrentImageIndex(index)}
+              aria-label={`Show slide ${index + 1}`}
+            />
+          ))}
+        </div>
       </main>
 
       <Footer />
