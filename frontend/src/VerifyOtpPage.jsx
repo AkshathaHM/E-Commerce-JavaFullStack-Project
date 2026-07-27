@@ -16,6 +16,12 @@ export default function VerifyOtpPage() {
   const [message, setMessage] = useState(location.state?.message || '');
   const [showToast, setShowToast] = useState(false);
   const [isResending, setIsResending] = useState(false);
+
+  useEffect(() => {
+    if (message && !isSuccess) {
+      setShowToast(true);
+    }
+  }, [message, isSuccess]);
   const [isVerifying, setIsVerifying] = useState(false);
   const [countdown, setCountdown] = useState(180);
   const [isExpired, setIsExpired] = useState(false);

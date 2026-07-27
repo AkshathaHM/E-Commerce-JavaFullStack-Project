@@ -81,6 +81,7 @@ export default function ForgotPasswordPage() {
     <AuthLayout
       title="Reset Password"
       subtitle="Enter your username to reset password"
+      variant="customer"
       footer={
         <p className="auth-footer-copy">
           Remembered your password? <Link to={returnTo} className="form-link">Back to login</Link>

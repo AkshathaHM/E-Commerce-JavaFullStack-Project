@@ -1,12 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';
-import Logo from '../Logo';
 import AuthCard from './AuthCard';
 import ThemeToggleButton from '../ThemeToggleButton';
-function AuthLayout({ title, subtitle, notice, children, footer, sidePanel, onClose }) {
+function AuthLayout({ title, subtitle, notice, children, footer, sidePanel, onClose, variant }) {
   const navigate = useNavigate();
-  const handleClose = onClose || (() => navigate('/'));
+  const handleClose = onClose || (() => navigate(variant === 'admin' ? '/admin' : '/'));
+  const brandTarget = variant === 'admin' ? '/admin' : '/';
 
   return (
     <div className="auth-page" role="dialog" aria-modal="true">
@@ -19,11 +19,26 @@ function AuthLayout({ title, subtitle, notice, children, footer, sidePanel, onCl
               ×
             </button>
             <div className="auth-card__brand">
-              <Logo showBrandText={false} />
-              <div className="auth-brand-stack">
-                <h2 className="auth-brand-label">SalesSavvy</h2>
-                <p className="auth-brand-tagline">Secure shopping and admin access</p>
-              </div>
+              <button
+                type="button"
+                className="brand-shell auth-brand-shell"
+                onClick={() => navigate(brandTarget)}
+                aria-label="Go to SalesSavvy homepage"
+              >
+                <img
+                  src="/logo.png"
+                  alt="SalesSavvy"
+                  className="brand-logo"
+                  onError={(event) => {
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src = '/images/no-image.png';
+                  }}
+                />
+                <div className="auth-brand-name-group">
+                  <span className="brand-name">SalesSavvy</span>
+                  {variant === 'admin' && <span className="admin-badge auth-admin-badge">Admin</span>}
+                </div>
+              </button>
             </div>
 
             <div className="auth-card__intro">
@@ -50,6 +65,7 @@ AuthLayout.propTypes = {
   footer: PropTypes.node,
   sidePanel: PropTypes.node,
   onClose: PropTypes.func,
+  variant: PropTypes.oneOf(['customer', 'admin']),
 };
 
 AuthLayout.defaultProps = {
@@ -58,6 +74,7 @@ AuthLayout.defaultProps = {
   footer: null,
   sidePanel: null,
   onClose: null,
+  variant: 'customer',
 };
 
 export default React.memo(AuthLayout);

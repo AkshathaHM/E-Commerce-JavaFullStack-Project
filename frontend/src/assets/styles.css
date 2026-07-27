@@ -666,34 +666,44 @@ button.button--ghost:hover,
 
 /* Theme switch (pill-style toggle) */
 .theme-switch {
-  width: 148px;
-  height: 42px;
-  padding: 6px 12px;
+  width: auto;
+  min-width: 88px;
+  height: 40px;
+  padding: 6px;
   border-radius: 999px;
   background: var(--surface-alt);
   border: 1px solid var(--border);
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 6px;
   cursor: pointer;
   transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.theme-switch--dark {
-  background: var(--brand);
-  color: var(--on-brand, #fff);
-  border-color: rgba(255, 255, 255, 0.16);
+.theme-switch--pill {
+  background: var(--surface-alt);
 }
 
-.theme-switch--light {
-  background: var(--surface-alt);
-  color: var(--text);
+.theme-switch-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.theme-switch-option.active {
+  background: var(--brand);
+  color: var(--button-text);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.16);
 }
 
 .theme-switch:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
 }
 
 .theme-switch:focus-visible,
@@ -702,30 +712,11 @@ button.button--ghost:hover,
   box-shadow: 0 0 0 4px rgba(34, 124, 255, 0.18);
 }
 
-.theme-switch-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  color: inherit;
-}
-
-.theme-switch-text {
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.theme-switch--dark .theme-switch-icon {
-  background: rgba(255, 255, 255, 0.18);
-}
-
-.theme-switch--light .theme-switch-icon {
-  background: rgba(15, 23, 42, 0.06);
+.theme-switch-icon,
+.theme-switch-text,
+.theme-switch--dark,
+.theme-switch--light {
+  display: none;
 }
 
 /* Position auth page toggle separately */
@@ -1018,6 +1009,44 @@ button.button--ghost:hover,
 
 .auth-card--auth-layout .auth-card__brand {
   margin-bottom: 28px;
+}
+
+.auth-brand-shell {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--text);
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.auth-brand-shell:hover .brand-name,
+.auth-brand-shell:hover .auth-admin-badge {
+  color: var(--brand);
+}
+
+.auth-brand-name-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.auth-admin-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: var(--on-brand, #fff);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .auth-brand-stack {
@@ -1383,19 +1412,19 @@ button.button--ghost:hover,
 .landing-header__button {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 18px;
+  justify-content: center;
+  padding: 12px 20px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.16);
-  background: rgba(255,255,255,0.06);
-  color: #fff;
+  border: 1px solid transparent;
+  background: var(--brand);
+  color: var(--button-text);
   font-weight: 700;
   cursor: pointer;
   transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
 
 .landing-header__button:hover {
-  background: rgba(255,255,255,0.12);
+  background: color-mix(in srgb, var(--brand) 75%, #000 25%);
   transform: translateY(-1px);
 }
 
@@ -1406,17 +1435,7 @@ button.button--ghost:hover,
 }
 
 .landing-header__button-icon {
-  font-size: 1rem;
-}
-
-.landing-hero {
-  position: relative;
-  min-height: calc(100vh - 84px);
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-}
-
+  display: none;
 .landing-hero__bg {
   position: absolute;
   inset: 0;

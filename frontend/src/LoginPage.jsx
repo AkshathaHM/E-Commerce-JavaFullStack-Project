@@ -61,7 +61,9 @@ export default function LoginPage() {
       setAuthSession(data.token || null, { username: data.username || identifier, role: normalizedRole });
       setShowToast(true);
       try { setCache('profile_me', { username: data.username || identifier, role: normalizedRole }, 60000); } catch (e) {}
-      navigate(getDashboardPath(normalizedRole), { replace: true });
+      window.setTimeout(() => {
+        navigate(getDashboardPath(normalizedRole), { replace: true });
+      }, 900);
     } catch (err) {
       setError(err.message || "Unable to sign in. Please try again.");
     } finally {
@@ -73,6 +75,7 @@ export default function LoginPage() {
     <AuthLayout
       title="Sign In"
       subtitle="Sign in to your account"
+      variant="customer"
       footer={
         <p className="auth-footer-copy">
           Don’t have an account? <Link to="/register" className="form-link">Create account</Link>

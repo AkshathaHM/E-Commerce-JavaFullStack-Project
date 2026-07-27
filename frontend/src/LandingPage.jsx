@@ -47,14 +47,6 @@ export default function LandingPage() {
           <p className="landing-hero__text">
             Experience premium, savvy shopping with the latest styles and must-have tech essentials.
           </p>
-          <div className="landing-hero__actions">
-            <button type="button" className="landing-hero__cta landing-hero__cta--primary" onClick={() => navigate('/login')}>
-              Sign In
-            </button>
-            <button type="button" className="landing-hero__cta" onClick={() => navigate('/register')}>
-              Create Account
-            </button>
-          </div>
         </div>
       </main>
 

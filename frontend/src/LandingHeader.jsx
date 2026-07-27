@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FaUserPlus, FaSignInAlt, FaUserShield } from 'react-icons/fa';
 import ThemeToggleButton from './ThemeToggleButton';
 
 export function LandingHeader() {
@@ -24,15 +25,15 @@ export function LandingHeader() {
 
         <div className="landing-header__actions">
           <button type="button" className="landing-header__button" onClick={() => navigate('/register')}>
-            <span className="landing-header__button-icon">📝</span>
+            <FaUserPlus className="landing-header__button-icon" />
             Sign Up
           </button>
-          <button type="button" className="landing-header__button landing-header__button--solid" onClick={() => navigate('/login')}>
-            <span className="landing-header__button-icon">🔐</span>
+          <button type="button" className="landing-header__button" onClick={() => navigate('/login')}>
+            <FaSignInAlt className="landing-header__button-icon" />
             Sign In
           </button>
           <button type="button" className="landing-header__button" onClick={() => navigate('/admin')}>
-            <span className="landing-header__button-icon">👤</span>
+            <FaUserShield className="landing-header__button-icon" />
             Admin Sign In
           </button>
           <ThemeToggleButton />

@@ -59,7 +59,9 @@ export default function AdminLogin() {
       setAuthSession(data.token || null, { username: data.username || username, role: 'ADMIN' });
       try { const { setCache } = await import('./utils/cache'); setCache('profile_me', { username: data.username || username, role: 'ADMIN' }, 60000); } catch (e) {}
       setShowToast(true);
-      navigate(getDashboardPath('ADMIN'), { state: { username: data.username || username }, replace: true });
+      window.setTimeout(() => {
+        navigate(getDashboardPath('ADMIN'), { state: { username: data.username || username }, replace: true });
+      }, 900);
     } catch (err) {
       setError(err.message || "Unexpected error");
     } finally {
@@ -71,6 +73,7 @@ export default function AdminLogin() {
     <AuthLayout
       title="Admin Sign In"
       subtitle="Sign in with admin credentials"
+      variant="admin"
       footer={
         <p className="auth-footer-copy">
           Need a customer account? <Link to="/login" className="form-link">User Sign In</Link>

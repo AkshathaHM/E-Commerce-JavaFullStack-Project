@@ -102,14 +102,16 @@ export default function RegistrationPage() {
 
       if (response.ok) {
         setShowToast(true);
-        navigate('/verify-otp', {
-          state: {
-            email,
-            role,
-            message: 'A verification code has been sent to your email.',
-          },
-          replace: true,
-        });
+        window.setTimeout(() => {
+          navigate('/verify-otp', {
+            state: {
+              email,
+              role,
+              message: 'A verification code has been sent to your email.',
+            },
+            replace: true,
+          });
+        }, 900);
       } else {
         throw new Error(data.error || data.message || 'Registration failed.');
       }
@@ -124,6 +126,7 @@ export default function RegistrationPage() {
     <AuthLayout
       title="Create your account"
       subtitle="Register for SalesSavvy"
+      variant="customer"
       footer={
         <p className="auth-footer-copy">
           Already have an account? <Link to="/" className="form-link">User login</Link>
