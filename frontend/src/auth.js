@@ -61,8 +61,9 @@ export const clearAuthSession = () => {
 };
 
 export const getDashboardPath = (role) => {
-  if (role === 'ADMIN') return '/admindashboard';
-  if (role === 'CUSTOMER') return '/customerhome';
+  const normalizedRole = String(role || '').toUpperCase();
+  if (normalizedRole === 'ADMIN') return '/admindashboard';
+  if (normalizedRole === 'CUSTOMER' || normalizedRole === 'USER') return '/customerhome';
   return '/';
 };
 

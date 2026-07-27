@@ -9,7 +9,7 @@ import { useCart } from './CartContext';
 import './assets/styles.css';
 
 export default function CustomerHomePage() {
-  const { cartCount, addedProductIds, addProductToCart, removeProductFromCart, incrementCartCount, decrementCartCount, setCartCount } = useCart();
+  const { cartItems, cartCount, addedProductIds, addProductToCart, removeProductFromCart, incrementCartCount, decrementCartCount, setCartCount, updateCartState } = useCart();
   const initialProducts = getCache('products_all') || [];
   const [allProducts, setAllProducts] = useState(initialProducts);
   const [username, setUsername] = useState(localStorage.getItem('username') || 'Guest');
@@ -120,16 +120,39 @@ export default function CustomerHomePage() {
     });
   }, [allProducts, deferredSearchTerm]);
 
-  const handleAddToCart = useCallback(async (productId) => {
+  const handleAddToCart = useCallback(async (product) => {
+    if (!product) return false;
+    const productId = String(product.product_id ?? product.id ?? product.productId);
     if (!productId) return false;
 
     const activeUsername = localStorage.getItem('username') || username || 'Guest';
 
-    try {
-      // optimistic UI: update local cart state immediately
-      addProductToCart(productId);
-      incrementCartCount();
+    // prepare minimal cart item for optimistic UI
+    const minimalItem = {
+      product_id: productId,
+      quantity: 1,
+      price_per_unit: (Number(product.price ?? product.amount ?? 0)).toFixed(2),
+      total_price: (Number(product.price ?? product.amount ?? 0)).toFixed(2),
+      display_name: product.name || product.title || 'Product',
+      display_description: product.description || '',
+      display_image_url: (product.images && product.images[0]) || product.imageUrl || product.image || '/images/no-image.png',
+    };
 
+    // snapshot previous state for rollback
+    const prevItems = Array.isArray(cartItems) ? cartItems : [];
+    const nextItems = [minimalItem, ...prevItems];
+
+    // optimistic UI updates
+    try {
+      updateCartState(nextItems);
+      addProductToCart(productId);
+      incrementCartCount(1);
+      try { setCache('cart_items', { items: nextItems, username: activeUsername, subtotal: nextItems.reduce((s, it) => s + Number(it.total_price || 0), 0).toFixed(2) }, 20000); } catch (e) {}
+    } catch (e) {
+      console.error('Optimistic add failed locally', e);
+    }
+
+    try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/add`, {
         method: 'POST',
         credentials: 'include',
@@ -139,6 +162,7 @@ export default function CustomerHomePage() {
 
       if (!res.ok) {
         // rollback optimistic update
+        updateCartState(prevItems);
         removeProductFromCart?.(productId);
         decrementCartCount?.(1);
         return false;
@@ -148,11 +172,12 @@ export default function CustomerHomePage() {
     } catch (e) {
       console.error('Add to cart failed:', e);
       // rollback optimistic update
+      updateCartState(prevItems);
       removeProductFromCart?.(productId);
       decrementCartCount?.(1);
       return false;
     }
-  }, [getAuthHeaders, username, addProductToCart, removeProductFromCart, incrementCartCount, decrementCartCount]);
+  }, [getAuthHeaders, username, addProductToCart, removeProductFromCart, incrementCartCount, decrementCartCount, cartItems, updateCartState]);
 
   const handleOpenProfileModal = useCallback(async () => {
     setProfileModalType('viewProfile');

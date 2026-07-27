@@ -87,6 +87,11 @@ const CartPage = () => {
     const id = item?.product_id ?? item?.productId ?? item?.id ?? null;
     return id != null ? String(id) : null;
   }, []);
+  const getItemStock = useCallback((item) => {
+    const stockValue = item?.stock ?? item?.availableStock ?? item?.available_stock ?? item?.maxQuantity ?? item?.max_quantity ?? item?.quantityAvailable ?? item?.quantity_available ?? item?.inventory ?? item?.product_stock;
+    const numericStock = Number(stockValue);
+    return Number.isFinite(numericStock) && numericStock >= 0 ? numericStock : null;
+  }, []);
   const getDisplayName = useCallback(
     (item) => item?.name || item?.title || item?.productName || item?.product_name || "Product",
     []
@@ -208,6 +213,7 @@ const CartPage = () => {
     setConfirmDeleteItem(null);
     setToastMessage(`${removed?.display_name || removed?.name || 'Item'} removed from cart.`);
     setToastType('success');
+    setShowPaymentToast(true);
 
     try {
       setCache('cart_items', { items: nextItems, username, subtotal: newSubtotal }, 20000);
@@ -244,11 +250,31 @@ const CartPage = () => {
 
   // Update quantity
   const handleQuantityChange = useCallback(async (productId, delta) => {
+    const item = sharedCartItems.find((i) => getItemId(i) === productId);
+    if (!item) return;
+
+    const currentQty = Number(item.quantity || 0);
+    const stockLimit = getItemStock(item);
+    const requestedQty = currentQty + Number(delta || 0);
+
+    if (requestedQty < 1) {
+      setToastMessage('Quantity cannot go below 1.');
+      setToastType('error');
+      setShowPaymentToast(true);
+      return;
+    }
+
+    if (stockLimit !== null && requestedQty > stockLimit) {
+      setToastMessage(`Only ${stockLimit} item${stockLimit === 1 ? '' : 's'} in stock for ${item.display_name || item.name || 'this product'}.`);
+      setToastType('error');
+      setShowPaymentToast(true);
+      return;
+    }
+
     let updatedQuantity = null;
 
     const nextItems = sharedCartItems.map((i) => {
       if (getItemId(i) !== productId) return i;
-      const currentQty = Number(i.quantity || 0);
       const newQty = Math.max(1, currentQty + Number(delta || 0));
       if (updatedQuantity === null) {
         updatedQuantity = newQty;
@@ -279,9 +305,10 @@ const CartPage = () => {
       console.error('Qty update failed:', err);
       setToastMessage('Could not update quantity. Re-syncing cart.');
       setToastType('error');
+      setShowPaymentToast(true);
       fetchCartItems({ showLoading: false });
     }
-  }, [getAuthHeaders, fetchCartItems, username, updateCartState]);
+  }, [getAuthHeaders, fetchCartItems, getItemStock, getItemId, sharedCartItems, username, updateCartState]);
 
   // stable callbacks for child components
   const handleIncrease = useCallback((id) => handleQuantityChange(id, +1), [handleQuantityChange]);

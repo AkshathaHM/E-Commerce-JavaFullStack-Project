@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import './assets/styles.css';
 import { Toast } from './Toast';
@@ -6,6 +6,7 @@ import AuthLayout from './components/AuthLayout';
 import InputField from './components/InputField';
 import PasswordField from './components/PasswordField';
 import PrimaryButton from './components/PrimaryButton';
+import OtpInput from './components/OtpInput';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phoneRegex = /^\d{10}$/;
@@ -18,15 +19,110 @@ export default function RegistrationPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [address, setAddress] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
-  const [role, setRole] = useState('');
+  const [role, setRole] = useState('CUSTOMER');
   const [agreement, setAgreement] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [countdown, setCountdown] = useState(180);
+  const [isExpired, setIsExpired] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [registeredRole, setRegisteredRole] = useState('CUSTOMER');
+  const [showOtpPanel, setShowOtpPanel] = useState(false);
+  const [otpMessage, setOtpMessage] = useState('');
   const passwordsMatch = password.trim() && confirmPassword.trim() && password === confirmPassword;
   const confirmPasswordError = fieldErrors.confirmPassword || (confirmPassword.trim() && password !== confirmPassword ? 'Passwords do not match.' : '');
   const isSubmitDisabled = !username.trim() || !email.trim() || !mobileNumber.trim() || !address.trim() || !password.trim() || !confirmPassword.trim() || !agreement || isSubmitting;
+
+  const formattedCountdown = useMemo(() => {
+    const minutes = String(Math.floor(countdown / 60)).padStart(2, '0');
+    const seconds = String(countdown % 60).padStart(2, '0');
+    return `${minutes}:${seconds}`;
+  }, [countdown]);
+
+  useEffect(() => {
+    if (!showOtpPanel) return undefined;
+    if (countdown <= 0) {
+      setIsExpired(true);
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => {
+      setCountdown((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [countdown, showOtpPanel]);
+
+  const handleVerifyOtp = async (event) => {
+    event.preventDefault();
+    if (!otp.trim() || otp.length !== 6) {
+      setError('Please enter the 6-digit verification code.');
+      return;
+    }
+
+    setError('');
+    setIsVerifying(true);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: registeredEmail, otp }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error || 'OTP verification failed.');
+      }
+
+      setOtpMessage('Your email is verified. Redirecting to sign in...');
+      setTimeout(() => {
+        navigate(registeredRole === 'ADMIN' ? '/admin' : '/', { replace: true });
+      }, 1400);
+    } catch (err) {
+      setError(err.message || 'Unable to verify the OTP.');
+      setOtp('');
+      setIsVerifying(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!registeredEmail) {
+      setError('Unable to resend OTP without email address.');
+      return;
+    }
+
+    setError('');
+    setOtpMessage('');
+    setIsResending(true);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/resend-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: registeredEmail }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Could not resend OTP.');
+      }
+
+      setOtp('');
+      setCountdown(180);
+      setIsExpired(false);
+      setOtpMessage(data.message || 'Verification code resent.');
+    } catch (err) {
+      setError(err.message || 'Unable to resend the OTP.');
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -102,7 +198,13 @@ export default function RegistrationPage() {
 
       if (response.ok) {
         setShowToast(true);
-        navigate('/verify-otp', { state: { email, role }, replace: true });
+        setRegisteredEmail(email);
+        setRegisteredRole(role);
+        setShowOtpPanel(true);
+        setOtp('');
+        setCountdown(180);
+        setIsExpired(false);
+        setOtpMessage('A verification code has been sent to your email.');
       } else {
         throw new Error(data.error || data.message || 'Registration failed.');
       }
@@ -226,6 +328,35 @@ export default function RegistrationPage() {
           Register
         </PrimaryButton>
       </form>
+    ) : (
+      <div className="otp-verification-card auth-card--secondary">
+        <div className="otp-card-header">
+          <p className="otp-helper-text">A verification code was sent to</p>
+          <div className="otp-email-pill">{registeredEmail}</div>
+          <p className="otp-helper-text">Enter the 6-digit code to complete registration.</p>
+        </div>
+        {error && <div className="auth-alert auth-alert--error">{error}</div>}
+        {otpMessage && <div className="auth-alert auth-alert--success">{otpMessage}</div>}
+        <form onSubmit={handleVerifyOtp} className="auth-form">
+          <div className="form-group">
+            <label className="form-label">Verification code</label>
+            <OtpInput value={otp} onChange={setOtp} length={6} disabled={isVerifying} />
+          </div>
+          <div className="otp-countdown-box">
+            <span className={`otp-countdown-label ${isExpired ? 'expired' : ''}`}>Expires in</span>
+            <span className="otp-countdown-value">{isExpired ? '00:00' : formattedCountdown}</span>
+          </div>
+          <div className="otp-actions">
+            <PrimaryButton type="submit" isLoading={isVerifying} loadingText="Verifying...">
+              Verify OTP
+            </PrimaryButton>
+            <PrimaryButton type="button" variant="secondary" isLoading={isResending} loadingText="Resending..." onClick={handleResendOtp}>
+              Resend OTP
+            </PrimaryButton>
+          </div>
+        </form>
+      </div>
+    )}
     </AuthLayout>
   );
 }

@@ -52,15 +52,16 @@ export default function LoginPage() {
         throw new Error(data.error || data.message || "Invalid credentials.");
       }
 
-      const role = data.role || "CUSTOMER";
+      const role = String(data.role || "CUSTOMER").toUpperCase();
       if (role === "ADMIN") {
-        throw new Error("Admin users must sign in from the admin login page.");
+        throw new Error("Admin accounts must sign in from the admin login page. Please use the Admin Login page.");
       }
 
-      setAuthSession(data.token || null, { username: data.username || identifier, role });
+      const normalizedRole = role === 'USER' ? 'CUSTOMER' : role;
+      setAuthSession(data.token || null, { username: data.username || identifier, role: normalizedRole });
       setShowToast(true);
-      try { setCache('profile_me', { username: data.username || identifier, role }, 60000); } catch (e) {}
-      navigate(getDashboardPath(role), { replace: true });
+      try { setCache('profile_me', { username: data.username || identifier, role: normalizedRole }, 60000); } catch (e) {}
+      navigate(getDashboardPath(normalizedRole), { replace: true });
     } catch (err) {
       setError(err.message || "Unable to sign in. Please try again.");
     } finally {

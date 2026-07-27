@@ -6,7 +6,7 @@ import AuthLayout from './components/AuthLayout';
 import InputField from './components/InputField';
 import PasswordField from './components/PasswordField';
 import PrimaryButton from './components/PrimaryButton';
-import { setAuthSession } from './auth';
+import { getDashboardPath, setAuthSession } from './auth';
 
 export default function AdminLogin() {
   const [username, setUsername] = useState('');
@@ -52,14 +52,14 @@ export default function AdminLogin() {
         throw new Error(data.error || data.message || "Login failed");
       }
 
-      if (data.role !== "ADMIN") {
-        throw new Error("Only admin users can log in from this page. Use the user login page for customer accounts.");
+      if (String(data.role || '').toUpperCase() !== "ADMIN") {
+        throw new Error("Only admin accounts can sign in here. Please use the User Login page for customer accounts.");
       }
 
       setAuthSession(data.token || null, { username: data.username || username, role: 'ADMIN' });
       try { const { setCache } = await import('./utils/cache'); setCache('profile_me', { username: data.username || username, role: 'ADMIN' }, 60000); } catch (e) {}
       setShowToast(true);
-      navigate("/admindashboard", { state: { username: data.username || username }, replace: true });
+      navigate(getDashboardPath('ADMIN'), { state: { username: data.username || username }, replace: true });
     } catch (err) {
       setError(err.message || "Unexpected error");
     } finally {

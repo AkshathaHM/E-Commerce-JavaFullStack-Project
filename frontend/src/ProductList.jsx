@@ -83,7 +83,7 @@ const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
     setOptimistic(true);
 
     try {
-      const success = await onAddToCart?.(id);
+      const success = await onAddToCart?.(product);
       if (!success) {
         // revert optimistic state on failure
         setOptimistic(false);

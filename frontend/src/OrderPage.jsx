@@ -4,7 +4,7 @@ import { CustomerLayout } from './CustomerLayout';
 import { OrderCardSkeleton } from './components/Skeleton';
 import { getDerivedOrderStatus, getExpectedDelivery, getOrderHistoryEntries, getStatusLabel, ORDER_STATUS_SEQUENCE } from './utils/orderStatus';
 import { cachedFetch } from './utils/apiClient';
-import { setCache } from './utils/cache';
+import { getCache, setCache } from './utils/cache';
 import StatusBadge from './components/StatusBadge';
 import TrackingTimeline from './components/TrackingTimeline';
 import './assets/styles.css';

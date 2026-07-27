@@ -46,6 +46,14 @@ export function CartProvider({ children }) {
     setCartItems(items);
     setCartCount(count);
     updateCache(items);
+    try {
+      const ids = (Array.isArray(items) ? items : []).map((it) => String(it.product_id ?? it.productId ?? it.id)).filter(Boolean);
+      const next = new Set(ids);
+      setAddedProductIds(next);
+      try { localStorage.setItem(`added_cart_products_${username}`, JSON.stringify(Array.from(next))); } catch (e) {}
+    } catch (e) {
+      // ignore
+    }
   }, [updateCache]);
 
   const incrementCartCount = useCallback((amount = 1) => {

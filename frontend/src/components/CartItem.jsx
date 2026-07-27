@@ -4,6 +4,11 @@ const CartItem = ({ item, onIncrease, onDecrease, onRemove, getItemId, imageFall
   const id = getItemId(item) || item.id || item.productId || item.product_id;
   const image = (item.display_image_url || item.image_url || item.image || '').startsWith?.('http') ? (item.display_image_url || item.image_url || item.image) : imageFallback;
 
+  const stockLimit = item?.stock ?? item?.availableStock ?? item?.available_stock ?? item?.maxQuantity ?? item?.max_quantity ?? item?.quantityAvailable ?? item?.quantity_available ?? item?.inventory ?? item?.product_stock ?? null;
+  const numericStockLimit = Number.isFinite(Number(stockLimit)) ? Number(stockLimit) : null;
+  const canDecrease = Number(item.quantity || 0) > 1;
+  const canIncrease = numericStockLimit === null || Number(item.quantity || 0) < numericStockLimit;
+
   return (
     <div className="cart-item">
       <img src={image} alt={item.display_name || item.name || 'Product'} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = imageFallback; }} />
@@ -15,9 +20,9 @@ const CartItem = ({ item, onIncrease, onDecrease, onRemove, getItemId, imageFall
 
         <div className="item-actions">
           <div className="quantity-controls">
-            <button onClick={() => onDecrease(id)} disabled={item.quantity <= 1}>−</button>
+            <button onClick={() => onDecrease(id)} disabled={!canDecrease}>−</button>
             <span className="quantity-display">{item.quantity}</span>
-            <button onClick={() => onIncrease(id)}>+</button>
+            <button onClick={() => onIncrease(id)} disabled={!canIncrease}>+</button>
           </div>
 
           <span className="price">₹{item.total_price}</span>
@@ -26,6 +31,11 @@ const CartItem = ({ item, onIncrease, onDecrease, onRemove, getItemId, imageFall
             🗑
           </button>
         </div>
+        {numericStockLimit !== null && (
+          <div className="item-stock-hint">
+            {`In stock: ${numericStockLimit}`}
+          </div>
+        )}
       </div>
     </div>
   );
