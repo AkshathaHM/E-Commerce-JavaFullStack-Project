@@ -1,72 +1,71 @@
-﻿import React from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import './Footer.css';
 
-const footerSections = [
-  {
-    title: 'Shop',
-    links: ['Products', 'Deals', 'Categories', 'Gift Cards'],
-  },
-  {
-    title: 'Sell',
-    links: ['Sell on SalesSavvy', 'Seller Center', 'Advertise', 'Pricing'],
-  },
-  {
-    title: 'Customer Service',
-    links: ['Help Center', 'Track Order', 'Returns', 'Payment Options'],
-  },
-  {
-    title: 'About',
-    links: ['About Us', 'Careers', 'Privacy Policy', 'Terms of Service'],
-  },
-];
+const shopLinks = ['Products', 'Deals', 'Categories', 'Gift Cards', 'Sell on SalesSavvy'];
+const serviceLinks = ['Help Center', 'Track Order', 'Returns', 'Payment Options', 'Shipping Info'];
+const aboutLinks = ['About Us', 'Careers', 'Privacy Policy', 'Terms of Service'];
 
 export function Footer() {
+  const [isVisible, setIsVisible] = useState(false);
+  const footerRef = useRef(null);
+
+  useEffect(() => {
+    const footer = footerRef.current;
+    if (!footer) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, []);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <footer className="footer">
-      <div className="footer-inner">
-        <div className="footer-brand-panel">
-          <div className="footer-brand-logo">S</div>
-          <div>
-            <p className="footer-brand-title">SalesSavvy</p>
-            <p className="footer-brand-subtitle">
-              Premium shopping for today’s modern buyer.
+    <footer className={`footer${isVisible ? ' footer--visible' : ''}`} ref={footerRef}>
+      <div className="footer-container">
+        <div className="footer-grid">
+          <div className="footer-column footer-brand-col">
+            <div className="footer-brand-panel">
+              <div className="footer-brand-logo">S</div>
+              <div>
+                <p className="footer-brand-title">SalesSavvy</p>
+                <p className="footer-brand-subtitle">
+                  Premium shopping for today’s modern buyer.
+                </p>
+              </div>
+            </div>
+
+            <p className="footer-intro">
+              Shop smarter with curated collections, personalized offers, and secure checkout.
+              Discover a premium experience designed for speed, confidence, and delight.
             </p>
+
+            <div className="social-block">
+              <p className="footer-section-title">Connect with us</p>
+              <div className="social-links">
+                <button type="button" className="social-button">Instagram</button>
+                <button type="button" className="social-button">Twitter</button>
+                <button type="button" className="social-button">Facebook</button>
+                <button type="button" className="social-button">LinkedIn</button>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <p className="footer-intro">
-          Shop smarter with curated collections, personalized offers, and secure checkout.
-          Discover a premium experience designed for speed, confidence, and delight.
-        </p>
-
-        <div className="newsletter-block">
-          <label htmlFor="footer-newsletter" className="newsletter-label">
-            Get insider updates and exclusive offers
-          </label>
-          <div className="newsletter-form">
-            <input
-              id="footer-newsletter"
-              type="email"
-              placeholder="Enter your email address"
-              aria-label="Email address"
-            />
-            <button type="button" className="newsletter-button">
-              Subscribe
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="footer-grid">
-        {footerSections.map((section) => (
-          <div key={section.title} className="footer-section">
-            <h3>{section.title}</h3>
-            <ul>
-              {section.links.map((link) => (
+          <div className="footer-column">
+            <h3 className="footer-section-title">Shop</h3>
+            <ul className="footer-list">
+              {shopLinks.map((link) => (
                 <li key={link}>
                   <a href="#" onClick={(event) => event.preventDefault()}>
                     {link}
@@ -75,38 +74,62 @@ export function Footer() {
               ))}
             </ul>
           </div>
-        ))}
 
-        <div className="footer-section footer-connect">
-          <h3>Stay Connected</h3>
-          <p>
-            Follow SalesSavvy for launch alerts, shopping inspiration, and member-only perks.
-          </p>
-          <div className="social-links">
-            <button type="button">Instagram</button>
-            <button type="button">Twitter</button>
-            <button type="button">Facebook</button>
-            <button type="button">LinkedIn</button>
+          <div className="footer-column">
+            <h3 className="footer-section-title">Customer Service</h3>
+            <ul className="footer-list">
+              {serviceLinks.map((link) => (
+                <li key={link}>
+                  <a href="#" onClick={(event) => event.preventDefault()}>
+                    {link}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
-          <button type="button" className="back-to-top" onClick={scrollToTop}>
-            Back to top
-          </button>
+
+          <div className="footer-column footer-about-col">
+            <h3 className="footer-section-title">About</h3>
+            <ul className="footer-list">
+              {aboutLinks.map((link) => (
+                <li key={link}>
+                  <a href="#" onClick={(event) => event.preventDefault()}>
+                    {link}
+                  </a>
+                </li>
+              ))}
+            </ul>
+
+            <div className="newsletter-block">
+              <p className="footer-section-title">Newsletter</p>
+              <p className="footer-intro footer-newsletter-copy">
+                Receive exclusive offers, early access, and curated updates every week.
+              </p>
+              <div className="newsletter-row">
+                <input
+                  id="footer-newsletter"
+                  type="email"
+                  placeholder="Enter your email address"
+                  aria-label="Email address"
+                />
+                <button type="button" className="newsletter-button">
+                  Subscribe
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="footer-divider" />
+
+        <div className="footer-bottom">
+          <p className="footer-copy">© 2026 SalesSavvy. All rights reserved.</p>
         </div>
       </div>
 
-      <div className="footer-bottom">
-        <p className="footer-copy">© 2026 SalesSavvy</p>
-        <div className="footer-center-brand">
-          <div className="footer-brand-logo-text" role="img" aria-label="SalesSavvy brand">
-            <span className="footer-brand-word footer-brand-word--sales" aria-hidden="true">
-              <span>S</span><span>a</span><span>l</span><span>e</span><span>s</span>
-            </span>
-            <span className="footer-brand-word footer-brand-word--savvy" aria-hidden="true">
-              <span>S</span><span>a</span><span>v</span><span>v</span><span>y</span>
-            </span>
-          </div>
-        </div>
-      </div>
+      <button type="button" className="back-to-top" onClick={scrollToTop}>
+        Back to top
+      </button>
     </footer>
   );
 }
