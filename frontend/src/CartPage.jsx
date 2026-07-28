@@ -460,7 +460,7 @@ const CartPage = () => {
 
             localStorage.setItem('lastOrder', JSON.stringify(successOrder));
             setPaymentSuccessData(successOrder);
-            setToastMessage("Payment successful! Your order is being prepared.");
+            setToastMessage("Payment successful!");
             setToastType("success");
             setShowPaymentToast(true);
             setPaymentError(null);
@@ -628,15 +628,8 @@ const CartPage = () => {
             onClick={handleCheckout}
             disabled={checkoutLoading || Number(subtotal) <= 0}
           >
-            {checkoutLoading ? (paymentState === 'creating-order' ? 'Creating Order...' : 'Processing Payment...') : 'Proceed to Checkout'}
+            {checkoutLoading ? 'Processing Payment...' : 'Proceed to Checkout'}
           </button>
-
-          {checkoutLoading && (
-            <div className="payment-progress-state" role="status" aria-live="polite">
-              <div className="payment-progress-spinner" />
-              <span>{paymentState === 'creating-order' ? 'Creating secure payment order...' : paymentState === 'opening-checkout' ? 'Opening Razorpay checkout...' : paymentState === 'verifying-payment' ? 'Verifying payment...' : 'Processing Payment...'}</span>
-            </div>
-          )}
 
           {sdkError && (
             <div className="payment-error-banner payment-error-banner--inline">
@@ -685,8 +678,8 @@ const CartPage = () => {
           <div className="order-success-modal" onClick={(e) => e.stopPropagation()}>
             <button type="button" className="order-success-modal-close" onClick={handleCloseSuccessModal} aria-label="Close">×</button>
             <div className="order-success-icon-badge">✓</div>
-            <h3 id="order-success-title">Order Placed Successfully!</h3>
-            <p>Your payment is confirmed and your order is now being prepared. Track your order from the Orders page or continue shopping.</p>
+            <h3 id="order-success-title">Payment Successful!</h3>
+            <p>Your order has been placed successfully.</p>
             <div className="order-success-meta">
               <div>
                 <span>Order ID</span>

@@ -64,7 +64,7 @@ public class OrderController {
     public ResponseEntity<Map<String, Object>> cancelOrder(@PathVariable String orderId, HttpServletRequest request) {
         try {
             User authenticatedUser = (User) request.getAttribute("authenticatedUser");
-            if (authenticatedUser == null) {
+            if (authenticatedUser == null || authenticatedUser.getUserId() == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "User not authenticated"));
             }
 

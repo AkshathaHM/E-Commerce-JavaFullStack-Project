@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -37,14 +38,29 @@ class OrderControllerTest {
         user.setRole(Role.CUSTOMER);
 
         when(request.getAttribute("authenticatedUser")).thenReturn(user);
-        when(orderService.getOrdersForUser(user)).thenReturn(Map.of(
+        when(orderService.getOrdersForUser(user, 0, 5)).thenReturn(Map.of(
+                "orders", List.of(Map.of("order_id", "ORD-100")),
                 "products", List.of(Map.of("order_id", "ORD-100"))
         ));
 
-        ResponseEntity<Map<String, Object>> response = orderController.getOrdersForUser(request);
+        ResponseEntity<Map<String, Object>> response = orderController.getOrdersForUser(request, 0, 5);
 
         assertEquals(200, response.getStatusCode().value());
         assertTrue(response.getBody().containsKey("orders"));
         assertEquals(1, ((List<?>) response.getBody().get("orders")).size());
+    }
+
+    @Test
+    void cancelOrderShouldReturnUnauthorizedWhenAuthenticatedUserMissingId() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        User user = new User();
+        user.setUsername("demo");
+
+        when(request.getAttribute("authenticatedUser")).thenReturn(user);
+
+        ResponseEntity<Map<String, Object>> response = orderController.cancelOrder("4", request);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("User not authenticated", response.getBody().get("error"));
     }
 }
