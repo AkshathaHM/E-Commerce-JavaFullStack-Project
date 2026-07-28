@@ -235,7 +235,7 @@ export default function LandingPage() {
       if (response.ok) {
         setForgotSuccess(true);
         setForgotSuccessMessage('Your password has been reset successfully. You may now sign in with your new password.');
-        setShowToast('✅ Password reset successful');
+        showToast('✅ Password reset successful');
       } else {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.error || data.message || 'Failed to reset password.');
@@ -265,7 +265,7 @@ export default function LandingPage() {
       }
 
       setIsSuccessVerify(true);
-      setShowToast('✅ Verification successful');
+      showToast('✅ Verification successful');
       setVerifyMessage('Your email has been verified. Redirecting to login...');
       window.setTimeout(() => {
         closeModal();
@@ -288,9 +288,22 @@ export default function LandingPage() {
     verifyOtpRequest(otp);
   };
 
+  // Auto-submit OTP when all digits are entered while on the verify modal
+  useEffect(() => {
+    if (activeModal !== 'verify-otp') return undefined;
+    if (isSuccessVerify || isVerifying || isExpired) return undefined;
+    if (otp.length === 6) {
+      // call verification automatically
+      verifyOtpRequest(otp);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otp, activeModal, isVerifying, isSuccessVerify, isExpired]);
+
   const handleResendOtp = async () => {
-    if (!modalMeta.email.trim()) {
-      setAuthError('Unable to resend OTP without email.');
+    const candidateEmail = (modalMeta && modalMeta.email) || signup?.email || (location && location.state && location.state.email) || '';
+    const emailToSend = String(candidateEmail || '').trim();
+    if (!emailToSend) {
+      setAuthError('Unable to resend OTP: no email available.');
       return;
     }
 
@@ -301,13 +314,14 @@ export default function LandingPage() {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/resend-otp`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: modalMeta.email }),
+        body: JSON.stringify({ email: emailToSend }),
       });
 
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(data.error || 'Could not resend OTP.');
+        throw new Error(data.error || data.message || 'Could not resend OTP.');
       }
 
       setCountdown(180);
@@ -316,7 +330,7 @@ export default function LandingPage() {
       setIsVerifying(false);
       setIsResending(false);
       setVerifyMessage(data.message || 'OTP resent successfully.');
-      setShowToast('✅ OTP resent successfully');
+      showToast('✅ OTP resent successfully');
     } catch (err) {
       setAuthError(err.message || 'Unable to resend the OTP.');
       setIsResending(false);
