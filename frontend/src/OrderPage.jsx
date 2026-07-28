@@ -75,7 +75,7 @@ const OrderCard = memo(function OrderCard({ order, onTrackOrder, onCancelOrder }
   const isDelivered = derivedStatus === 'delivered';
 
   return (
-    <article className="order-card">
+    <article className={`order-card ${isCancelled ? 'order-card--disabled' : ''}`} aria-disabled={isCancelled}>
       <div className="order-card-header">
         <div>
           <p className="section-eyebrow">Order ID</p>
@@ -297,8 +297,16 @@ export default function OrderPage() {
         throw new Error('Unable to cancel this order right now.');
       }
 
-      setOrders((currentOrders) => currentOrders.map((entry) => entry.orderId === pendingCancelOrder.orderId ? { ...entry, status: 'Cancelled' } : entry));
+      // Update local UI state immediately
+      setOrders((currentOrders) => currentOrders.map((entry) => entry.orderId === pendingCancelOrder.orderId ? { ...entry, status: 'cancelled' } : entry));
       setCancelMessage('Your order has been cancelled successfully.');
+
+      // If the cancelled order is currently selected in the tracking modal, update it and highlight cancelled
+      if (selectedOrder && selectedOrder.orderId === pendingCancelOrder.orderId) {
+        setSelectedOrder((s) => ({ ...(s || {}), status: 'cancelled' }));
+        setTrackingStatus('cancelled');
+      }
+
       setPendingCancelOrder(null);
     } catch (err) {
       setCancelMessage(err.message || 'Unable to cancel this order right now.');
@@ -454,13 +462,13 @@ export default function OrderPage() {
           )}
 
           {pendingCancelOrder && (
-            <div className="confirmation-dialog-overlay" onClick={() => setPendingCancelOrder(null)}>
+            <div className="confirmation-dialog-overlay" role="dialog" aria-modal="true" aria-labelledby="cancel-order-title" onClick={() => setPendingCancelOrder(null)}>
               <div className="confirmation-dialog" onClick={(event) => event.stopPropagation()}>
-                <h3>Cancel Order?</h3>
+                <h3 id="cancel-order-title">Cancel Order?</h3>
                 <p>Are you sure you want to cancel this order?</p>
                 <div className="confirmation-dialog-actions">
-                  <button className="order-card-action order-card-action--danger" type="button" onClick={confirmCancelOrder}>Yes Cancel</button>
-                  <button className="order-card-action order-card-action--ghost" type="button" onClick={() => setPendingCancelOrder(null)}>No</button>
+                  <button className="order-card-action order-card-action--danger" type="button" onClick={confirmCancelOrder}>Yes, Cancel</button>
+                  <button className="order-card-action order-card-action--dark" type="button" onClick={() => setPendingCancelOrder(null)}>No</button>
                 </div>
               </div>
             </div>

@@ -39,6 +39,20 @@ const CartPage = () => {
   const hasFetchedCartRef = useRef(false);
   const navigate = useNavigate();
 
+  const handleCloseSuccessModal = useCallback(() => {
+    setPaymentSuccessData(null);
+  }, []);
+
+  const handleTrackSuccessOrder = useCallback(() => {
+    if (!paymentSuccessData) return;
+    navigate(`/orders/${encodeURIComponent(paymentSuccessData.orderId)}/tracking`, { state: { order: paymentSuccessData }, replace: true });
+  }, [navigate, paymentSuccessData]);
+
+  const handleContinueAfterSuccess = useCallback(() => {
+    setPaymentSuccessData(null);
+    navigate('/customerhome');
+  }, [navigate]);
+
   const getAuthHeaders = useCallback(() => {
     const token = localStorage.getItem("authToken");
     return token ? { Authorization: `Bearer ${token}` } : {};
@@ -452,7 +466,6 @@ const CartPage = () => {
             setPaymentError(null);
             setPaymentState("success");
             updateCartState([]);
-            navigate('/order-success', { state: { order: successOrder }, replace: true });
           } catch (e) {
             console.error("Payment verification error:", e);
             const details = getPaymentErrorDetails(e, "Payment processed but verification failed.");
@@ -546,24 +559,100 @@ const CartPage = () => {
     );
   }
 
-  if (sharedCartItems.length === 0) {
-    return (
-      <CustomerLayout username={username || 'Guest'}>
-        <div className="cart-page empty">
-          <h2>Your Cart is Empty</h2>
-          <p>Start adding some awesome products!</p>
-          <div className="cart-empty-actions">
-            <button onClick={() => navigate("/customerhome")}>Continue Shopping</button>
-          </div>
+  const isCartEmpty = sharedCartItems.length === 0;
+
+  const cartView = isCartEmpty ? (
+    <div className="cart-page empty">
+      <h2>Your Cart is Empty</h2>
+      <p>Start adding some awesome products!</p>
+      <div className="cart-empty-actions">
+        <button onClick={() => navigate('/customerhome')}>Continue Shopping</button>
+      </div>
+    </div>
+  ) : (
+    <div className="cart-container">
+      <div className="cart-page">
+        <div className="cart-page-actions">
+          <button className="back-button" onClick={() => navigate('/customerhome')}>← Continue Shopping</button>
         </div>
-      </CustomerLayout>
-    );
-  }
+
+        <div className="cart-header">
+          <h2>Shopping Cart</h2>
+          <p>{sharedCartItems.length} item{sharedCartItems.length !== 1 ? 's' : ''}</p>
+        </div>
+
+        {latestOrderStatus && (
+          <div className="latest-order-status-banner" onClick={() => navigate(`/orders/${encodeURIComponent(latestOrderStatus.orderId)}/tracking`, { state: { order: { orderId: latestOrderStatus.orderId, status: latestOrderStatus.label } } })}>
+            <span>Latest order</span>
+            <strong>{latestOrderStatus.label}</strong>
+            <small>Track #{latestOrderStatus.orderId}</small>
+          </div>
+        )}
+
+        <div className="cart-items">
+          {sharedCartItems.map((item, index) => (
+            <CartItem
+              key={getItemId(item) || index}
+              item={item}
+              onIncrease={handleIncrease}
+              onDecrease={handleDecrease}
+              onRemove={handleRemove}
+              getItemId={getItemId}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="checkout-section">
+        <h2>Order Summary</h2>
+        <div className="checkout-summary">
+          <div className="summary-row">
+            <span>Subtotal</span>
+            <span>₹{subtotal}</span>
+          </div>
+          <div className="summary-row">
+            <span>Shipping</span>
+            <span>₹{shipping}</span>
+          </div>
+          <div className="summary-row">
+            <span>Total Items</span>
+            <span>{totalItems}</span>
+          </div>
+          <div className="summary-row total">
+            <span>Total</span>
+            <span>₹{(Number(subtotal) + Number(shipping)).toFixed(2)}</span>
+          </div>
+
+          <button
+            className="checkout-button"
+            onClick={handleCheckout}
+            disabled={checkoutLoading || Number(subtotal) <= 0}
+          >
+            {checkoutLoading ? (paymentState === 'creating-order' ? 'Creating Order...' : 'Processing Payment...') : 'Proceed to Checkout'}
+          </button>
+
+          {checkoutLoading && (
+            <div className="payment-progress-state" role="status" aria-live="polite">
+              <div className="payment-progress-spinner" />
+              <span>{paymentState === 'creating-order' ? 'Creating secure payment order...' : paymentState === 'opening-checkout' ? 'Opening Razorpay checkout...' : paymentState === 'verifying-payment' ? 'Verifying payment...' : 'Processing Payment...'}</span>
+            </div>
+          )}
+
+          {sdkError && (
+            <div className="payment-error-banner payment-error-banner--inline">
+              <p>Unable to load payment gateway. Please check your internet connection.</p>
+              <button className="retry-payment-button" type="button" onClick={handleCheckout}>Retry Payment</button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <CustomerLayout username={username}>
       <Toast
-        message={toastMessage || "Payment successful!"}
+        message={toastMessage || 'Payment successful!'}
         show={showPaymentToast}
         type={toastType}
         onClose={() => setShowPaymentToast(false)}
@@ -574,104 +663,47 @@ const CartPage = () => {
         </div>
       )}
 
-      <div className="cart-container">
-        <div className="cart-page">
-          <div className="cart-page-actions">
-            <button className="back-button" onClick={() => navigate("/customerhome")}>
-              ← Continue Shopping
-            </button>
+      {cartView}
 
-          </div>
-
-          <div className="cart-header">
-            <h2>Shopping Cart</h2>
-            <p>{sharedCartItems.length} item{sharedCartItems.length !== 1 ? "s" : ""}</p>
-          </div>
-
-          {latestOrderStatus && (
-            <div className="latest-order-status-banner" onClick={() => navigate(`/orders/${encodeURIComponent(latestOrderStatus.orderId)}/tracking`, { state: { order: { orderId: latestOrderStatus.orderId, status: latestOrderStatus.label } } })}>
-              <span>Latest order</span>
-              <strong>{latestOrderStatus.label}</strong>
-              <small>Track #{latestOrderStatus.orderId}</small>
+      {confirmDeleteItem && (
+        <div className="confirmation-popup-overlay" onClick={cancelDelete}>
+          <div className="confirmation-popup" onClick={(e) => e.stopPropagation()}>
+            <h3>Confirm Delete</h3>
+            <p>Are you sure you want to remove <strong>{confirmDeleteItem.name}</strong> from your cart?</p>
+            <div className="confirmation-buttons">
+              <button type="button" className="secondary-action-btn" onClick={cancelDelete}>No</button>
+              <button type="button" className="product-delete-btn" onClick={confirmDelete} disabled={deleteLoading}>
+                {deleteLoading ? 'Deleting…' : 'Yes, remove it'}
+              </button>
             </div>
-          )}
-
-          <div className="cart-items">
-            {sharedCartItems.map((item, index) => (
-              <CartItem
-                key={getItemId(item) || index}
-                item={item}
-                onIncrease={handleIncrease}
-                onDecrease={handleDecrease}
-                onRemove={handleRemove}
-                getItemId={getItemId}
-              />
-            ))}
           </div>
         </div>
+      )}
 
-        {confirmDeleteItem && (
-          <div className="confirmation-popup-overlay" onClick={cancelDelete}>
-            <div className="confirmation-popup" onClick={(e) => e.stopPropagation()}>
-              <h3>Confirm Delete</h3>
-              <p>Are you sure you want to remove <strong>{confirmDeleteItem.name}</strong> from your cart?</p>
-              <div className="confirmation-buttons">
-                <button type="button" className="secondary-action-btn" onClick={cancelDelete}>No</button>
-                <button type="button" className="product-delete-btn" onClick={confirmDelete} disabled={deleteLoading}>
-                  {deleteLoading ? 'Deleting…' : 'Yes, remove it'}
-                </button>
+      {paymentSuccessData && (
+        <div className="order-success-modal-overlay" onClick={handleCloseSuccessModal} role="dialog" aria-modal="true" aria-labelledby="order-success-title">
+          <div className="order-success-modal" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="order-success-modal-close" onClick={handleCloseSuccessModal} aria-label="Close">×</button>
+            <div className="order-success-icon-badge">✓</div>
+            <h3 id="order-success-title">Order Placed Successfully!</h3>
+            <p>Your payment is confirmed and your order is now being prepared. Track your order from the Orders page or continue shopping.</p>
+            <div className="order-success-meta">
+              <div>
+                <span>Order ID</span>
+                <strong>{paymentSuccessData.orderId}</strong>
+              </div>
+              <div>
+                <span>Total</span>
+                <strong>₹{Number(paymentSuccessData.totalAmount || paymentSuccessData.amount || paymentSuccessData.price || 0).toFixed(2)}</strong>
               </div>
             </div>
-          </div>
-        )}
-
-        <div className="checkout-section">
-          <h2>Order Summary</h2>
-          <div className="checkout-summary">
-            <div className="summary-row">
-              <span>Subtotal</span>
-              <span>₹{subtotal}</span>
+            <div className="order-success-actions">
+              <button type="button" className="btn-primary" onClick={handleTrackSuccessOrder}>Track Order</button>
+              <button type="button" className="btn-secondary" onClick={handleContinueAfterSuccess}>Continue Shopping</button>
             </div>
-            <div className="summary-row">
-              <span>Shipping</span>
-              <span>₹{shipping}</span>
-            </div>
-            <div className="summary-row">
-              <span>Total Items</span>
-              <span>{totalItems}</span>
-            </div>
-            <div className="summary-row total">
-              <span>Total</span>
-              <span>₹{(Number(subtotal) + Number(shipping)).toFixed(2)}</span>
-            </div>
-
-            <button
-              className="checkout-button"
-              onClick={handleCheckout}
-              disabled={checkoutLoading || Number(subtotal) <= 0}
-            >
-              {checkoutLoading ? (paymentState === "creating-order" ? "Creating Order..." : "Processing Payment...") : "Proceed to Checkout"}
-            </button>
-
-            {checkoutLoading && (
-              <div className="payment-progress-state" role="status" aria-live="polite">
-                <div className="payment-progress-spinner" />
-                <span>{paymentState === "creating-order" ? "Creating secure payment order..." : paymentState === "opening-checkout" ? "Opening Razorpay checkout..." : paymentState === "verifying-payment" ? "Verifying payment..." : "Processing Payment..."}</span>
-              </div>
-            )}
-
-            {sdkError && (
-              <div className="payment-error-banner payment-error-banner--inline">
-                <p>Unable to load payment gateway. Please check your internet connection.</p>
-                <button className="retry-payment-button" type="button" onClick={handleCheckout}>Retry Payment</button>
-              </div>
-            )}
           </div>
         </div>
-      </div>
-
+      )}
     </CustomerLayout>
   );
-};
-
 export default CartPage;

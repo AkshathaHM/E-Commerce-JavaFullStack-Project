@@ -572,129 +572,141 @@
   background: #94a3b8;
 }
 
-.cart-page.success-page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  background: #f4f7fb;
+.order-success-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  z-index: 3000;
 }
 
-.payment-success-screen {
-  width: 100%;
-  max-width: 720px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-
-.success-card {
-  width: 100%;
+.order-success-modal {
+  width: min(520px, 100%);
   background: var(--surface);
-  border-radius: 30px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.12);
-  padding: 36px 32px;
-  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  box-shadow: 0 32px 80px rgba(15, 23, 42, 0.18);
+  padding: 32px 28px;
   position: relative;
+  text-align: center;
+  color: var(--text);
 }
 
-.success-card::before {
-  content: "";
+.order-success-modal-close {
   position: absolute;
-  top: -16px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 6px;
-  border-radius: 999px;
-  background: #00abe4;
+  top: 16px;
+  right: 16px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-alt);
+  color: var(--text);
+  font-size: 22px;
+  cursor: pointer;
 }
 
-.success-card h1 {
-  margin: 0 0 12px;
-  font-size: 34px;
-  color: #073b5b;
+.order-success-modal-close:hover {
+  background: rgba(226, 232, 240, 0.9);
 }
 
-.success-card p {
-  color: #4a5568;
-  line-height: 1.65;
-  margin: 10px 0;
+.order-success-icon-badge {
+  width: 68px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: rgba(34, 197, 94, 0.12);
+  color: #16a34a;
+  font-size: 32px;
+  font-weight: 700;
 }
 
-.success-details {
-  margin: 24px auto;
-  padding: 26px;
-  background: #e8f5ff;
-  border: 1px solid #cfe8ff;
-  border-radius: 22px;
+.order-success-modal h3 {
+  margin: 0 0 14px;
+  font-size: 1.75rem;
+}
+
+.order-success-modal p {
+  margin: 0 auto 24px;
+  max-width: 420px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.order-success-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
   text-align: left;
 }
 
-.success-details p {
-  margin: 12px 0;
-  color: #102a43;
-  font-size: 15px;
+.order-success-meta div {
+  padding: 16px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: 16px;
 }
 
-.success-details strong {
-  display: inline-block;
-  width: 160px;
-  color: #0f3d69;
+.order-success-meta span {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
 }
 
-.success-actions {
+.order-success-meta strong {
+  display: block;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.order-success-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
   justify-content: center;
-  margin-top: 28px;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
-.success-button {
-  border: none;
+.btn-primary,
+.btn-secondary {
+  min-width: 160px;
+  padding: 12px 18px;
   border-radius: 12px;
-  padding: 14px 28px;
-  font-size: 15px;
+  font-size: 0.95rem;
   font-weight: 700;
+  border: none;
   cursor: pointer;
-  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
 }
 
-.success-button.primary {
-  background: #0078d4;
-  color: var(--button-text);
-  box-shadow: 0 14px 24px rgba(0, 120, 212, 0.18);
-}
-
-.success-button.secondary {
-  background: #f8fbff;
-  color: #0f3d69;
-  border: 1px solid #c6d9ef;
-}
-
-.success-button.tertiary {
-  background: #00abe4;
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary2));
   color: var(--button-text);
 }
 
-.success-button:hover {
-  transform: translateY(-2px);
+.btn-primary:hover {
+  transform: translateY(-1px);
 }
 
-.success-button.primary:hover {
-  background: #005fa6;
+.btn-secondary {
+  background: var(--surface-alt);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
-.success-button.secondary:hover {
-  background: #eef5fb;
+.btn-secondary:hover {
+  background: rgba(248, 250, 252, 0.95);
 }
 
-.success-button.tertiary:hover {
-  background: #0091c1;
+@media (max-width: 640px) {
+  .order-success-meta {
+    grid-template-columns: 1fr;
+  }
 }
 
 .tracking-overlay {

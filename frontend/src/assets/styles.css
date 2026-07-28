@@ -3424,6 +3424,61 @@ button[type="submit"]:focus-visible {
   background: var(--surface-alt);
 }
 
+/* Centered cancel confirmation modal */
+.confirmation-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2,6,23,0.6);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 2200;
+}
+
+.confirmation-dialog {
+  width: min(520px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 20px 60px rgba(2,6,23,0.4);
+  color: var(--text);
+  text-align: center;
+}
+
+.confirmation-dialog h3 {
+  margin: 0 0 10px;
+  font-size: 1.25rem;
+}
+
+.confirmation-dialog p {
+  margin: 0 0 18px;
+  color: var(--text-secondary);
+}
+
+.confirmation-dialog-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* Dark-styled 'No' button for confirmation */
+.order-card-action--dark {
+  min-width: 140px;
+  border: none;
+  background: #0b1220;
+  color: #ffffff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* Slightly greyed/disabled look for cancelled order cards */
+.order-card--disabled {
+  opacity: 0.72;
+  filter: grayscale(6%);
+}
+
 .order-status-badge {
   display: inline-flex;
   align-items: center;
