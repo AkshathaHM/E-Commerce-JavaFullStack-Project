@@ -18,7 +18,7 @@ const CategoryButton = React.memo(({ category, isActive, onClick }) => (
 CategoryButton.displayName = 'CategoryButton';
 
 export const CategoryNavigation = React.memo(({ selectedCategory, onCategoryClick }) => {
-  const categories = ['All', 'Shirts', 'Pants', 'Accessories', 'Mobiles', 'Mobile Accessories'];
+  const categories = ['All', 'Shirts', 'Pants', 'Sarees', 'Kurtas', 'Western Dresses', 'Accessories', 'Mobiles', 'Mobile Accessories'];
 
   return (
     <nav className="category-navigation" aria-label="Category navigation">

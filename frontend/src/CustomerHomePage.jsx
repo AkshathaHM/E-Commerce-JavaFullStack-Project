@@ -3,6 +3,7 @@ import { CustomerLayout } from './CustomerLayout';
 import { ProductList } from './ProductList';
 import { ProductCardSkeleton } from './components/Skeleton';
 import CustomModal from './CustomModal';
+import { CategoryNavigation } from './CategoryNavigation';
 import { cachedFetch } from './utils/apiClient';
 import { getCache, setCache } from './utils/cache';
 import { useCart } from './CartContext';
@@ -14,6 +15,7 @@ export default function CustomerHomePage() {
   const [allProducts, setAllProducts] = useState(initialProducts);
   const [username, setUsername] = useState(localStorage.getItem('username') || 'Guest');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [loading, setLoading] = useState(() => initialProducts.length === 0);
   const [error, setError] = useState('');
   const [profileModalType, setProfileModalType] = useState(null);
@@ -104,6 +106,20 @@ export default function CustomerHomePage() {
 
   const filteredProducts = useMemo(() => {
     const normalizedSearch = deferredSearchTerm.trim().toLowerCase();
+    const normalizedCategory = selectedCategory.trim().toLowerCase();
+
+    const categoryTokens = {
+      shirts: ['shirt', 'shirts', 't-shirt', 'tee'],
+      pants: ['pant', 'pants', 'trouser', 'trousers', 'jeans'],
+      sarees: ['saree', 'sarees', 'saari', 'saaree'],
+      kurtas: ['kurta', 'kurtas', 'kurti', 'kurtis'],
+      'western dresses': ['western dress', 'western dresses', 'dress', 'dresses', 'gown'],
+      accessories: ['accessorie', 'accessories', 'jewelry', 'jewellery', 'bag', 'belt'],
+      mobiles: ['mobile', 'mobile phone', 'smartphone', 'phone'],
+      'mobile accessories': ['mobile accessories', 'phone accessories', 'charger', 'earbuds', 'earphones', 'headphones'],
+    };
+
+    const categoryKeywords = categoryTokens[normalizedCategory] || [normalizedCategory];
 
     return allProducts.filter((product) => {
       const searchableText = [
@@ -116,9 +132,13 @@ export default function CustomerHomePage() {
         .join(' ')
         .toLowerCase();
 
-      return !normalizedSearch || searchableText.includes(normalizedSearch);
+      const matchesSearch = !normalizedSearch || searchableText.includes(normalizedSearch);
+      const matchesCategory = normalizedCategory === 'all'
+        || categoryKeywords.some((token) => searchableText.includes(token));
+
+      return matchesSearch && matchesCategory;
     });
-  }, [allProducts, deferredSearchTerm]);
+  }, [allProducts, deferredSearchTerm, selectedCategory]);
 
   const handleAddToCart = useCallback(async (product) => {
     if (!product) return false;
@@ -238,6 +258,8 @@ export default function CustomerHomePage() {
             {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
           </div>
         </div>
+
+        <CategoryNavigation selectedCategory={selectedCategory} onCategoryClick={setSelectedCategory} />
 
         {showSkeletons ? (
           <div className="product-grid" aria-label="Loading featured products">

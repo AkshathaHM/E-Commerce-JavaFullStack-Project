@@ -11,12 +11,16 @@ import { Toast } from "./Toast";
 const CATEGORY_OPTIONS = [
   { label: "Shirts", value: 1 },
   { label: "Pants", value: 2 },
+  { label: "Sarees", value: 6 },
+  { label: "Kurtas", value: 7 },
+  { label: "Western Dresses", value: 8 },
   { label: "Accessories", value: 3 },
   { label: "Mobiles", value: 4 },
   { label: "Mobile Accessories", value: 5 },
 ];
 
 const createEmptyProductForm = () => ({
+
   name: "",
   description: "",
   price: "",

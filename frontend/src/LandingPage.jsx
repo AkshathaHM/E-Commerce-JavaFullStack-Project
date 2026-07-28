@@ -473,7 +473,7 @@ export default function LandingPage() {
     <div className="landing-page">
       <LandingHeader onOpenModal={openModal} />
 
-      <main className="landing-hero">
+      <main className={`landing-hero${activeModal ? ' landing-hero--modal-open' : ''}`}>
         {visibleHeroImages.map((src, index) => (
           <div
             key={src}
@@ -491,10 +491,10 @@ export default function LandingPage() {
 
         <div className="landing-hero__overlay" />
         <div className="landing-hero__content">
-          <p className="landing-hero__eyebrow">ABOUT SALESSVVY</p>
-          <h1 className="landing-hero__title">Discover curated collections of boy&apos;s shirts, pants, and mobile accessories.</h1>
+          <p className="landing-hero__eyebrow">&nbsp;</p>
+          <h1 className="landing-hero__title">Your Smart Destination for Online Shopping</h1>
           <p className="landing-hero__text">
-            Experience premium, savvy shopping with the latest styles and must-have tech essentials.
+            Discover high-quality products across fashion, electronics, accessories, home essentials, and more. SalesSavvy combines convenience, reliability, and value to deliver an exceptional shopping experience for every customer through secure payments, fast delivery, and trusted service.
           </p>
         </div>
         <div className="landing-hero__pager" aria-label="Landing slideshow navigation">
@@ -566,95 +566,107 @@ export default function LandingPage() {
           {authError && <div className="auth-alert auth-alert--error">{authError}</div>}
           {activeModal === 'signup' && (
             <form onSubmit={handleSignUp} className="auth-form">
-              <InputField
-                id="landingUsername"
-                label="Username"
-                placeholder="Enter username"
-                value={signup.username}
-                onChange={(e) => {
-                  setSignup((prev) => ({ ...prev, username: e.target.value }));
-                  if (fieldErrors.username) setFieldErrors((prev) => ({ ...prev, username: '' }));
-                }}
-                error={fieldErrors.username}
-              />
-              <InputField
-                id="landingEmail"
-                label="Email"
-                type="email"
-                placeholder="john@example.com"
-                value={signup.email}
-                onChange={(e) => {
-                  setSignup((prev) => ({ ...prev, email: e.target.value }));
-                  if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: '' }));
-                }}
-                error={fieldErrors.email}
-              />
-              <InputField
-                id="landingMobileNumber"
-                label="Mobile Number"
-                type="tel"
-                placeholder="1234567890"
-                value={signup.mobileNumber}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-                  setSignup((prev) => ({ ...prev, mobileNumber: value }));
-                  if (fieldErrors.mobileNumber) setFieldErrors((prev) => ({ ...prev, mobileNumber: '' }));
-                }}
-                error={fieldErrors.mobileNumber}
-              />
-              <InputField
-                id="landingAddress"
-                label="Address"
-                placeholder="123 Main Street"
-                value={signup.address}
-                onChange={(e) => {
-                  setSignup((prev) => ({ ...prev, address: e.target.value }));
-                  if (fieldErrors.address) setFieldErrors((prev) => ({ ...prev, address: '' }));
-                }}
-                error={fieldErrors.address}
-              />
-              <InputField
-                id="landingRole"
-                label="Role"
-                type="select"
-                value={signup.role}
-                onChange={(e) => setSignup((prev) => ({ ...prev, role: e.target.value }))}
-              >
-                <option value="CUSTOMER">Customer</option>
-                <option value="ADMIN">Admin</option>
-              </InputField>
-              <PasswordField
-                id="landingPassword"
-                label="Password"
-                placeholder="Create password"
-                value={signup.password}
-                onChange={(e) => {
-                  setSignup((prev) => ({ ...prev, password: e.target.value }));
-                  if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: '' }));
-                }}
-                error={fieldErrors.password}
-              />
-              <PasswordField
-                id="landingConfirmPassword"
-                label="Confirm Password"
-                placeholder="Confirm password"
-                value={signup.confirmPassword}
-                onChange={(e) => {
-                  setSignup((prev) => ({ ...prev, confirmPassword: e.target.value }));
-                  if (fieldErrors.confirmPassword) setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
-                }}
-                error={fieldErrors.confirmPassword}
-              />
-              <label className="auth-checkbox">
-                <input
-                  type="checkbox"
-                  checked={signup.agreement}
-                  onChange={(e) => setSignup((prev) => ({ ...prev, agreement: e.target.checked }))}
+              <div className="auth-form-row">
+                <InputField
+                  id="landingUsername"
+                  label="Username"
+                  placeholder="Enter username"
+                  value={signup.username}
+                  onChange={(e) => {
+                    setSignup((prev) => ({ ...prev, username: e.target.value }));
+                    if (fieldErrors.username) setFieldErrors((prev) => ({ ...prev, username: '' }));
+                  }}
+                  error={fieldErrors.username}
                 />
-                I agree to the Terms & Conditions.
-              </label>
+                <InputField
+                  id="landingEmail"
+                  label="Email"
+                  type="email"
+                  placeholder="john@example.com"
+                  value={signup.email}
+                  onChange={(e) => {
+                    setSignup((prev) => ({ ...prev, email: e.target.value }));
+                    if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: '' }));
+                  }}
+                  error={fieldErrors.email}
+                />
+              </div>
+
+              <div className="auth-form-row">
+                <InputField
+                  id="landingMobileNumber"
+                  label="Mobile Number"
+                  type="tel"
+                  placeholder="1234567890"
+                  value={signup.mobileNumber}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setSignup((prev) => ({ ...prev, mobileNumber: value }));
+                    if (fieldErrors.mobileNumber) setFieldErrors((prev) => ({ ...prev, mobileNumber: '' }));
+                  }}
+                  error={fieldErrors.mobileNumber}
+                />
+                <InputField
+                  id="landingAddress"
+                  label="Address"
+                  placeholder="123 Main Street"
+                  value={signup.address}
+                  onChange={(e) => {
+                    setSignup((prev) => ({ ...prev, address: e.target.value }));
+                    if (fieldErrors.address) setFieldErrors((prev) => ({ ...prev, address: '' }));
+                  }}
+                  error={fieldErrors.address}
+                />
+              </div>
+
+              <div className="auth-form-row">
+                <InputField
+                  id="landingRole"
+                  label="Role"
+                  type="select"
+                  value={signup.role}
+                  onChange={(e) => setSignup((prev) => ({ ...prev, role: e.target.value }))}
+                >
+                  <option value="CUSTOMER">Customer</option>
+                  <option value="ADMIN">Admin</option>
+                </InputField>
+                <label className="auth-checkbox auth-checkbox--panel">
+                  <input
+                    type="checkbox"
+                    checked={signup.agreement}
+                    onChange={(e) => setSignup((prev) => ({ ...prev, agreement: e.target.checked }))}
+                  />
+                  I agree to the Terms & Conditions.
+                </label>
+              </div>
+
+              <div className="auth-form-row">
+                <PasswordField
+                  id="landingPassword"
+                  label="Password"
+                  placeholder="Create password"
+                  value={signup.password}
+                  onChange={(e) => {
+                    setSignup((prev) => ({ ...prev, password: e.target.value }));
+                    if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: '' }));
+                  }}
+                  error={fieldErrors.password}
+                />
+                <PasswordField
+                  id="landingConfirmPassword"
+                  label="Confirm Password"
+                  placeholder="Confirm password"
+                  value={signup.confirmPassword}
+                  onChange={(e) => {
+                    setSignup((prev) => ({ ...prev, confirmPassword: e.target.value }));
+                    if (fieldErrors.confirmPassword) setFieldErrors((prev) => ({ ...prev, confirmPassword: '' }));
+                  }}
+                  error={fieldErrors.confirmPassword}
+                />
+              </div>
+
               {fieldErrors.agreement && <p className="auth-feedback">{fieldErrors.agreement}</p>}
-              <PrimaryButton type="submit" isLoading={isSubmitting} loadingText="Creating account..." disabled={isSignupSubmitDisabled}>
+              <PrimaryButton type="submit" isLoading={isSubmitting} loadingText="Creating account..." disabled={isSignupSubmitDisabled} className="auth-form-submit">
                 Sign Up
               </PrimaryButton>
             </form>
