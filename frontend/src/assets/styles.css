@@ -1900,34 +1900,16 @@ button[type="submit"]:focus-visible {
 
 .admin-dashboard {
   min-height: 100vh;
-  position: relative;
   background: var(--bg);
   color: var(--text);
-  background-image: url('/background1.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-.admin-dashboard::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.42);
-  pointer-events: none;
-}
-
-.admin-dashboard .dashboard-content {
-  position: relative;
-  z-index: 1;
 }
 
 .admin-dashboard .dashboard-hero {
   padding: 30px;
   border-radius: 28px;
-  background: rgba(8, 15, 26, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24);
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
   margin-bottom: 24px;
 }
 
@@ -2584,7 +2566,7 @@ button[type="submit"]:focus-visible {
   position: relative;
   padding: 30px;
   border-radius: 28px;
-  background: linear-gradient(rgba(8, 15, 26, 0.82), rgba(8, 15, 26, 0.82)), url('/background1.png') center/cover no-repeat;
+  background: linear-gradient(rgba(8, 15, 26, 0.82), rgba(8, 15, 26, 0.82)), url('/landing-images/admin-custom.png') center/cover no-repeat;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24);
   color: #ffffff;
@@ -4091,17 +4073,28 @@ button[type="submit"]:focus-visible {
 }
 
 .admin-dashboard .dashboard-hero {
+  position: relative;
   padding: 30px;
   border-radius: 28px;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  background: linear-gradient(rgba(8, 15, 26, 0.82), rgba(8, 15, 26, 0.82)), url('/landing-images/admin-custom.png') center/cover no-repeat;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24);
+  color: #ffffff;
   margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.admin-dashboard .dashboard-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.18);
+  pointer-events: none;
 }
 
 .admin-dashboard .dashboard-hero__eyebrow {
   margin: 0 0 8px;
-  color: var(--brand);
+  color: #cfe8ff;
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.2em;
