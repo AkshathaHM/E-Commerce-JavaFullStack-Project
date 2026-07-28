@@ -27,25 +27,36 @@ const readSafeValue = (value, fallback = 'N/A') => {
 
 const normalizeOrderPayload = (order) => {
   // Ensure createdAt is always used as the source of truth for orderDate
-  // This is critical for time-based status calculation
+  // This is critical for time-based status calculation after refresh
   const createdAtValue = order?.createdAt || order?.created_at;
   const backendStatus = readSafeValue(order?.status || order?.orderStatus, 'Order Placed');
+  const orderId = order?.order_id || order?.orderId || order?.id || 'N/A';
   
+  // Detailed validation of createdAt
   if (!createdAtValue) {
-    console.warn('[OrderNormalize] Order missing createdAt timestamp:', {
-      orderId: order?.orderId || order?.order_id,
-      receivedStatus: backendStatus
+    console.error('[OrderNormalize] CRITICAL: Order missing createdAt timestamp! Cannot calculate status correctly.', {
+      orderId,
+      receivedStatus: backendStatus,
+      rawOrder: order
     });
   } else {
+    // Log the format and value of createdAt for debugging
+    const createdAtType = typeof createdAtValue;
+    const createdAtIsArray = Array.isArray(createdAtValue);
     console.log('[OrderNormalize] Order loaded with createdAt:', {
-      orderId: order?.order_id || order?.orderId,
+      orderId,
       createdAt: createdAtValue,
-      receivedStatus: backendStatus
+      createdAtType,
+      createdAtIsArray,
+      createdAtLength: createdAtIsArray ? createdAtValue.length : 'N/A',
+      receivedStatus: backendStatus,
+      // Try to parse as Date to verify it's valid
+      parsedAsDate: new Date(createdAtValue).toISOString().substring(0, 19)
     });
   }
 
   return {
-    orderId: order?.order_id || order?.orderId || order?.id || 'N/A',
+    orderId,
     customerName: readSafeValue(order?.customerName || order?.customer_name, 'Customer'),
     email: readSafeValue(order?.email || order?.customerEmail),
     phone: readSafeValue(order?.phone || order?.mobile),
@@ -265,7 +276,8 @@ export default function OrderPage() {
     }
   }, [location.state, username]);
 
-  // Calculate tracking status once when modal opens
+  // Calculate tracking status once when modal opens or order data changes
+  // Re-calculate even for the same order if the orderDate/status changes (e.g., after refresh)
   useEffect(() => {
     if (!selectedOrder) {
       setTrackingStatus('placed');
@@ -273,15 +285,18 @@ export default function OrderPage() {
     }
 
     const currentStatus = getDerivedOrderStatus(selectedOrder.orderDate, selectedOrder.status);
-    console.log('[TrackingModal] Modal opened for order:', {
+    console.log('[TrackingModal] Status recalculated for order:', {
       orderId: selectedOrder.orderId,
       orderDate: selectedOrder.orderDate,
+      orderDateType: typeof selectedOrder.orderDate,
+      orderDateIsArray: Array.isArray(selectedOrder.orderDate),
       receivedStatus: selectedOrder.status,
       calculatedStatus: currentStatus,
+      elapsedMs: Date.now() - new Date(selectedOrder.orderDate).getTime(),
       elapsedMinutes: Math.floor((Date.now() - new Date(selectedOrder.orderDate).getTime()) / 60000)
     });
     setTrackingStatus(currentStatus);
-  }, [selectedOrder?.orderId]);
+  }, [selectedOrder?.orderId, selectedOrder?.orderDate, selectedOrder?.status]);
 
   const orderCards = useMemo(() => {
     return coerceOrderArray(orders).map((order) => ({

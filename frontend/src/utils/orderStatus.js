@@ -29,6 +29,67 @@ const normalizeStatusText = (status) => {
   return 'placed';
 };
 
+/**
+ * Safely parse createdAt timestamp from various formats that the backend might send
+ * Handles: ISO 8601 string, milliseconds since epoch, array format
+ */
+function parseCreatedAtSafely(createdAt) {
+  if (!createdAt) {
+    console.warn('[Status Parse] createdAt is missing/null/undefined');
+    return null;
+  }
+
+  // If it's already a Date, use it directly
+  if (createdAt instanceof Date) {
+    return createdAt;
+  }
+
+  // If it's a string, try to parse as ISO 8601
+  if (typeof createdAt === 'string') {
+    try {
+      const parsed = new Date(createdAt);
+      if (!Number.isNaN(parsed.getTime())) {
+        console.log('[Status Parse] Successfully parsed ISO string:', { input: createdAt, parsed: parsed.toISOString() });
+        return parsed;
+      }
+    } catch (e) {
+      console.warn('[Status Parse] Failed to parse ISO string:', createdAt, e.message);
+    }
+  }
+
+  // If it's a number, could be milliseconds since epoch
+  if (typeof createdAt === 'number') {
+    try {
+      const parsed = new Date(createdAt);
+      if (!Number.isNaN(parsed.getTime())) {
+        console.log('[Status Parse] Successfully parsed epoch number:', { input: createdAt, parsed: parsed.toISOString() });
+        return parsed;
+      }
+    } catch (e) {
+      console.warn('[Status Parse] Failed to parse epoch number:', createdAt, e.message);
+    }
+  }
+
+  // If it's an array (Spring Boot LocalDateTime serialization), construct ISO string
+  if (Array.isArray(createdAt) && createdAt.length >= 3) {
+    try {
+      const [year, month, day, hour = 0, minute = 0, second = 0] = createdAt;
+      const isoString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
+      const parsed = new Date(isoString);
+      if (!Number.isNaN(parsed.getTime())) {
+        console.log('[Status Parse] Successfully parsed array format:', { input: createdAt, isoString, parsed: parsed.toISOString() });
+        return parsed;
+      }
+    } catch (e) {
+      console.warn('[Status Parse] Failed to parse array format:', createdAt, e.message);
+    }
+  }
+
+  // If we get here, the format is unsupported
+  console.error('[Status Parse] Unsupported createdAt format - cannot parse:', { value: createdAt, type: typeof createdAt });
+  return null;
+}
+
 export function getDerivedOrderStatus(createdAt, rawStatus = '') {
   // If explicitly cancelled, return cancelled regardless of time
   const normalized = normalizeStatusText(rawStatus);
@@ -36,28 +97,40 @@ export function getDerivedOrderStatus(createdAt, rawStatus = '') {
     return 'cancelled';
   }
 
-  // Validate createdAt exists and is a valid date
-  if (!createdAt) {
-    // If createdAt is missing, always return 'placed' (never use backend status for time-based progression)
-    console.warn('Order missing createdAt timestamp; defaulting to placed status');
+  // Parse createdAt with defensive handling for various formats
+  const createdDate = parseCreatedAtSafely(createdAt);
+  if (!createdDate) {
+    console.warn('[Status Calc] Could not parse createdAt; defaulting to placed status');
     return 'placed';
   }
 
-  const createdTime = new Date(createdAt).getTime();
-  if (Number.isNaN(createdTime)) {
-    // If createdAt is invalid, always return 'placed' (never use backend status for time-based progression)
-    console.warn('Order has invalid createdAt format:', createdAt, '; defaulting to placed status');
-    return 'placed';
-  }
-
-  // Calculate elapsed time since order creation
+  const createdTime = createdDate.getTime();
   const nowTime = Date.now();
   const elapsedMs = nowTime - createdTime;
   const elapsedMinutes = Math.floor(elapsedMs / 60000);
 
-  console.log(`[Status Calc] Order created ${elapsedMinutes}min ago; determined status based on time thresholds`);
+  // Sanity check: if elapsed time is negative (order created in future), something is wrong
+  if (elapsedMinutes < 0) {
+    console.warn('[Status Calc] Order created in the future (clock skew?); elapsed:', elapsedMinutes, 'minutes; defaulting to placed');
+    return 'placed';
+  }
 
-  // Determine status based on elapsed time (NOT based on backend status)
+  // Sanity check: if elapsed time is unreasonably large (>10 years), creation date parsing failed
+  const MAX_REASONABLE_MINUTES = 10 * 365 * 24 * 60; // ~10 years
+  if (elapsedMinutes > MAX_REASONABLE_MINUTES) {
+    console.warn('[Status Calc] Unreasonably large elapsed time:', elapsedMinutes, 'minutes (>10 years); creation date likely parsed incorrectly; defaulting to placed');
+    return 'placed';
+  }
+
+  console.log('[Status Calc] Order created at:', createdDate.toISOString(), 'Elapsed:', elapsedMinutes, 'minutes → Status:', determineStatusFromElapsed(elapsedMinutes));
+
+  return determineStatusFromElapsed(elapsedMinutes);
+}
+
+/**
+ * Determine order status based on elapsed minutes
+ */
+function determineStatusFromElapsed(elapsedMinutes) {
   if (elapsedMinutes >= TIME_THRESHOLDS_MINUTES.delivered) {
     return 'delivered';
   }
