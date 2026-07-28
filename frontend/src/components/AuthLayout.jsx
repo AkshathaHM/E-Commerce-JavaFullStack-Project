@@ -5,9 +5,13 @@ import AuthCard from './AuthCard';
 function AuthLayout({ title, subtitle, notice, children, footer, onClose, variant }) {
   const navigate = useNavigate();
   const handleClose = onClose || (() => navigate(variant === 'admin' ? '/admin' : '/'));
+  // keep a ref to the latest handleClose so our mount-only effect can call the current function
+  const handleCloseRef = useRef(handleClose);
+  handleCloseRef.current = handleClose;
   const brandTarget = variant === 'admin' ? '/admin' : '/';
   const dialogRef = useRef(null);
 
+  // Run focus-trap & body-scroll lock only on mount to avoid stealing focus on every re-render.
   useEffect(() => {
     if (!dialogRef.current) return undefined;
 
@@ -31,7 +35,8 @@ function AuthLayout({ title, subtitle, notice, children, footer, onClose, varian
 
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
-        handleClose();
+        // call the latest handleClose from ref
+        handleCloseRef.current && handleCloseRef.current();
         return;
       }
 
@@ -60,7 +65,8 @@ function AuthLayout({ title, subtitle, notice, children, footer, onClose, varian
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = previousOverflow || 'auto';
     };
-  }, [handleClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="auth-page" role="dialog" aria-modal="true">
