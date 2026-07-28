@@ -10,6 +10,7 @@ import { cachedFetch, invalidateCache } from './utils/apiClient';
 import { getPaymentErrorDetails } from "./utils/paymentFlow";
 import { getDerivedOrderStatus, getStatusLabel } from "./utils/orderStatus";
 import { useCart } from './CartContext';
+import { getCartItemStockLimit } from './utils/cartUtils';
 
 const CartPage = () => {
   const { cartItems: sharedCartItems, updateCartState, removeProductFromCart } = useCart();
@@ -87,11 +88,7 @@ const CartPage = () => {
     const id = item?.product_id ?? item?.productId ?? item?.id ?? null;
     return id != null ? String(id) : null;
   }, []);
-  const getItemStock = useCallback((item) => {
-    const stockValue = item?.stock ?? item?.availableStock ?? item?.available_stock ?? item?.maxQuantity ?? item?.max_quantity ?? item?.quantityAvailable ?? item?.quantity_available ?? item?.inventory ?? item?.product_stock;
-    const numericStock = Number(stockValue);
-    return Number.isFinite(numericStock) && numericStock >= 0 ? numericStock : null;
-  }, []);
+  const getItemStock = useCallback((item) => getCartItemStockLimit(item), []);
   const getDisplayName = useCallback(
     (item) => item?.name || item?.title || item?.productName || item?.product_name || "Product",
     []
@@ -157,6 +154,7 @@ const CartPage = () => {
           display_name: getDisplayName(item),
           display_description: getDisplayDescription(item),
           display_image_url: getDisplayImageUrl(item),
+          stock: getCartItemStockLimit(item) ?? item?.stock ?? null,
         };
       });
 
@@ -254,8 +252,8 @@ const CartPage = () => {
     if (!item) return;
 
     const currentQty = Number(item.quantity || 0);
-    const stockLimit = getItemStock(item);
     const requestedQty = currentQty + Number(delta || 0);
+    const stockLimit = getItemStock(item);
 
     if (requestedQty < 1) {
       setToastMessage('Quantity cannot go below 1.');
@@ -265,7 +263,7 @@ const CartPage = () => {
     }
 
     if (stockLimit !== null && requestedQty > stockLimit) {
-      setToastMessage(`Only ${stockLimit} item${stockLimit === 1 ? '' : 's'} in stock for ${item.display_name || item.name || 'this product'}.`);
+      setToastMessage(`Only ${stockLimit} item${stockLimit === 1 ? '' : 's'} available for ${item.display_name || item.name || 'this product'}.`);
       setToastType('error');
       setShowPaymentToast(true);
       return;
@@ -308,7 +306,7 @@ const CartPage = () => {
       setShowPaymentToast(true);
       fetchCartItems({ showLoading: false });
     }
-  }, [getAuthHeaders, fetchCartItems, getItemStock, getItemId, sharedCartItems, username, updateCartState]);
+  }, [getAuthHeaders, fetchCartItems, getItemId, sharedCartItems, username, updateCartState]);
 
   // stable callbacks for child components
   const handleIncrease = useCallback((id) => handleQuantityChange(id, +1), [handleQuantityChange]);

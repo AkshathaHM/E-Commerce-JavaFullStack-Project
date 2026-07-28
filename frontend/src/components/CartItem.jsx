@@ -1,13 +1,12 @@
 import React, { memo } from 'react';
+import { canIncreaseCartItem } from '../utils/cartUtils';
 
 const CartItem = ({ item, onIncrease, onDecrease, onRemove, getItemId, imageFallback = '/images/no-image.png' }) => {
   const id = getItemId(item) || item.id || item.productId || item.product_id;
-  const image = (item.display_image_url || item.image_url || item.image || '').startsWith?.('http') ? (item.display_image_url || item.image_url || item.image) : imageFallback;
+  const image = ((item.display_image_url || item.image_url || item.image || item.imageUrl || '') + '').startsWith?.('http') || ((item.display_image_url || item.image_url || item.image || item.imageUrl || '') + '').startsWith?.('data:image/') ? (item.display_image_url || item.image_url || item.image || item.imageUrl) : imageFallback;
 
-  const stockLimit = item?.stock ?? item?.availableStock ?? item?.available_stock ?? item?.maxQuantity ?? item?.max_quantity ?? item?.quantityAvailable ?? item?.quantity_available ?? item?.inventory ?? item?.product_stock ?? null;
-  const numericStockLimit = Number.isFinite(Number(stockLimit)) ? Number(stockLimit) : null;
   const canDecrease = Number(item.quantity || 0) > 1;
-  const canIncrease = numericStockLimit === null || Number(item.quantity || 0) < numericStockLimit;
+  const canIncrease = canIncreaseCartItem(item);
 
   return (
     <div className="cart-item">
@@ -31,11 +30,6 @@ const CartItem = ({ item, onIncrease, onDecrease, onRemove, getItemId, imageFall
             🗑
           </button>
         </div>
-        {numericStockLimit !== null && (
-          <div className="item-stock-hint">
-            {`In stock: ${numericStockLimit}`}
-          </div>
-        )}
       </div>
     </div>
   );

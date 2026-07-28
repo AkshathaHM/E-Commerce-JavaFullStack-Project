@@ -193,13 +193,15 @@ export default function OrderPage() {
     if (!username) return;
     setIsCartLoading(true);
     try {
-      const count = await cachedFetch(
-        `cart_count_${username}`,
-        `${import.meta.env.VITE_API_URL}/api/cart/items/count?username=${username}`,
-        { credentials: 'include' },
-        30000
-      );
-      setCartCount(Number(count) || 0);
+      // Prefer fetching full cart and summing quantities to ensure accurate badge
+      const cartData = await cachedFetch('cart_items', `${import.meta.env.VITE_API_URL}/api/cart/items`, { credentials: 'include' }, 30000);
+      if (cartData && cartData.cart && Array.isArray(cartData.cart.products)) {
+        const count = cartData.cart.products.reduce((s, it) => s + Number(it.quantity || it.qty || 0), 0);
+        setCartCount(Number(count) || 0);
+      } else {
+        const count = await cachedFetch(`cart_count_${username}`, `${import.meta.env.VITE_API_URL}/api/cart/items/count?username=${username}`, { credentials: 'include' }, 30000);
+        setCartCount(Number(count) || 0);
+      }
       setCartError(false);
     } catch (error) {
       console.error('Error fetching cart count:', error);

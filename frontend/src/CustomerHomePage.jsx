@@ -7,10 +7,12 @@ import { CategoryNavigation } from './CategoryNavigation';
 import { cachedFetch } from './utils/apiClient';
 import { getCache, setCache } from './utils/cache';
 import { useCart } from './CartContext';
+import { normalizeProductList } from './utils/products';
+import { mergeCartItemById } from './utils/cartUtils';
 import './assets/styles.css';
 
 export default function CustomerHomePage() {
-  const { cartItems, cartCount, addedProductIds, addProductToCart, removeProductFromCart, incrementCartCount, decrementCartCount, setCartCount, updateCartState } = useCart();
+  const { cartItems, cartCount, addedProductIds, addProductToCart, removeProductFromCart, setCartCount, updateCartState } = useCart();
   const initialProducts = getCache('products_all') || [];
   const [allProducts, setAllProducts] = useState(initialProducts);
   const [username, setUsername] = useState(localStorage.getItem('username') || 'Guest');
@@ -50,10 +52,12 @@ export default function CustomerHomePage() {
         60000,
       );
 
-      const productList = Array.isArray(data?.products) ? data.products : (Array.isArray(data) ? data : []);
+      const productList = normalizeProductList(data);
       if (productList.length) {
         setAllProducts(productList);
         setCache(cacheKey, productList, 60000);
+      } else if (!Array.isArray(data)) {
+        setAllProducts([]);
       }
 
       if (data?.user) {
@@ -72,7 +76,8 @@ export default function CustomerHomePage() {
   const fetchCartCount = useCallback(async () => {
     const activeUsername = localStorage.getItem('username') || username || 'Guest';
     if (!activeUsername || activeUsername === 'Guest') {
-      setCartCount(0);
+      const localCount = (Array.isArray(cartItems) ? cartItems : []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+      setCartCount(localCount);
       return;
     }
 
@@ -82,14 +87,28 @@ export default function CustomerHomePage() {
       setCartCount(cachedCount);
     }
 
+    // Prefer fetching full cart items and calculate badge from quantities to avoid stock-field misuse
     try {
+      const cartData = await cachedFetch('cart_items', `${import.meta.env.VITE_API_URL}/api/cart/items`, {
+        credentials: 'include',
+        headers: getAuthHeaders(),
+      }, 30000);
+
+      if (cartData && cartData.cart && Array.isArray(cartData.cart.products)) {
+        const count = cartData.cart.products.reduce((s, it) => s + Number(it.quantity || it.qty || 0), 0);
+        setCartCount(count);
+        try { setCache(cacheKey, count, 30000); } catch (e) {}
+        return;
+      }
+
+      // fallback to dedicated count endpoint if items endpoint not available
       const data = await cachedFetch(cacheKey, `${import.meta.env.VITE_API_URL}/api/cart/items/count?username=${encodeURIComponent(activeUsername)}`, {
         credentials: 'include',
         headers: getAuthHeaders(),
       }, 30000);
       if (data !== null && data !== undefined) {
-        setCartCount(data);
-        setCache(cacheKey, data, 30000);
+        setCartCount(Number(data));
+        setCache(cacheKey, Number(data), 30000);
       }
     } catch (e) {
       console.warn('Cart count fetch failed', e);
@@ -121,7 +140,9 @@ export default function CustomerHomePage() {
 
     const categoryKeywords = categoryTokens[normalizedCategory] || [normalizedCategory];
 
-    return allProducts.filter((product) => {
+    const products = Array.isArray(allProducts) ? allProducts : [];
+
+    return products.filter((product) => {
       const searchableText = [
         product.name,
         product.description,
@@ -147,7 +168,6 @@ export default function CustomerHomePage() {
 
     const activeUsername = localStorage.getItem('username') || username || 'Guest';
 
-    // prepare minimal cart item for optimistic UI
     const minimalItem = {
       product_id: productId,
       quantity: 1,
@@ -156,17 +176,24 @@ export default function CustomerHomePage() {
       display_name: product.name || product.title || 'Product',
       display_description: product.description || '',
       display_image_url: (product.images && product.images[0]) || product.imageUrl || product.image || '/images/no-image.png',
+      image_url: (product.images && product.images[0]) || product.imageUrl || product.image || '/images/no-image.png',
+      name: product.name || product.title || 'Product',
+      description: product.description || '',
+      price: Number(product.price ?? product.amount ?? 0),
+      image: (product.images && product.images[0]) || product.imageUrl || product.image || '/images/no-image.png',
+      imageUrl: (product.images && product.images[0]) || product.imageUrl || product.image || '/images/no-image.png',
+      category: product.category || '',
+      brand: product.brand || '',
+      stock: product.stock ?? product.availableStock ?? product.available_stock ?? product.inventory ?? null,
     };
 
-    // snapshot previous state for rollback
     const prevItems = Array.isArray(cartItems) ? cartItems : [];
-    const nextItems = [minimalItem, ...prevItems];
+    const nextItems = mergeCartItemById(prevItems, minimalItem);
 
     // optimistic UI updates
     try {
       updateCartState(nextItems);
       addProductToCart(productId);
-      incrementCartCount(1);
       try { setCache('cart_items', { items: nextItems, username: activeUsername, subtotal: nextItems.reduce((s, it) => s + Number(it.total_price || 0), 0).toFixed(2) }, 20000); } catch (e) {}
     } catch (e) {
       console.error('Optimistic add failed locally', e);
@@ -188,7 +215,6 @@ export default function CustomerHomePage() {
         // rollback optimistic update
         updateCartState(prevItems);
         removeProductFromCart?.(productId);
-        decrementCartCount?.(1);
         return false;
       }
 
@@ -198,10 +224,9 @@ export default function CustomerHomePage() {
       // rollback optimistic update
       updateCartState(prevItems);
       removeProductFromCart?.(productId);
-      decrementCartCount?.(1);
       return false;
     }
-  }, [getAuthHeaders, username, addProductToCart, removeProductFromCart, incrementCartCount, decrementCartCount, cartItems, updateCartState]);
+  }, [getAuthHeaders, username, addProductToCart, removeProductFromCart, cartItems, updateCartState]);
 
   const handleOpenProfileModal = useCallback(async () => {
     setProfileModalType('viewProfile');
@@ -246,24 +271,6 @@ export default function CustomerHomePage() {
             </div>
           </div>
         </section>
-
-        <div className="product-toolbar">
-          <label className="product-search" htmlFor="product-search">
-            <span aria-hidden="true">🔎</span>
-            <input
-              id="product-search"
-              type="text"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search products by name, category or description"
-            />
-          </label>
-          <div className="product-results-pill">
-            {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
-          </div>
-        </div>
-
-        <CategoryNavigation selectedCategory={selectedCategory} onCategoryClick={setSelectedCategory} />
 
         {showSkeletons ? (
           <div className="product-grid" aria-label="Loading featured products">

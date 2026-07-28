@@ -28,12 +28,6 @@ export const ProductList = React.memo(({ products, onAddToCart, addedProductIds,
 
   return (
     <div className="product-list">
-      <div className="product-list-header">
-        <div>
-          <p className="section-eyebrow">Curated picks</p>
-          <h3 className="section-title">{products.length} products ready to explore</h3>
-        </div>
-      </div>
       <div className="product-grid">
         {products.map((product) => (
           <ProductCard
