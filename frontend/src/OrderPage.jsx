@@ -2,7 +2,7 @@ import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CustomerLayout } from './CustomerLayout';
 import { OrderCardSkeleton } from './components/Skeleton';
-import { getDerivedOrderStatus, getExpectedDelivery, getOrderHistoryEntries, getStatusLabel, ORDER_STATUS_SEQUENCE } from './utils/orderStatus';
+import { getDerivedOrderStatus, getExpectedDelivery, getOrderHistoryEntries, getStatusLabel, ORDER_STATUS_SEQUENCE, getOrderStatus } from './utils/orderStatus';
 import { cachedFetch } from './utils/apiClient';
 import { getCache, setCache } from './utils/cache';
 import { getAuthHeaders } from './auth';
@@ -285,6 +285,7 @@ export default function OrderPage() {
     }
 
     const currentStatus = getDerivedOrderStatus(selectedOrder.orderDate, selectedOrder.status);
+    const currentLabel = getOrderStatus(selectedOrder.orderDate);
     console.log('[TrackingModal] Status recalculated for order:', {
       orderId: selectedOrder.orderId,
       orderDate: selectedOrder.orderDate,
@@ -292,6 +293,7 @@ export default function OrderPage() {
       orderDateIsArray: Array.isArray(selectedOrder.orderDate),
       receivedStatus: selectedOrder.status,
       calculatedStatus: currentStatus,
+      calculatedLabel: currentLabel,
       elapsedMs: Date.now() - new Date(selectedOrder.orderDate).getTime(),
       elapsedMinutes: Math.floor((Date.now() - new Date(selectedOrder.orderDate).getTime()) / 60000)
     });
