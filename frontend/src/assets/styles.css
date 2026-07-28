@@ -1888,7 +1888,7 @@ button[type="submit"]:focus-visible {
   opacity: 0;
   transform: scale(1.06);
   transition: opacity 0.9s ease-in-out, transform 12s ease;
-  filter: brightness(0.88) saturate(0.88) contrast(0.96);
+  filter: brightness(1.08) saturate(1.02) contrast(1.02);
   pointer-events: none;
   will-change: opacity, transform;
 }
@@ -2566,9 +2566,9 @@ button[type="submit"]:focus-visible {
   position: relative;
   padding: 30px;
   border-radius: 28px;
-  background: linear-gradient(rgba(8, 15, 26, 0.82), rgba(8, 15, 26, 0.82)), url('/landing-images/admin-custom.png') center/cover no-repeat;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24);
+  background: linear-gradient(rgba(8, 15, 26, 0.68), rgba(8, 15, 26, 0.68)), url('/landing-images/admin-custom.png') center/cover no-repeat;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
   color: #ffffff;
   margin-bottom: 24px;
   overflow: hidden;
@@ -4076,9 +4076,9 @@ button[type="submit"]:focus-visible {
   position: relative;
   padding: 30px;
   border-radius: 28px;
-  background: linear-gradient(rgba(8, 15, 26, 0.82), rgba(8, 15, 26, 0.82)), url('/landing-images/admin-custom.png') center/cover no-repeat;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24);
+  background: linear-gradient(rgba(8, 15, 26, 0.68), rgba(8, 15, 26, 0.68)), url('/landing-images/admin-custom.png') center/cover no-repeat;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
   color: #ffffff;
   margin-bottom: 24px;
   overflow: hidden;
