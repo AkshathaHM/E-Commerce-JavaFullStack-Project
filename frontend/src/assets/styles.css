@@ -1178,17 +1178,56 @@ button[type="submit"]:focus-visible {
 }
 
 /* inner scroll area for auth cards */
+.auth-page {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 20px;
+  background: transparent;
+  box-sizing: border-box;
+  z-index: 9999;
+  overflow-y: auto;
+}
+
+.auth-page__content {
+  position: relative;
+  z-index: 10000;
+  display: grid;
+  gap: 24px;
+  width: 100%;
+  justify-content: center;
+  pointer-events: auto;
+  max-height: calc(100vh - 40px);
+}
+
 .auth-card__scroll {
-  overflow: auto;
+  overflow: visible;
   -webkit-overflow-scrolling: touch;
-  max-height: calc(min(80vh, 720px) - 48px);
+  max-height: none;
 }
 
 /* popup specific tweaks */
 .auth-card--popup {
-  padding: 20px;
-  max-width: 480px;
-  max-height: min(80vh, 640px);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(700px, 95vw);
+  max-width: 700px;
+  max-height: 90vh;
+  overflow: hidden;
+  padding: 30px;
+  margin: 0 auto;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.24);
+  color: var(--text);
+  border-radius: 18px;
+  backdrop-filter: blur(18px);
+  transform: translateY(12px);
+  opacity: 0;
+  animation: auth-card-slide-up 0.55s ease-out forwards;
 }
 
 .auth-card--auth-layout .auth-card__scroll {
@@ -1201,7 +1240,7 @@ button[type="submit"]:focus-visible {
   color: var(--text2);
   margin: 12px 0 0;
   font-size: 1rem;
-  line-height: 1.6;
+  line-height: 1.7;
   font-weight: 400;
 }
 
@@ -1231,16 +1270,20 @@ button[type="submit"]:focus-visible {
 .auth-form {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 18px;
-  max-height: calc(90vh - 100px);
-  overflow-y: auto;
-  padding-right: 4px;
+  gap: 22px;
+  max-height: none;
+  overflow-y: visible;
+  padding-right: 0;
 }
 
 .auth-form-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+}
+
+.auth-form-row--single {
+  grid-template-columns: 1fr;
 }
 
 @media (max-width: 768px) {
@@ -1259,6 +1302,10 @@ button[type="submit"]:focus-visible {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   min-height: 48px;
+}
+
+.auth-checkbox--full {
+  width: 100%;
 }
 
 .auth-checkbox--panel {

@@ -52,8 +52,14 @@ function AuthLayout({ title, subtitle, notice, children, footer, onClose, varian
       }
     };
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow || 'auto';
+    };
   }, [handleClose]);
 
   return (

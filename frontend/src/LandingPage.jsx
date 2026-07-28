@@ -630,17 +630,6 @@ export default function LandingPage() {
                   <option value="CUSTOMER">Customer</option>
                   <option value="ADMIN">Admin</option>
                 </InputField>
-                <label className="auth-checkbox auth-checkbox--panel">
-                  <input
-                    type="checkbox"
-                    checked={signup.agreement}
-                    onChange={(e) => setSignup((prev) => ({ ...prev, agreement: e.target.checked }))}
-                  />
-                  I agree to the Terms & Conditions.
-                </label>
-              </div>
-
-              <div className="auth-form-row">
                 <PasswordField
                   id="landingPassword"
                   label="Password"
@@ -652,6 +641,9 @@ export default function LandingPage() {
                   }}
                   error={fieldErrors.password}
                 />
+              </div>
+
+              <div className="auth-form-row auth-form-row--single">
                 <PasswordField
                   id="landingConfirmPassword"
                   label="Confirm Password"
@@ -663,6 +655,17 @@ export default function LandingPage() {
                   }}
                   error={fieldErrors.confirmPassword}
                 />
+              </div>
+
+              <div className="auth-form-row auth-form-row--single">
+                <label className="auth-checkbox auth-checkbox--panel auth-checkbox--full">
+                  <input
+                    type="checkbox"
+                    checked={signup.agreement}
+                    onChange={(e) => setSignup((prev) => ({ ...prev, agreement: e.target.checked }))}
+                  />
+                  I agree to the Terms & Conditions.
+                </label>
               </div>
 
               {fieldErrors.agreement && <p className="auth-feedback">{fieldErrors.agreement}</p>}

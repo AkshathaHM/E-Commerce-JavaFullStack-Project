@@ -194,19 +194,21 @@
 }
 
 .social-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
   border: 1px solid var(--border);
-  border-radius: 999px;
   background: var(--surface-alt);
   color: var(--text);
-  padding: 12px 18px;
-  min-width: 110px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  text-transform: capitalize;
+  font-size: 1rem;
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease, color 0.3s ease;
   position: relative;
   overflow: hidden;
+  text-decoration: none;
 }
 
 .social-button::before {
@@ -222,12 +224,20 @@
 .social-button:focus {
   transform: translateY(-4px);
   box-shadow: 0 12px 25px rgba(56,189,248,0.18);
+  background: var(--brand);
+  color: var(--button-text);
 }
 
 .social-button:hover::before,
 .social-button:focus::before {
   opacity: 1;
 }
+
+.social-button svg {
+  width: 20px;
+  height: 20px;
+}
+
 
 .back-to-top {
   position: fixed;

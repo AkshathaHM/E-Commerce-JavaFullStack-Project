@@ -1,9 +1,17 @@
 ﻿import React, { useEffect, useRef, useState } from 'react';
+import { FaInstagram, FaTwitter, FaFacebookF, FaLinkedinIn } from 'react-icons/fa';
 import './Footer.css';
 
 const shopLinks = ['Products', 'Deals', 'Categories', 'Gift Cards', 'Sell on SalesSavvy'];
 const serviceLinks = ['Help Center', 'Track Order', 'Returns', 'Payment Options', 'Shipping Info'];
 const aboutLinks = ['About Us', 'Careers', 'Privacy Policy', 'Terms of Service'];
+
+const socialLinks = [
+  { label: 'Instagram', icon: FaInstagram, href: '#' },
+  { label: 'Twitter', icon: FaTwitter, href: '#' },
+  { label: 'Facebook', icon: FaFacebookF, href: '#' },
+  { label: 'LinkedIn', icon: FaLinkedinIn, href: '#' },
+];
 
 export function Footer() {
   const [isVisible, setIsVisible] = useState(false);
@@ -54,10 +62,11 @@ export function Footer() {
             <div className="social-block">
               <p className="footer-section-title">Connect with us</p>
               <div className="social-links">
-                <button type="button" className="social-button">Instagram</button>
-                <button type="button" className="social-button">Twitter</button>
-                <button type="button" className="social-button">Facebook</button>
-                <button type="button" className="social-button">LinkedIn</button>
+                {socialLinks.map(({ label, icon: Icon, href }) => (
+                  <a key={label} href={href} className="social-button" aria-label={label}>
+                    <Icon />
+                  </a>
+                ))}
               </div>
             </div>
           </div>
