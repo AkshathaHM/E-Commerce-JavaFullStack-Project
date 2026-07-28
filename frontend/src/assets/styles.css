@@ -798,6 +798,40 @@ button[type="submit"]:focus-visible {
 .theme-switch:hover {
   transform: translateY(-1px);
   background: var(--surface);
+
+/* Category navigation (remove default list bullets and style pills) */
+.category-navigation {
+  padding: 0;
+}
+.category-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.category-list li {
+  margin: 0;
+  padding: 0;
+}
+.category-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 18px;
+  border-radius: 18px;
+  background: var(--surface-alt);
+  color: var(--text);
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  min-width: 140px;
+}
+.category-item.active {
+  background: linear-gradient(90deg, var(--primary), var(--primary2));
+  color: var(--btn-foreground);
+  box-shadow: 0 10px 24px rgba(14,165,233,0.12);
+}
 }
 
 .theme-switch:focus-visible,

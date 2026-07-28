@@ -171,6 +171,10 @@ export default function CustomerHomePage() {
     } catch (e) {
       console.error('Optimistic add failed locally', e);
     }
+    // If user is not signed in (Guest), keep cart locally and skip backend call
+    if (!activeUsername || activeUsername === 'Guest') {
+      return true;
+    }
 
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/add`, {

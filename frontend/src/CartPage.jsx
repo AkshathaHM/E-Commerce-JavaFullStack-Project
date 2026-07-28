@@ -556,7 +556,6 @@ const CartPage = () => {
           <p>Start adding some awesome products!</p>
           <div className="cart-empty-actions">
             <button onClick={() => navigate("/customerhome")}>Continue Shopping</button>
-            <button className="cart-empty-secondary" onClick={() => navigate("/profile")}>View Profile</button>
           </div>
         </div>
       </CustomerLayout>

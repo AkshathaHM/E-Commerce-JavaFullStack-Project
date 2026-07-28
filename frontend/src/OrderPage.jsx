@@ -317,9 +317,8 @@ export default function OrderPage() {
         </div>
         <section className="orders-hero">
             <div>
-              <p className="section-eyebrow">Your account</p>
-              <h1 className="form-title">Your Orders</h1>
-            </div>
+                  <h1 className="form-title">Your Orders</h1>
+                </div>
           </section>
 
           {cancelMessage && (
