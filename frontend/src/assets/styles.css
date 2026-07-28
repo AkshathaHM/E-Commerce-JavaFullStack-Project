@@ -1904,14 +1904,6 @@ button[type="submit"]:focus-visible {
   color: var(--text);
 }
 
-.admin-dashboard .dashboard-hero {
-  padding: 30px;
-  border-radius: 28px;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  margin-bottom: 24px;
-}
 
 .landing-hero__overlay {
   position: absolute;
@@ -2547,55 +2539,6 @@ button[type="submit"]:focus-visible {
   color: var(--button-text);
 }
 
-.home-hero,
-.dashboard-hero,
-.latest-order-status-banner,
-.tracking-hero,
-.checkout-section,
-.product-toolbar,
-.order-tracking-card,
-.notification-panel,
-.order-details,
-.order-items,
-.modal-content,
-.manage-products-shell {
-  width: 100%;
-}
-
-.home-hero {
-  position: relative;
-  padding: 30px;
-  border-radius: 28px;
-  background: linear-gradient(rgba(8, 15, 26, 0.68), rgba(8, 15, 26, 0.68)), url('/landing-images/admin-custom.png') center/cover no-repeat;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
-  color: #ffffff;
-  margin-bottom: 24px;
-  overflow: hidden;
-}
-
-.home-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.18);
-  pointer-events: none;
-}
-
-.home-hero-content {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.home-hero h2,
-.home-hero p {
-  color: #fff;
-}
 
 .product-toolbar {
   display: flex;
@@ -3506,13 +3449,7 @@ button[type="submit"]:focus-visible {
   color: var(--danger);
 }
 
-.tracking-hero,
-.dashboard-hero {
-  border-radius: 28px;
-  padding: 28px;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-}
+
 
 .tracking-modal-overlay {
   position: fixed;
@@ -4072,25 +4009,6 @@ button[type="submit"]:focus-visible {
   padding: 24px 24px 40px;
 }
 
-.admin-dashboard .dashboard-hero {
-  position: relative;
-  padding: 30px;
-  border-radius: 28px;
-  background: linear-gradient(rgba(8, 15, 26, 0.68), rgba(8, 15, 26, 0.68)), url('/landing-images/admin-custom.png') center/cover no-repeat;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.18);
-  color: #ffffff;
-  margin-bottom: 24px;
-  overflow: hidden;
-}
-
-.admin-dashboard .dashboard-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.18);
-  pointer-events: none;
-}
 
 .admin-dashboard .dashboard-hero__eyebrow {
   margin: 0 0 8px;
