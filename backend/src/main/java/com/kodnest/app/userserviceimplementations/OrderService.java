@@ -125,37 +125,67 @@ public class OrderService implements OrderServiceContract {
     @Override
     @Transactional
     public boolean cancelOrder(String orderId, int userId) {
+        // Validate input
         if (orderId == null || orderId.isBlank()) {
             throw new IllegalArgumentException("Order ID is required");
         }
 
+        String trimmedId = orderId.trim();
+        System.out.println("[OrderService] Attempting to cancel order: " + trimmedId + " by user: " + userId);
+
         try {
-            Order order = orderRepository.findById(orderId.trim()).orElse(null);
+            // Fetch order from database
+            Order order = orderRepository.findById(trimmedId).orElse(null);
             if (order == null) {
+                System.out.println("[OrderService] Order not found: " + trimmedId);
                 throw new IllegalArgumentException("Order not found");
             }
 
+            System.out.println("[OrderService] Order found. Current status: " + order.getStatus() + ", Order UserId: " + order.getUserId() + ", Request UserId: " + userId);
+
+            // Check authorization
             if (order.getUserId() != userId) {
+                System.out.println("[OrderService] Unauthorized: User " + userId + " cannot cancel order owned by " + order.getUserId());
                 throw new IllegalStateException("You are not authorized to cancel this order");
             }
 
-            OrderStatus resolvedStatus = orderLifecycleStatusResolver.resolve(order);
-            if (order.getStatus() == OrderStatus.CANCELLED || resolvedStatus == OrderStatus.CANCELLED) {
+            // Check if already cancelled
+            if (order.getStatus() == OrderStatus.CANCELLED) {
+                System.out.println("[OrderService] Order already cancelled: " + trimmedId);
                 throw new IllegalStateException("Order is already cancelled");
             }
 
-            if (resolvedStatus == OrderStatus.OUT_FOR_DELIVERY || resolvedStatus == OrderStatus.DELIVERED) {
-                throw new IllegalStateException("Order cannot be cancelled after it is out for delivery or delivered");
+            // Resolve current status based on elapsed time
+            OrderStatus resolvedStatus = orderLifecycleStatusResolver.resolve(order);
+            System.out.println("[OrderService] Resolved status: " + resolvedStatus);
+
+            // Check if order can be cancelled based on current status
+            if (resolvedStatus == OrderStatus.DELIVERED) {
+                System.out.println("[OrderService] Cannot cancel delivered order: " + trimmedId);
+                throw new IllegalStateException("This order has already been delivered and cannot be cancelled");
             }
 
+            if (resolvedStatus == OrderStatus.OUT_FOR_DELIVERY) {
+                System.out.println("[OrderService] Cannot cancel order out for delivery: " + trimmedId);
+                throw new IllegalStateException("This order is out for delivery and cannot be cancelled");
+            }
+
+            // Allowed statuses for cancellation: ORDER_PLACED, CONFIRMED, PACKED, SHIPPED
+            System.out.println("[OrderService] Order eligible for cancellation. Updating status to CANCELLED");
             order.setStatus(OrderStatus.CANCELLED);
             order.setUpdatedAt(LocalDateTime.now());
             orderRepository.save(order);
+
+            System.out.println("[OrderService] Order successfully cancelled: " + trimmedId);
             return true;
+
         } catch (IllegalArgumentException | IllegalStateException ex) {
+            System.out.println("[OrderService] Expected error: " + ex.getMessage());
             throw ex;
-        } catch (RuntimeException ex) {
-            throw new IllegalStateException("Unable to cancel order right now", ex);
+        } catch (Exception ex) {
+            System.out.println("[OrderService] Unexpected error: " + ex.getClass().getName() + " - " + ex.getMessage());
+            ex.printStackTrace();
+            throw new IllegalStateException("Unable to cancel order: " + ex.getMessage(), ex);
         }
     }
 }

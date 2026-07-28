@@ -25,27 +25,36 @@ const readSafeValue = (value, fallback = 'N/A') => {
   return text || fallback;
 };
 
-const normalizeOrderPayload = (order) => ({
-  orderId: order?.order_id || order?.orderId || order?.id || 'N/A',
-  customerName: readSafeValue(order?.customerName || order?.customer_name, 'Customer'),
-  email: readSafeValue(order?.email || order?.customerEmail),
-  phone: readSafeValue(order?.phone || order?.mobile),
-  orderDate: order?.createdAt || order?.created_at || order?.orderDate || new Date().toISOString(),
-  paymentMethod: readSafeValue(order?.paymentMethod || order?.payment_method, 'Razorpay'),
-  paymentStatus: readSafeValue(order?.paymentStatus || order?.payment_status, 'Paid'),
-  status: readSafeValue(order?.status || order?.orderStatus, 'Order Placed'),
-  name: readSafeValue(order?.name || order?.productName, 'Product'),
-  description: readSafeValue(order?.description, 'No description available'),
-  quantity: Number(order?.quantity ?? order?.qty ?? 1),
-  price: Number(order?.price_per_unit ?? order?.price ?? 0),
-  totalPrice: Number(order?.total_price ?? order?.totalAmount ?? order?.amount ?? 0),
-  deliveryCharges: Number(order?.deliveryCharges || order?.delivery_charge || 0),
-  tax: Number(order?.tax || order?.totalTax || 0),
-  address: readSafeValue(order?.address || order?.deliveryAddress, 'Delivery address on file'),
-  imageUrl: order?.image_url || order?.imageUrl || order?.image || NO_IMAGE,
-  productId: order?.product_id || order?.productId || 'N/A',
-  category: order?.category || order?.productCategory || 'N/A',
-});
+const normalizeOrderPayload = (order) => {
+  // Ensure createdAt is always used as the source of truth for orderDate
+  // This is critical for time-based status calculation
+  const createdAtValue = order?.createdAt || order?.created_at;
+  if (!createdAtValue) {
+    console.warn('Order missing createdAt timestamp:', order?.orderId || order?.order_id);
+  }
+
+  return {
+    orderId: order?.order_id || order?.orderId || order?.id || 'N/A',
+    customerName: readSafeValue(order?.customerName || order?.customer_name, 'Customer'),
+    email: readSafeValue(order?.email || order?.customerEmail),
+    phone: readSafeValue(order?.phone || order?.mobile),
+    orderDate: createdAtValue || new Date().toISOString(),
+    paymentMethod: readSafeValue(order?.paymentMethod || order?.payment_method, 'Razorpay'),
+    paymentStatus: readSafeValue(order?.paymentStatus || order?.payment_status, 'Paid'),
+    status: readSafeValue(order?.status || order?.orderStatus, 'Order Placed'),
+    name: readSafeValue(order?.name || order?.productName, 'Product'),
+    description: readSafeValue(order?.description, 'No description available'),
+    quantity: Number(order?.quantity ?? order?.qty ?? 1),
+    price: Number(order?.price_per_unit ?? order?.price ?? 0),
+    totalPrice: Number(order?.total_price ?? order?.totalAmount ?? order?.amount ?? 0),
+    deliveryCharges: Number(order?.deliveryCharges || order?.delivery_charge || 0),
+    tax: Number(order?.tax || order?.totalTax || 0),
+    address: readSafeValue(order?.address || order?.deliveryAddress, 'Delivery address on file'),
+    imageUrl: order?.image_url || order?.imageUrl || order?.image || NO_IMAGE,
+    productId: order?.product_id || order?.productId || 'N/A',
+    category: order?.category || order?.productCategory || 'N/A',
+  };
+};
 
 const formatDisplayDate = (value, fallback = 'Not available') => {
   const parsed = new Date(value);
@@ -144,41 +153,58 @@ export default function OrderPage() {
   const navigate = useNavigate();
 
   const fetchOrders = useCallback(async (nextPage = 0, append = false) => {
+    // For initial load (nextPage = 0), always skip cache and fetch fresh
+    // For pagination (nextPage > 0), use cache
     const cacheKey = `orders_page_${nextPage}`;
-    const cachedPage = getCache(cacheKey);
+    const cachedPage = nextPage > 0 ? getCache(cacheKey) : null;
 
-    if (cachedPage && !append) {
+    if (cachedPage && append) {
       const normalizedCached = coerceOrderArray(cachedPage);
-      setOrders(normalizedCached);
+      setOrders((current) => [...coerceOrderArray(current), ...normalizedCached]);
       setLoading(false);
       setError(null);
-    } else if (!cachedPage && !append) {
-      setLoading(true);
-      setError(null);
+      return;
     }
 
-    if (append && !cachedPage) {
+    if (!append) {
+      setLoading(true);
+      setError(null);
+    } else {
       setIsLoadingMore(true);
     }
 
     try {
-      const data = await cachedFetch(cacheKey, `${import.meta.env.VITE_API_URL}/api/orders?page=${nextPage}&size=5`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders?page=${nextPage}&size=5`, {
         credentials: 'include',
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-      }, 30000);
-      const productList = coerceOrderArray(data?.orders ?? data?.products ?? data?.data ?? data);
-      const nextOrders = productList.map((entry) => normalizeOrderPayload(entry));
-      setOrders((currentOrders) => {
-        const result = append ? [...coerceOrderArray(currentOrders), ...nextOrders] : nextOrders;
-        try { setCache(cacheKey, result, 30000); } catch {};
-        return result;
       });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch orders: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const productList = coerceOrderArray(data?.orders ?? data?.products ?? data?.data ?? data);
+      
+      if (!Array.isArray(productList) || productList.length === 0) {
+        if (!append) {
+          setOrders([]);
+          setError(null);
+        }
+      } else {
+        const nextOrders = productList.map((entry) => normalizeOrderPayload(entry));
+        setOrders((currentOrders) => append ? [...coerceOrderArray(currentOrders), ...nextOrders] : nextOrders);
+        if (nextPage > 0) {
+          try { setCache(cacheKey, nextOrders, 30000); } catch {}
+        }
+      }
+
       setHasNextPage(Boolean(data?.hasNext));
       setPage(nextPage);
       setUsername(data?.username || 'Guest');
       setError(null);
     } catch (err) {
-      if (!cachedPage) {
+      if (!append) {
         setError(err.message || 'Unable to load orders.');
       }
     } finally {
@@ -228,26 +254,16 @@ export default function OrderPage() {
     }
   }, [location.state, username]);
 
-  // Recalculate tracking status when time passes
+  // Calculate tracking status once when modal opens
   useEffect(() => {
     if (!selectedOrder) {
       setTrackingStatus('placed');
       return undefined;
     }
 
-    const initialStatus = getDerivedOrderStatus(selectedOrder.orderDate, selectedOrder.status);
-    setTrackingStatus(initialStatus);
-
-    // Refresh status every 30 seconds to keep it in sync with elapsed time
-    const refreshInterval = window.setInterval(() => {
-      setTrackingStatus((current) => {
-        const updated = getDerivedOrderStatus(selectedOrder.orderDate, selectedOrder.status);
-        return updated;
-      });
-    }, 30000);
-
-    return () => window.clearInterval(refreshInterval);
-  }, [selectedOrder?.orderId, selectedOrder?.orderDate, selectedOrder?.status]);
+    const currentStatus = getDerivedOrderStatus(selectedOrder.orderDate, selectedOrder.status);
+    setTrackingStatus(currentStatus);
+  }, [selectedOrder?.orderId]);
 
   const orderCards = useMemo(() => {
     return coerceOrderArray(orders).map((order) => ({
@@ -285,48 +301,58 @@ export default function OrderPage() {
       'Content-Type': 'application/json',
     };
 
-    const methods = ['POST', 'PATCH', 'PUT'];
-
     try {
-      let lastPayload = {};
-      let lastResponse = null;
+      console.log(`[Frontend] Cancelling order: ${pendingCancelOrder.orderId}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${encodeURIComponent(pendingCancelOrder.orderId)}/cancel`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers,
+      });
 
-      for (const method of methods) {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${encodeURIComponent(pendingCancelOrder.orderId)}/cancel`, {
-          method,
-          credentials: 'include',
-          headers,
-        });
+      const responseData = await response.json().catch(() => ({}));
+      console.log(`[Frontend] Cancel response status: ${response.status}`, responseData);
 
-        lastResponse = response;
-        lastPayload = await response.json().catch(() => ({}));
+      if (response.ok) {
+        // Success - order cancelled
+        console.log('[Frontend] Order cancelled successfully');
+        setOrders((currentOrders) => 
+          currentOrders.map((entry) => (
+            String(entry.orderId) === String(pendingCancelOrder.orderId) 
+              ? { ...entry, status: 'cancelled' }
+              : entry
+          ))
+        );
 
-        if (response.ok) {
-          setOrders((currentOrders) => currentOrders.map((entry) => (String(entry.orderId) === String(pendingCancelOrder.orderId) ? { ...entry, status: 'cancelled' } : entry)));
-          setCancelMessage(lastPayload.message || 'Order cancelled successfully');
-
-          if (selectedOrder && String(selectedOrder.orderId) === String(pendingCancelOrder.orderId)) {
-            setSelectedOrder((s) => ({ ...(s || {}), status: 'cancelled' }));
-            setTrackingStatus('cancelled');
-          }
-
-          setPendingCancelOrder(null);
-          return;
+        if (selectedOrder && String(selectedOrder.orderId) === String(pendingCancelOrder.orderId)) {
+          setSelectedOrder((s) => ({ ...(s || {}), status: 'cancelled' }));
+          setTrackingStatus('cancelled');
         }
 
-        if (response.status !== 405) {
-          break;
-        }
+        setCancelMessage('✓ Order cancelled successfully');
+        setPendingCancelOrder(null);
+        return;
       }
 
-      if (lastResponse?.status === 401) {
-        setCancelMessage('Authentication required. Please log in and try again.');
-      } else {
-        throw new Error(lastPayload.error || lastPayload.message || 'Unable to cancel this order right now.');
+      // Handle error responses
+      let errorMessage = responseData.error || 'Unable to cancel this order';
+      
+      if (response.status === 401 || response.status === 403) {
+        errorMessage = 'Please log in to cancel this order';
+      } else if (response.status === 404) {
+        errorMessage = 'Order not found';
+      } else if (response.status === 409) {
+        errorMessage = responseData.error || 'This order cannot be cancelled at its current stage';
+      } else if (response.status >= 500) {
+        errorMessage = 'Server error. Please try again later';
       }
+
+      console.error(`[Frontend] Cancel failed (${response.status}): ${errorMessage}`);
+      setCancelMessage(`✗ ${errorMessage}`);
+      setPendingCancelOrder(null);
+
     } catch (err) {
-      setCancelMessage(err.message || 'Unable to cancel this order right now.');
-    } finally {
+      console.error('[Frontend] Cancel error:', err);
+      setCancelMessage(`✗ ${err.message || 'Unable to cancel this order'}`);
       setPendingCancelOrder(null);
     }
   };

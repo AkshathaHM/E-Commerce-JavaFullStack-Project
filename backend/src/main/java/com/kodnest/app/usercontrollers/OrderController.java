@@ -57,33 +57,69 @@ public class OrderController {
         }
     }
 
-    @PatchMapping("/{orderId}/cancel")
     @PutMapping("/{orderId}/cancel")
-    @PostMapping("/{orderId}/cancel")
-    @RequestMapping(value = "/{orderId}/cancel", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE})
+    @PatchMapping("/{orderId}/cancel")
     public ResponseEntity<Map<String, Object>> cancelOrder(@PathVariable String orderId, HttpServletRequest request) {
+        System.out.println("[OrderController] Received cancel request for order: " + orderId);
+
         try {
             User authenticatedUser = (User) request.getAttribute("authenticatedUser");
-            if (authenticatedUser == null || authenticatedUser.getUserId() == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "User not authenticated"));
+            if (authenticatedUser == null) {
+                System.out.println("[OrderController] No authenticated user found");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "error", "User not authenticated. Please log in and try again.",
+                    "code", "UNAUTHORIZED"
+                ));
             }
 
+            if (authenticatedUser.getUserId() == null) {
+                System.out.println("[OrderController] Authenticated user has no userId");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "error", "Invalid user session. Please log in again.",
+                    "code", "INVALID_SESSION"
+                ));
+            }
+
+            System.out.println("[OrderController] Calling orderService.cancelOrder() for user: " + authenticatedUser.getUserId());
             boolean cancelled = orderService.cancelOrder(orderId, authenticatedUser.getUserId());
-            if (!cancelled) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Order cannot be cancelled at this stage"));
+
+            if (cancelled) {
+                System.out.println("[OrderController] Order cancelled successfully");
+                return ResponseEntity.ok(Map.of(
+                    "message", "Order cancelled successfully",
+                    "orderId", orderId,
+                    "status", "CANCELLED"
+                ));
+            } else {
+                System.out.println("[OrderController] Cancellation returned false");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "error", "This order cannot be cancelled",
+                    "code", "CANNOT_CANCEL"
+                ));
             }
 
-            return ResponseEntity.ok(Map.of("message", "Order cancelled successfully"));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+            System.out.println("[OrderController] IllegalArgumentException: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", e.getMessage(),
+                "code", "ORDER_NOT_FOUND"
+            ));
+
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+            System.out.println("[OrderController] IllegalStateException: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", e.getMessage(),
+                "code", "CANNOT_CANCEL"
+            ));
+
         } catch (Exception e) {
+            System.out.println("[OrderController] Unexpected exception: " + e.getClass().getName() + " - " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred"));
+            String errorMsg = e.getMessage() != null ? e.getMessage() : "Unable to process cancel request";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "error", errorMsg,
+                "code", "INTERNAL_ERROR"
+            ));
         }
     }
 }

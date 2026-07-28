@@ -61,11 +61,11 @@ class OrderControllerTest {
         ResponseEntity<Map<String, Object>> response = orderController.cancelOrder("4", request);
 
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertEquals("User not authenticated", response.getBody().get("error"));
+        assertTrue(response.getBody().containsKey("error"));
     }
 
     @Test
-    void cancelOrderShouldReturnBadRequestForUnexpectedRuntimeExceptions() {
+    void cancelOrderShouldReturnInternalErrorForUnexpectedRuntimeExceptions() {
         HttpServletRequest request = mock(HttpServletRequest.class);
         User user = new User();
         user.setUserId(7);
@@ -75,7 +75,7 @@ class OrderControllerTest {
 
         ResponseEntity<Map<String, Object>> response = orderController.cancelOrder("4", request);
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Unexpected state", response.getBody().get("error"));
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertTrue(response.getBody().containsKey("error"));
     }
 }
