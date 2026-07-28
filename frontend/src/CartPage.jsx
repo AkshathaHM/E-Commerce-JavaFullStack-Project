@@ -706,4 +706,6 @@ const CartPage = () => {
       )}
     </CustomerLayout>
   );
+};
+
 export default CartPage;
