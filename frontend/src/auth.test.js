@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { clearAuthSession, getDashboardPath, isAuthenticated, setAuthSession } from './auth.js';
+import { clearAuthSession, getAuthHeaders, getDashboardPath, isAuthenticated, setAuthSession } from './auth.js';
 
 class MockStorage {
   constructor() {
@@ -50,4 +50,14 @@ test('getDashboardPath returns the correct dashboard for each role', () => {
   assert.equal(getDashboardPath('CUSTOMER'), '/customerhome');
   assert.equal(getDashboardPath('ADMIN'), '/admindashboard');
   assert.equal(getDashboardPath('UNKNOWN'), '/');
+});
+
+test('getAuthHeaders exposes the token through common auth header names', () => {
+  clearAuthSession();
+  setAuthSession('abc123', { username: 'Alice', role: 'CUSTOMER' });
+
+  const headers = getAuthHeaders();
+  assert.equal(headers.Authorization, 'Bearer abc123');
+  assert.equal(headers['X-Auth-Token'], 'abc123');
+  assert.equal(headers['x-access-token'], 'abc123');
 });

@@ -1555,9 +1555,25 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
     return order?.[field] || "";
   };
 
-  const getItemUnitPrice = (item) => Number(item?.pricePerUnit ?? item?.unitPrice ?? item?.price ?? item?.price_per_unit ?? item?.unit_price ?? 0);
+  const getItemUnitPrice = (item) => {
+    const directValue = Number(item?.pricePerUnit ?? item?.unitPrice ?? item?.price ?? item?.price_per_unit ?? item?.unit_price ?? 0);
+    if (Number.isFinite(directValue) && directValue > 0) {
+      return directValue;
+    }
+
+    const totalValue = Number(item?.totalPrice ?? item?.total_price ?? item?.lineTotal ?? item?.line_total ?? item?.amount ?? item?.total ?? 0);
+    const quantity = getItemQuantity(item);
+    return quantity > 0 ? totalValue / quantity : totalValue;
+  };
+
   const getItemQuantity = (item) => Number(item?.quantity ?? item?.qty ?? item?.count ?? 0);
-  const getItemLineTotal = (item) => getItemUnitPrice(item) * getItemQuantity(item);
+  const getItemLineTotal = (item) => {
+    const explicitTotal = Number(item?.totalPrice ?? item?.total_price ?? item?.lineTotal ?? item?.line_total ?? item?.amount ?? item?.total ?? 0);
+    if (Number.isFinite(explicitTotal) && explicitTotal > 0) {
+      return explicitTotal;
+    }
+    return getItemUnitPrice(item) * getItemQuantity(item);
+  };
 
   const getOrderItems = (order) => {
     const candidates = [order?.items, order?.orderItems, order?.order_items, order?.orderitems, order?.products];

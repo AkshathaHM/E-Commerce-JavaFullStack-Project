@@ -5,6 +5,7 @@ import { OrderCardSkeleton } from './components/Skeleton';
 import { getDerivedOrderStatus, getExpectedDelivery, getOrderHistoryEntries, getStatusLabel, ORDER_STATUS_SEQUENCE } from './utils/orderStatus';
 import { cachedFetch } from './utils/apiClient';
 import { getCache, setCache } from './utils/cache';
+import { getAuthHeaders } from './auth';
 import StatusBadge from './components/StatusBadge';
 import TrackingTimeline from './components/TrackingTimeline';
 import './assets/styles.css';
@@ -140,18 +141,6 @@ export default function OrderPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-
-  const getAuthHeaders = useCallback(() => {
-    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-    if (!token) {
-      return {};
-    }
-    return {
-      Authorization: `Bearer ${token}`,
-      'X-Auth-Token': token,
-      'x-access-token': token,
-    };
-  }, []);
 
   const fetchOrders = useCallback(async (nextPage = 0, append = false) => {
     const cacheKey = `orders_page_${nextPage}`;
@@ -317,40 +306,53 @@ export default function OrderPage() {
   const confirmCancelOrder = async () => {
     if (!pendingCancelOrder) return;
 
+    const headers = {
+      ...getAuthHeaders(),
+      'Content-Type': 'application/json',
+    };
+
+    const methods = ['POST', 'PATCH', 'PUT'];
+
     try {
-      const headers = {
-        ...getAuthHeaders(),
-        'Content-Type': 'application/json',
-      };
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${encodeURIComponent(pendingCancelOrder.orderId)}/cancel`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers,
-      });
+      let lastPayload = {};
+      let lastResponse = null;
 
-      const payload = await response.json().catch(() => ({}));
+      for (const method of methods) {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${encodeURIComponent(pendingCancelOrder.orderId)}/cancel`, {
+          method,
+          credentials: 'include',
+          headers,
+        });
 
-      if (response.status === 401) {
+        lastResponse = response;
+        lastPayload = await response.json().catch(() => ({}));
+
+        if (response.ok) {
+          setOrders((currentOrders) => currentOrders.map((entry) => (String(entry.orderId) === String(pendingCancelOrder.orderId) ? { ...entry, status: 'cancelled' } : entry)));
+          setCancelMessage(lastPayload.message || 'Order cancelled successfully');
+
+          if (selectedOrder && String(selectedOrder.orderId) === String(pendingCancelOrder.orderId)) {
+            setSelectedOrder((s) => ({ ...(s || {}), status: 'cancelled' }));
+            setTrackingStatus('cancelled');
+          }
+
+          setPendingCancelOrder(null);
+          return;
+        }
+
+        if (response.status !== 405) {
+          break;
+        }
+      }
+
+      if (lastResponse?.status === 401) {
         setCancelMessage('Authentication required. Please log in and try again.');
-        setPendingCancelOrder(null);
-        return;
+      } else {
+        throw new Error(lastPayload.error || lastPayload.message || 'Unable to cancel this order right now.');
       }
-
-      if (!response.ok) {
-        throw new Error(payload.error || payload.message || 'Unable to cancel this order right now.');
-      }
-
-      setOrders((currentOrders) => currentOrders.map((entry) => (String(entry.orderId) === String(pendingCancelOrder.orderId) ? { ...entry, status: 'cancelled' } : entry)));
-      setCancelMessage(payload.message || 'Order cancelled successfully');
-
-      if (selectedOrder && String(selectedOrder.orderId) === String(pendingCancelOrder.orderId)) {
-        setSelectedOrder((s) => ({ ...(s || {}), status: 'cancelled' }));
-        setTrackingStatus('cancelled');
-      }
-
-      setPendingCancelOrder(null);
     } catch (err) {
       setCancelMessage(err.message || 'Unable to cancel this order right now.');
+    } finally {
       setPendingCancelOrder(null);
     }
   };

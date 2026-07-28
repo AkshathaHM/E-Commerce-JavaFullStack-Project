@@ -1,10 +1,11 @@
 export const AUTH_TOKEN_KEY = 'authToken';
+export const LEGACY_TOKEN_KEY = 'token';
 export const USERNAME_KEY = 'username';
 export const ROLE_KEY = 'role';
 export const SESSION_EXPIRY_KEY = 'authSessionExpiry';
 export const SESSION_DURATION_MS = 60 * 60 * 1000;
 
-export const getStoredAuthToken = () => localStorage.getItem(AUTH_TOKEN_KEY);
+export const getStoredAuthToken = () => localStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem(LEGACY_TOKEN_KEY);
 
 export const getSessionExpiry = () => {
   const value = localStorage.getItem(SESSION_EXPIRY_KEY);
@@ -34,9 +35,11 @@ export const isAuthenticated = () => {
 export const setAuthSession = (token, userData = {}) => {
   if (token) {
     localStorage.setItem(AUTH_TOKEN_KEY, token);
+    localStorage.setItem(LEGACY_TOKEN_KEY, token);
     localStorage.setItem(SESSION_EXPIRY_KEY, String(Date.now() + SESSION_DURATION_MS));
   } else {
     localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
     localStorage.removeItem(SESSION_EXPIRY_KEY);
   }
 
@@ -55,6 +58,7 @@ export const setAuthSession = (token, userData = {}) => {
 
 export const clearAuthSession = () => {
   localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem(LEGACY_TOKEN_KEY);
   localStorage.removeItem(USERNAME_KEY);
   localStorage.removeItem(ROLE_KEY);
   localStorage.removeItem(SESSION_EXPIRY_KEY);
@@ -73,5 +77,9 @@ export const getAuthHeaders = () => {
     return {};
   }
   const token = getStoredAuthToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return token ? {
+    Authorization: `Bearer ${token}`,
+    'X-Auth-Token': token,
+    'x-access-token': token,
+  } : {};
 };

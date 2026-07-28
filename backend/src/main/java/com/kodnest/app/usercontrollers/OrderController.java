@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.kodnest.app.entities.User;
@@ -59,6 +60,7 @@ public class OrderController {
     @PatchMapping("/{orderId}/cancel")
     @PutMapping("/{orderId}/cancel")
     @PostMapping("/{orderId}/cancel")
+    @RequestMapping(value = "/{orderId}/cancel", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE})
     public ResponseEntity<Map<String, Object>> cancelOrder(@PathVariable String orderId, HttpServletRequest request) {
         try {
             User authenticatedUser = (User) request.getAttribute("authenticatedUser");
