@@ -11,7 +11,7 @@ import PrimaryButton from './components/PrimaryButton';
 import { Toast } from './Toast';
 import { getDashboardPath, setAuthSession } from './auth';
 
-// Use Vite-safe URL resolution so images work in dev and when deployed to a subpath
+// Use public asset paths for Vite so hero images load reliably in dev and production
 const HERO_IMAGE_FILENAMES = [
   'shirts.jpg',
   'pants.jpg',
@@ -22,9 +22,7 @@ const HERO_IMAGE_FILENAMES = [
   'Gemini_Generated_Image_9xwq8q9xwq8q9xwq.png',
 ];
 
-const HERO_IMAGES = HERO_IMAGE_FILENAMES.map((filename) =>
-  new URL(`/landing-images/${filename}`, import.meta.url).href
-);
+const HERO_IMAGES = HERO_IMAGE_FILENAMES.map((filename) => `/landing-images/${filename}`);
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phoneRegex = /^\d{10}$/;

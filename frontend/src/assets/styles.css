@@ -1661,7 +1661,7 @@ button[type="submit"]:focus-visible {
   align-items: center;
   justify-content: center;
   background: transparent;
-  padding: 0 0 80px;
+  padding: 0 0 100px;
 }
 
 .landing-hero__bg {
@@ -1787,18 +1787,18 @@ button[type="submit"]:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   margin: 0;
   padding: 0;
   z-index: 1100;
 }
 
 .landing-hero__pager-dot {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   border: none;
-  background: rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.40);
   box-shadow: none;
   cursor: pointer;
   transition: transform 0.3s ease, width 0.3s ease, height 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
@@ -1817,37 +1817,37 @@ button[type="submit"]:focus-visible {
 }
 
 .landing-hero__pager-dot--active {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   background: #38bdf8;
-  box-shadow: 0 0 8px rgba(56,189,248,0.45);
+  box-shadow: 0 0 12px rgba(56,189,248,0.45);
 }
 
 @media (max-width: 768px) {
   .landing-hero__pager-dot {
-    width: 9px;
-    height: 9px;
+    width: 10px;
+    height: 10px;
   }
 
   .landing-hero__pager-dot--active {
-    width: 11px;
-    height: 11px;
+    width: 12px;
+    height: 12px;
   }
 }
 
 @media (max-width: 480px) {
   .landing-hero__pager {
-    gap: 6px;
+    gap: 8px;
   }
 
   .landing-hero__pager-dot {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
   }
 
   .landing-hero__pager-dot--active {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
   }
 }
 
