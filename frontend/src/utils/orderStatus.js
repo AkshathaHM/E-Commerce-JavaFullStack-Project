@@ -36,21 +36,28 @@ export function getDerivedOrderStatus(createdAt, rawStatus = '') {
     return 'cancelled';
   }
 
-  // Calculate elapsed time since order creation
+  // Validate createdAt exists and is a valid date
   if (!createdAt) {
-    return normalized || 'placed';
+    // If createdAt is missing, always return 'placed' (never use backend status for time-based progression)
+    console.warn('Order missing createdAt timestamp; defaulting to placed status');
+    return 'placed';
   }
 
   const createdTime = new Date(createdAt).getTime();
   if (Number.isNaN(createdTime)) {
-    return normalized || 'placed';
+    // If createdAt is invalid, always return 'placed' (never use backend status for time-based progression)
+    console.warn('Order has invalid createdAt format:', createdAt, '; defaulting to placed status');
+    return 'placed';
   }
 
+  // Calculate elapsed time since order creation
   const nowTime = Date.now();
   const elapsedMs = nowTime - createdTime;
   const elapsedMinutes = Math.floor(elapsedMs / 60000);
 
-  // Determine status based on elapsed time
+  console.log(`[Status Calc] Order created ${elapsedMinutes}min ago; determined status based on time thresholds`);
+
+  // Determine status based on elapsed time (NOT based on backend status)
   if (elapsedMinutes >= TIME_THRESHOLDS_MINUTES.delivered) {
     return 'delivered';
   }

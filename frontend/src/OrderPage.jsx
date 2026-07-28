@@ -29,8 +29,19 @@ const normalizeOrderPayload = (order) => {
   // Ensure createdAt is always used as the source of truth for orderDate
   // This is critical for time-based status calculation
   const createdAtValue = order?.createdAt || order?.created_at;
+  const backendStatus = readSafeValue(order?.status || order?.orderStatus, 'Order Placed');
+  
   if (!createdAtValue) {
-    console.warn('Order missing createdAt timestamp:', order?.orderId || order?.order_id);
+    console.warn('[OrderNormalize] Order missing createdAt timestamp:', {
+      orderId: order?.orderId || order?.order_id,
+      receivedStatus: backendStatus
+    });
+  } else {
+    console.log('[OrderNormalize] Order loaded with createdAt:', {
+      orderId: order?.order_id || order?.orderId,
+      createdAt: createdAtValue,
+      receivedStatus: backendStatus
+    });
   }
 
   return {
@@ -41,7 +52,7 @@ const normalizeOrderPayload = (order) => {
     orderDate: createdAtValue || new Date().toISOString(),
     paymentMethod: readSafeValue(order?.paymentMethod || order?.payment_method, 'Razorpay'),
     paymentStatus: readSafeValue(order?.paymentStatus || order?.payment_status, 'Paid'),
-    status: readSafeValue(order?.status || order?.orderStatus, 'Order Placed'),
+    status: backendStatus,
     name: readSafeValue(order?.name || order?.productName, 'Product'),
     description: readSafeValue(order?.description, 'No description available'),
     quantity: Number(order?.quantity ?? order?.qty ?? 1),
@@ -262,6 +273,13 @@ export default function OrderPage() {
     }
 
     const currentStatus = getDerivedOrderStatus(selectedOrder.orderDate, selectedOrder.status);
+    console.log('[TrackingModal] Modal opened for order:', {
+      orderId: selectedOrder.orderId,
+      orderDate: selectedOrder.orderDate,
+      receivedStatus: selectedOrder.status,
+      calculatedStatus: currentStatus,
+      elapsedMinutes: Math.floor((Date.now() - new Date(selectedOrder.orderDate).getTime()) / 60000)
+    });
     setTrackingStatus(currentStatus);
   }, [selectedOrder?.orderId]);
 
