@@ -13,6 +13,8 @@ import { getDashboardPath, setAuthSession } from './auth';
 
 // Use public asset paths for Vite so hero images load reliably in dev and production
 const HERO_IMAGE_FILENAMES = [
+  'background.png',
+  'background1.png',
   'shirts.jpg',
   'pants.jpg',
   'phone.jpg',

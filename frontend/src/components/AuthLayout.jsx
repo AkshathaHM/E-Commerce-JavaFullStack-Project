@@ -69,9 +69,9 @@ function AuthLayout({ title, subtitle, notice, children, footer, onClose, varian
   }, []);
 
   return (
-    <div className="auth-page" role="dialog" aria-modal="true">
+    <div className="auth-page" role="dialog" aria-modal="true" onClick={handleClose}>
       <div className="auth-page__overlay" onClick={handleClose} aria-hidden="true" />
-      <div className="auth-page__container" ref={dialogRef}>
+      <div className="auth-page__container" ref={dialogRef} onClick={(event) => event.stopPropagation()}>
         <div className="auth-page__content">
           <AuthCard className="auth-card--auth-layout auth-card--popup">
               <div className="auth-card__intro">

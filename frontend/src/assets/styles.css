@@ -1006,6 +1006,10 @@ button[type="submit"]:focus-visible {
   gap: 24px;
   width: 100%;
   justify-content: center;
+  pointer-events: none;
+}
+
+.auth-page__content > * {
   pointer-events: auto;
 }
 
@@ -1884,7 +1888,7 @@ button[type="submit"]:focus-visible {
   opacity: 0;
   transform: scale(1.06);
   transition: opacity 0.9s ease-in-out, transform 12s ease;
-  filter: brightness(1.1) contrast(1.05);
+  filter: brightness(0.88) saturate(0.88) contrast(0.96);
   pointer-events: none;
   will-change: opacity, transform;
 }
@@ -1892,6 +1896,39 @@ button[type="submit"]:focus-visible {
 .landing-hero__bg--active {
   opacity: 1;
   transform: scale(1);
+}
+
+.admin-dashboard {
+  min-height: 100vh;
+  position: relative;
+  background: var(--bg);
+  color: var(--text);
+  background-image: url('/background1.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.admin-dashboard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  pointer-events: none;
+}
+
+.admin-dashboard .dashboard-content {
+  position: relative;
+  z-index: 1;
+}
+
+.admin-dashboard .dashboard-hero {
+  padding: 30px;
+  border-radius: 28px;
+  background: rgba(8, 15, 26, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24);
+  margin-bottom: 24px;
 }
 
 .landing-hero__overlay {
@@ -2544,20 +2581,38 @@ button[type="submit"]:focus-visible {
 }
 
 .home-hero {
+  position: relative;
   padding: 30px;
   border-radius: 28px;
-  background: var(--surface-alt);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  background: linear-gradient(rgba(8, 15, 26, 0.82), rgba(8, 15, 26, 0.82)), url('/background1.png') center/cover no-repeat;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24);
+  color: #ffffff;
   margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.home-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.18);
+  pointer-events: none;
 }
 
 .home-hero-content {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
+}
+
+.home-hero h2,
+.home-hero p {
+  color: #fff;
 }
 
 .product-toolbar {
