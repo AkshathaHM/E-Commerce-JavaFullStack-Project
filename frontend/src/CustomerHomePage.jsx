@@ -261,13 +261,21 @@ export default function CustomerHomePage() {
     <CustomerLayout username={username}>
       <div className="main-content">
         <section className="home-hero">
-          <div className="home-hero-content">
-            <div>
-              <h2>Hello, {username}!</h2>
-              <p>Discover products, manage your cart, and track every order with ease.</p>
-            </div>
-            <div className="home-hero-actions">
-              {/* Profile accessible only via profile dropdown now; remove dashboard button for customer */}
+          <div className="relative w-full h-48 md:h-56 rounded-2xl overflow-hidden mb-8 shadow-lg">
+            <img
+              src="/landing-images/admin-custom.png"
+              alt="Banner"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/70" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-black/20" />
+            <div className="relative z-10 h-full flex flex-col justify-center px-8 text-white">
+              <h1 className="text-3xl md:text-4xl font-bold mb-2 drop-shadow-lg">
+                Hello, {username}!
+              </h1>
+              <p className="text-sm md:text-base opacity-90 max-w-lg drop-shadow">
+                Discover products, manage your cart, and track every order with ease.
+              </p>
             </div>
           </div>
         </section>
