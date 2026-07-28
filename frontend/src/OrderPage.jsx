@@ -75,7 +75,7 @@ const OrderCard = memo(function OrderCard({ order, onTrackOrder, onCancelOrder }
   const isDelivered = derivedStatus === 'delivered';
 
   return (
-    <article className={`order-card ${isCancelled ? 'order-card--disabled' : ''}`} aria-disabled={isCancelled}>
+    <article className={`order-card ${isCancelled ? 'order-card--cancelled' : ''}`}>
       <div className="order-card-header">
         <div>
           <p className="section-eyebrow">Order ID</p>
@@ -230,27 +230,54 @@ export default function OrderPage() {
     }
   }, [location.state, username]);
 
+  // Keep trackingStatus in sync when the selected order changes
   useEffect(() => {
-    if (!selectedOrder) return undefined;
-
-    const initialStatus = getDerivedOrderStatus(selectedOrder.orderDate, selectedOrder.status);
-    setTrackingStatus(initialStatus);
-
-    if (initialStatus === 'delivered' || initialStatus === 'cancelled') {
+    if (!selectedOrder) {
+      setTrackingStatus('placed');
       return undefined;
     }
 
-    const timer = window.setTimeout(() => {
-      setTrackingStatus((currentStatus) => {
-        const currentIndex = DEMO_SEQUENCE.indexOf(currentStatus);
-        if (currentIndex < 0) return currentStatus;
-        const nextIndex = Math.min(currentIndex + 1, DEMO_SEQUENCE.length - 1);
-        return DEMO_SEQUENCE[nextIndex];
-      });
-    }, 60000);
-
-    return () => window.clearTimeout(timer);
+    const initialStatus = getDerivedOrderStatus(selectedOrder.orderDate, selectedOrder.status);
+    setTrackingStatus(initialStatus);
+    return undefined;
   }, [selectedOrder?.orderId, selectedOrder?.orderDate, selectedOrder?.status]);
+
+  // Global hourly progression: advance every order one step per hour (client-side simulation)
+  useEffect(() => {
+    const activeSequence = ORDER_STATUS_SEQUENCE.filter((s) => s.key !== 'cancelled');
+    const keys = activeSequence.map((s) => s.key);
+
+    const tick = () => {
+      setOrders((currentOrders) => {
+        const now = Date.now();
+        const updated = currentOrders.map((entry) => {
+          const cur = getDerivedOrderStatus(entry.orderDate, entry.status);
+          if (cur === 'delivered' || cur === 'cancelled') return entry;
+          const idx = keys.indexOf(cur);
+          if (idx < 0 || idx >= keys.length - 1) return entry;
+          const nextKey = keys[idx + 1];
+          return { ...entry, status: nextKey };
+        });
+
+        // If selected order is open, update it to reflect new status
+        if (selectedOrder) {
+          const matching = updated.find((o) => String(o.orderId) === String(selectedOrder.orderId));
+          if (matching) {
+            setSelectedOrder(matching);
+            setTrackingStatus(getDerivedOrderStatus(matching.orderDate, matching.status));
+          }
+        }
+
+        try { setCache('orders_page_0', updated, 30000); } catch {}
+        return updated;
+      });
+    };
+
+    // Run immediately (so users see progression without waiting an hour) and then every hour
+    tick();
+    const interval = window.setInterval(tick, 60 * 60 * 1000);
+    return () => window.clearInterval(interval);
+  }, [selectedOrder]);
 
   const orderCards = useMemo(() => {
     return orders.map((order) => ({
@@ -293,16 +320,25 @@ export default function OrderPage() {
         },
       });
 
+      if (response.status === 401) {
+        // Authentication issue - prompt re-login
+        setCancelMessage('Authentication required. Please log in and try again.');
+        setPendingCancelOrder(null);
+        // Optionally navigate to login page
+        // navigate('/login');
+        return;
+      }
+
       if (!response.ok) {
         throw new Error('Unable to cancel this order right now.');
       }
 
-      // Update local UI state immediately
-      setOrders((currentOrders) => currentOrders.map((entry) => entry.orderId === pendingCancelOrder.orderId ? { ...entry, status: 'cancelled' } : entry));
+      // Update local UI state immediately (string-compare order ids to avoid type mismatch)
+      setOrders((currentOrders) => currentOrders.map((entry) => (String(entry.orderId) === String(pendingCancelOrder.orderId) ? { ...entry, status: 'cancelled' } : entry)));
       setCancelMessage('Your order has been cancelled successfully.');
 
       // If the cancelled order is currently selected in the tracking modal, update it and highlight cancelled
-      if (selectedOrder && selectedOrder.orderId === pendingCancelOrder.orderId) {
+      if (selectedOrder && String(selectedOrder.orderId) === String(pendingCancelOrder.orderId)) {
         setSelectedOrder((s) => ({ ...(s || {}), status: 'cancelled' }));
         setTrackingStatus('cancelled');
       }

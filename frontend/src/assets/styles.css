@@ -3479,6 +3479,21 @@ button[type="submit"]:focus-visible {
   filter: grayscale(6%);
 }
 
+/* Subtle cancelled card styling: red border and muted text */
+.order-card--cancelled {
+  border-color: var(--danger-border);
+  box-shadow: 0 8px 24px rgba(235, 87, 87, 0.06);
+}
+
+.order-card--cancelled .order-card-header h3,
+.order-card--cancelled .order-detail-row strong {
+  color: var(--text);
+}
+
+.order-card--cancelled .order-status-badge--cancelled {
+  border: 1px solid rgba(0,0,0,0.02);
+}
+
 .order-status-badge {
   display: inline-flex;
   align-items: center;

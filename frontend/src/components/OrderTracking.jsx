@@ -137,7 +137,6 @@ export default function OrderTracking() {
           <h2>Unable to load order tracking</h2>
           <p>{error}</p>
           <div className="order-tracking-actions">
-            <button className="order-card-action" type="button" onClick={() => navigate('/orders')}>Back to Orders</button>
             <button className="order-card-action order-card-action--ghost" type="button" onClick={() => navigate('/customerhome')}>Continue Shopping</button>
           </div>
         </div>
@@ -263,7 +262,6 @@ export default function OrderTracking() {
         </div>
 
         <div className="order-tracking-actions">
-          <button className="order-card-action" type="button" onClick={() => navigate('/orders')}>Back to Orders</button>
           {!isCancelled && <button className="order-card-action order-card-action--ghost" type="button" onClick={() => navigate('/customerhome')}>Continue Shopping</button>}
         </div>
       </div>
