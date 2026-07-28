@@ -1633,11 +1633,12 @@ button[type="submit"]:focus-visible {
     justify-content: center;
     padding: 12px 18px;
     min-width: 110px;
+  }
 
-.landing-header__button:hover {
-  background: color-mix(in srgb, var(--brand) 75%, #000 25%);
-  transform: translateY(-1px);
-}
+  .landing-header__button:hover {
+    background: color-mix(in srgb, var(--brand) 75%, #000 25%);
+    transform: translateY(-1px);
+  }
 
 .landing-header__button--solid {
   background: var(--brand);
@@ -1685,6 +1686,22 @@ button[type="submit"]:focus-visible {
   inset: 0;
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.44), rgba(0, 0, 0, 0.68));
   pointer-events: none;
+}
+
+.landing-hero__loading {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  color: #fff;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(2px);
 }
 
 .landing-hero__bg::after {

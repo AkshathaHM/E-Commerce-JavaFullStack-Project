@@ -12,21 +12,27 @@ import { Toast } from './Toast';
 import { getDashboardPath, setAuthSession } from './auth';
 
 // Use Vite-safe URL resolution so images work in dev and when deployed to a subpath
-const HERO_IMAGES = [
-  new URL('/landing-images/shirts.jpg', import.meta.url).href,
-  new URL('/landing-images/pants.jpg', import.meta.url).href,
-  new URL('/landing-images/phone.jpg', import.meta.url).href,
-  new URL('/landing-images/phones.avif', import.meta.url).href,
-  new URL('/landing-images/tvs.webp', import.meta.url).href,
-  new URL('/landing-images/laps.jpg', import.meta.url).href,
-  new URL('/landing-images/Gemini_Generated_Image_9xwq8q9xwq8q9xwq.png', import.meta.url).href,
+const HERO_IMAGE_FILENAMES = [
+  'shirts.jpg',
+  'pants.jpg',
+  'phone.jpg',
+  'phones.avif',
+  'tvs.webp',
+  'laps.jpg',
+  'Gemini_Generated_Image_9xwq8q9xwq8q9xwq.png',
 ];
+
+const HERO_IMAGES = HERO_IMAGE_FILENAMES.map((filename) =>
+  new URL(`/landing-images/${filename}`, import.meta.url).href
+);
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phoneRegex = /^\d{10}$/;
 
 export default function LandingPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [failedHeroImages, setFailedHeroImages] = useState([]);
+  const [heroImagesLoaded, setHeroImagesLoaded] = useState(false);
   const [activeModal, setActiveModal] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
@@ -55,27 +61,64 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const displayHeroImages = HERO_IMAGES.filter((src) => !failedHeroImages.includes(src));
+  const visibleHeroImages = displayHeroImages.length ? displayHeroImages : HERO_IMAGES;
+
   useEffect(() => {
+    if (!visibleHeroImages.length) return undefined;
+
     const interval = window.setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % HERO_IMAGES.length);
-    }, 3000);
+      setCurrentImageIndex((prev) => (prev + 1) % visibleHeroImages.length);
+    }, 4000);
 
     return () => window.clearInterval(interval);
+  }, [visibleHeroImages.length]);
+
+  useEffect(() => {
+    let mounted = true;
+    const errors = new Set();
+    const loaded = new Set();
+    const images = HERO_IMAGES.map((src) => {
+      const img = new Image();
+
+      const markComplete = () => {
+        if (!mounted) return;
+        if (loaded.size + errors.size === HERO_IMAGES.length) {
+          setFailedHeroImages(Array.from(errors));
+          setHeroImagesLoaded(true);
+        }
+      };
+
+      img.onload = () => {
+        if (!mounted) return;
+        loaded.add(src);
+        markComplete();
+      };
+
+      img.onerror = () => {
+        if (!mounted) return;
+        errors.add(src);
+        markComplete();
+      };
+
+      img.src = src;
+      return img;
+    });
+
+    return () => {
+      mounted = false;
+      images.forEach((img) => {
+        img.onload = null;
+        img.onerror = null;
+      });
+    };
   }, []);
 
-  // Preload hero images to avoid flicker or failed loads in some deploy bases
   useEffect(() => {
-    const placeholder = new URL('/images/no-image.png', import.meta.url).href;
-    HERO_IMAGES.forEach((src) => {
-      const img = new Image();
-      img.onload = () => {};
-      img.onerror = () => {
-        // if a slide fails to load, replace with placeholder to avoid blank background
-        img.src = placeholder;
-      };
-      img.src = src;
-    });
-  }, []);
+    if (currentImageIndex >= visibleHeroImages.length) {
+      setCurrentImageIndex(0);
+    }
+  }, [visibleHeroImages.length, currentImageIndex]);
 
   useEffect(() => {
     if (!toastVisible) return undefined;
@@ -433,7 +476,7 @@ export default function LandingPage() {
       <LandingHeader onOpenModal={openModal} />
 
       <main className="landing-hero">
-        {HERO_IMAGES.map((src, index) => (
+        {visibleHeroImages.map((src, index) => (
           <div
             key={src}
             className={`landing-hero__bg${index === currentImageIndex ? ' landing-hero__bg--active' : ''}`}
@@ -441,6 +484,12 @@ export default function LandingPage() {
             aria-hidden="true"
           />
         ))}
+
+        {!heroImagesLoaded && (
+          <div className="landing-hero__loading" aria-live="polite">
+            Loading hero slideshow...
+          </div>
+        )}
 
         <div className="landing-hero__overlay" />
         <div className="landing-hero__content">
@@ -451,7 +500,7 @@ export default function LandingPage() {
           </p>
         </div>
         <div className="landing-hero__pager" aria-label="Landing slideshow navigation">
-          {HERO_IMAGES.map((_, index) => (
+          {visibleHeroImages.map((_, index) => (
             <button
               key={index}
               type="button"
