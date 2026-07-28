@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kodnest.app.entities.LoginRequest;
+import com.kodnest.app.usersrepositaries.UserRepository;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.kodnest.app.entities.User;
 import com.kodnest.app.userservices.AuthServiceContract;
 
@@ -27,9 +29,11 @@ import jakarta.servlet.http.HttpServletRequest;
 public class AuthController {
 
     private final AuthServiceContract authService;
+    private final UserRepository userRepository;
 
-    public AuthController(AuthServiceContract authService) {
+    public AuthController(AuthServiceContract authService, UserRepository userRepository) {
         this.authService = authService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/login")
@@ -125,6 +129,35 @@ public class AuthController {
         body.put("createdAt", user.getCreatedAt());
         body.put("updatedAt", user.getUpdatedAt());
         return ResponseEntity.ok(body);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
+        try {
+            String username = body.get("username");
+            String newPassword = body.get("newPassword");
+
+            if (username == null || username.isBlank()) {
+                throw new IllegalArgumentException("Username is required");
+            }
+            if (newPassword == null || newPassword.isBlank() || newPassword.length() < 8) {
+                throw new IllegalArgumentException("New password must be at least 8 characters long");
+            }
+
+            var userOpt = userRepository.findByUsername(username.trim());
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "User not found"));
+            }
+
+            User user = userOpt.get();
+            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+            user.setPassword(encoder.encode(newPassword));
+            userRepository.save(user);
+
+            return ResponseEntity.ok(Map.of("message", "Password reset successful"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
 }

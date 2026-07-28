@@ -614,7 +614,7 @@ export default function LandingPage() {
                   id="landingMobileNumber"
                   label="Mobile Number"
                   type="tel"
-                  placeholder="1234567890"
+                  placeholder="Enter mobile number"
                   value={signup.mobileNumber}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, '').slice(0, 10);
