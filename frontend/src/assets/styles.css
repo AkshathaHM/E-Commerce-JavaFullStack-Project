@@ -917,6 +917,41 @@ button[type="submit"]:focus-visible {
   z-index: 9999;
 }
 
+/* Light theme: make auth cards and inputs fully white to avoid any background bleed */
+[data-theme='light'] .auth-page__overlay {
+  background: rgba(9, 30, 66, 0.08);
+  backdrop-filter: none;
+}
+
+[data-theme='light'] .auth-card--popup,
+[data-theme='light'] .auth-card,
+[data-theme='light'] .auth-card--auth-layout,
+[data-theme='light'] .auth-hero-panel {
+  background: #ffffff;
+  color: #071025;
+  border: 1px solid rgba(9, 30, 66, 0.06);
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.08);
+}
+
+[data-theme='light'] .auth-card--popup .form-input,
+[data-theme='light'] .auth-card--popup .auth-input,
+[data-theme='light'] .auth-card--popup .auth-select,
+[data-theme='light'] .auth-hero-panel .form-input,
+[data-theme='light'] .auth-hero-panel .auth-input {
+  background: #ffffff;
+  color: #071025;
+  border-color: rgba(9, 30, 66, 0.08);
+}
+
+/* Keep link focus visible but non-translucent so underlying page cannot show through */
+.form-link:focus,
+.form-link:active {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  background: transparent;
+  box-shadow: none;
+}
+
 .auth-page__container {
   position: relative;
   z-index: 10000;
@@ -944,18 +979,20 @@ button[type="submit"]:focus-visible {
   position: relative;
   display: flex;
   flex-direction: column;
-  width: min(95vw, 900px);
-  max-width: 900px;
+  width: min(700px, 95vw);
+  max-width: 700px;
   max-height: 90vh;
   overflow: hidden;
-  padding: 28px;
+  padding: 30px;
   margin: 0 auto;
-  background: rgba(15, 23, 42, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 40px 90px rgba(0, 0, 0, 0.25);
+  /* use the theme surface as an opaque background so page images don't show through */
+  background: var(--surface);
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.24);
   color: var(--text);
-  border-radius: 20px;
-  backdrop-filter: blur(18px);
+  border-radius: 18px;
+  /* remove heavy backdrop blur to avoid bleeding of underlying imagery */
+  backdrop-filter: none;
   transform: translateY(12px);
   opacity: 0;
   animation: auth-card-slide-up 0.55s ease-out forwards;

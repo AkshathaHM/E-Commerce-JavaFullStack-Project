@@ -20,6 +20,9 @@ const HERO_IMAGE_FILENAMES = [
   'tvs.webp',
   'laps.jpg',
   'Gemini_Generated_Image_9xwq8q9xwq8q9xwq.png',
+  /* Added images (place the actual files into public/landing-images/) */
+  'women-western.jpg',
+  'women-saree.jpg',
 ];
 
 const HERO_IMAGES = HERO_IMAGE_FILENAMES.map((filename) => `/landing-images/${filename}`);
