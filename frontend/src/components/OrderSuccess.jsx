@@ -56,8 +56,8 @@ export default function OrderSuccess() {
         </div>
 
         <OrderActionButtons
-          onTrack={() => navigate('/order-tracking', { state: { order }, replace: true })}
-          onViewDetails={() => navigate('/orders', { state: { order, modal: true }, replace: true })}
+          onTrack={() => navigate('/orders', { state: { order, openTracking: true }, replace: true })}
+          onViewDetails={() => navigate('/orders', { state: { order, openTracking: true }, replace: true })}
           onContinueShopping={() => navigate('/customerhome')}
         />
       </div>

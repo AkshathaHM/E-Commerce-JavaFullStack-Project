@@ -269,10 +269,15 @@ export default function OrderPage() {
 
   useEffect(() => {
     if (location.state?.order) {
-      setSelectedOrder({
+      const nextOrder = {
         ...location.state.order,
         customerName: location.state.order.customerName || username || 'Customer',
-      });
+      };
+      setSelectedOrder(nextOrder);
+
+      if (location.state?.openTracking) {
+        setTrackingStatus(getDerivedOrderStatus(nextOrder.orderDate || nextOrder.createdAt || nextOrder.created_at, nextOrder.status));
+      }
     }
   }, [location.state, username]);
 
