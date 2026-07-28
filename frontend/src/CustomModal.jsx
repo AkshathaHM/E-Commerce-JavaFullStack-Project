@@ -1530,7 +1530,6 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
   const [sortDirection, setSortDirection] = useState("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
-  const [cartPopupOrder, setCartPopupOrder] = useState(null);
   const pageSize = 5;
 
   const formatAmount = (value) => {
@@ -1559,6 +1558,34 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
   const getItemUnitPrice = (item) => Number(item?.pricePerUnit ?? item?.unitPrice ?? item?.price ?? item?.price_per_unit ?? item?.unit_price ?? 0);
   const getItemQuantity = (item) => Number(item?.quantity ?? item?.qty ?? item?.count ?? 0);
   const getItemLineTotal = (item) => getItemUnitPrice(item) * getItemQuantity(item);
+
+  const getOrderItems = (order) => {
+    const candidates = [order?.items, order?.orderItems, order?.order_items, order?.orderitems, order?.products];
+    return Array.isArray(candidates.find(Boolean)) ? candidates.find(Boolean) : [];
+  };
+
+  const getOrderSubtotal = (order) => {
+    const items = getOrderItems(order);
+    if (Array.isArray(items) && items.length > 0) {
+      return items.reduce((sum, item) => sum + getItemLineTotal(item), 0);
+    }
+
+    const explicitSubtotal = Number(order?.subtotal ?? order?.subTotal ?? order?.sub_total ?? order?.orderSubtotal ?? order?.order_subtotal ?? 0);
+    if (Number.isFinite(explicitSubtotal) && explicitSubtotal > 0) {
+      return explicitSubtotal;
+    }
+
+    const totalValue = Number(order?.totalAmount ?? order?.total_amount ?? order?.amount ?? order?.total_price ?? order?.totalPrice ?? 0);
+    return Number.isFinite(totalValue) ? totalValue : 0;
+  };
+
+  const getOrderTotal = (order) => {
+    const explicitTotal = Number(order?.totalAmount ?? order?.total_amount ?? order?.amount ?? order?.total_price ?? order?.totalPrice ?? 0);
+    if (Number.isFinite(explicitTotal) && explicitTotal > 0) {
+      return explicitTotal;
+    }
+    return getOrderSubtotal(order);
+  };
 
   const orders = Array.isArray(modalData)
     ? modalData
@@ -1668,6 +1695,8 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
                   const badgeClass = toSafeLower(orderStatus).replace(/\s+/g, "-");
                   const rowNumber = (currentPage - 1) * pageSize + index + 1;
                   const isExpanded = expandedOrderId === orderId;
+                  const subtotalValue = getOrderSubtotal(order);
+                  const totalValue = getOrderTotal(order);
 
                   return (
                     <React.Fragment key={`${orderId}-${index}`}>
@@ -1728,11 +1757,11 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
                                     <div className="order-summary">
                                       <div className="summary-row">
                                         <span>Subtotal:</span>
-                                        <span>{formatAmount(order.items.reduce((sum, item) => sum + getItemLineTotal(item), 0))}</span>
+                                        <span>{formatAmount(subtotalValue)}</span>
                                       </div>
                                       <div className="summary-row total-row">
                                         <span>Order Total:</span>
-                                        <span>{formatAmount(Number(getOrderValue(order, "total")) > 0 ? getOrderValue(order, "total") : order.items.reduce((sum, item) => sum + getItemLineTotal(item), 0))}</span>
+                                        <span>{formatAmount(totalValue)}</span>
                                       </div>
                                     </div>
                                   </div>
@@ -1743,15 +1772,6 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
                               <div className="details-section">
                                 <div className="order-details-header">
                                   <h3>Order Information</h3>
-                                  <div className="order-details-actions">
-                                    <button
-                                      type="button"
-                                      className="primary-action-btn"
-                                      onClick={(e) => { e.stopPropagation(); setExpandedOrderId(null); setCartPopupOrder(order); }}
-                                    >
-                                      View Cart
-                                    </button>
-                                  </div>
                                 </div>
                                 <div className="info-grid">
                                   <div className="info-item">
@@ -1799,49 +1819,6 @@ const OrdersForm = ({ onClose, response, modalData, loading }) => {
 
       {response && response.includes("Error") && (
         <div className="response-message error">{response}</div>
-      )}
-
-      {cartPopupOrder && (
-        <div className="modal-overlay modal-overlay--nested" onClick={() => setCartPopupOrder(null)}>
-          <div className="order-cart-popup" onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="modal-close-btn" onClick={() => setCartPopupOrder(null)}>&times;</button>
-            <h3>Order Cart — {toSafeString(cartPopupOrder.orderId || cartPopupOrder.id || cartPopupOrder._id)}</h3>
-            <div className="items-list">
-              <table className="items-table">
-                <thead>
-                  <tr>
-                    <th>Product ID</th>
-                    <th>Name</th>
-                    <th>Quantity</th>
-                    <th>Price</th>
-                    <th>Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Array.isArray(cartPopupOrder.items) && cartPopupOrder.items.length > 0 ? (
-                    cartPopupOrder.items.map((item, idx) => (
-                      <tr key={item.id || item.productId || idx}>
-                        <td>#{item.productId ?? item.product_id ?? item.id ?? 'N/A'}</td>
-                        <td>{item.name || item.title || item.productName || '—'}</td>
-                        <td>{getItemQuantity(item)}</td>
-                        <td>{formatAmount(getItemUnitPrice(item))}</td>
-                        <td><strong>{formatAmount(getItemLineTotal(item))}</strong></td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr><td colSpan="5">No items in this order.</td></tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <div className="order-cart-summary">
-              <div className="summary-row">
-                <span>Order Total:</span>
-                <strong>{formatAmount(getOrderValue(cartPopupOrder, 'total'))}</strong>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
 
       <div className="modal-form-buttons">

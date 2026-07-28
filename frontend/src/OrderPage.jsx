@@ -142,8 +142,15 @@ export default function OrderPage() {
   const navigate = useNavigate();
 
   const getAuthHeaders = useCallback(() => {
-    const token = localStorage.getItem('authToken');
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+    if (!token) {
+      return {};
+    }
+    return {
+      Authorization: `Bearer ${token}`,
+      'X-Auth-Token': token,
+      'x-access-token': token,
+    };
   }, []);
 
   const fetchOrders = useCallback(async (nextPage = 0, append = false) => {
@@ -311,13 +318,14 @@ export default function OrderPage() {
     if (!pendingCancelOrder) return;
 
     try {
+      const headers = {
+        ...getAuthHeaders(),
+        'Content-Type': 'application/json',
+      };
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${encodeURIComponent(pendingCancelOrder.orderId)}/cancel`, {
         method: 'PUT',
         credentials: 'include',
-        headers: {
-          ...getAuthHeaders(),
-          'Content-Type': 'application/json',
-        },
+        headers,
       });
 
       const payload = await response.json().catch(() => ({}));
