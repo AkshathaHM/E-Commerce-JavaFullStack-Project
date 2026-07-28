@@ -115,7 +115,7 @@ const OrderCard = memo(function OrderCard({ order, onTrackOrder, onCancelOrder }
 
       <div className="order-card-footer order-card-footer--actions">
         <div className="order-card-actions">
-          {!isCancelled && <button className="order-card-action" type="button" onClick={() => onTrackOrder(order)}>Track Order</button>}
+          <button className="order-card-action" type="button" onClick={() => onTrackOrder(order)}>Track Order</button>
           {showCancel && <button className="order-card-action order-card-action--danger" type="button" onClick={() => onCancelOrder(order)}>Cancel Order</button>}
         </div>
       </div>
@@ -312,7 +312,7 @@ export default function OrderPage() {
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/${encodeURIComponent(pendingCancelOrder.orderId)}/cancel`, {
-        method: 'PATCH',
+        method: 'PUT',
         credentials: 'include',
         headers: {
           ...getAuthHeaders(),
@@ -320,24 +320,21 @@ export default function OrderPage() {
         },
       });
 
+      const payload = await response.json().catch(() => ({}));
+
       if (response.status === 401) {
-        // Authentication issue - prompt re-login
         setCancelMessage('Authentication required. Please log in and try again.');
         setPendingCancelOrder(null);
-        // Optionally navigate to login page
-        // navigate('/login');
         return;
       }
 
       if (!response.ok) {
-        throw new Error('Unable to cancel this order right now.');
+        throw new Error(payload.error || payload.message || 'Unable to cancel this order right now.');
       }
 
-      // Update local UI state immediately (string-compare order ids to avoid type mismatch)
       setOrders((currentOrders) => currentOrders.map((entry) => (String(entry.orderId) === String(pendingCancelOrder.orderId) ? { ...entry, status: 'cancelled' } : entry)));
-      setCancelMessage('Your order has been cancelled successfully.');
+      setCancelMessage(payload.message || 'Order cancelled successfully');
 
-      // If the cancelled order is currently selected in the tracking modal, update it and highlight cancelled
       if (selectedOrder && String(selectedOrder.orderId) === String(pendingCancelOrder.orderId)) {
         setSelectedOrder((s) => ({ ...(s || {}), status: 'cancelled' }));
         setTrackingStatus('cancelled');
@@ -445,7 +442,6 @@ export default function OrderPage() {
 
                 <div className="order-tracking-actions">
                   <button className="order-card-action order-card-action--ghost" type="button" onClick={() => setSelectedOrder(null)}>Close</button>
-                  <button className="order-card-action" type="button" onClick={() => navigate('/orders')}>Back to Orders</button>
                 </div>
               </div>
             </div>

@@ -126,17 +126,21 @@ public class OrderService implements OrderServiceContract {
     @Transactional
     public boolean cancelOrder(String orderId, int userId) {
         Order order = orderRepository.findById(orderId).orElse(null);
-        if (order == null || order.getUserId() != userId) {
-            return false;
+        if (order == null) {
+            throw new IllegalArgumentException("Order not found");
         }
 
-        if (order.getStatus() == OrderStatus.CANCELLED) {
-            return true;
+        if (order.getUserId() != userId) {
+            throw new IllegalStateException("You are not authorized to cancel this order");
         }
 
         OrderStatus resolvedStatus = orderLifecycleStatusResolver.resolve(order);
+        if (order.getStatus() == OrderStatus.CANCELLED || resolvedStatus == OrderStatus.CANCELLED) {
+            throw new IllegalStateException("Order is already cancelled");
+        }
+
         if (resolvedStatus == OrderStatus.OUT_FOR_DELIVERY || resolvedStatus == OrderStatus.DELIVERED) {
-            return false;
+            throw new IllegalStateException("Order cannot be cancelled after it is out for delivery or delivered");
         }
 
         order.setStatus(OrderStatus.CANCELLED);
