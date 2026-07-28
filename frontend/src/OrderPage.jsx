@@ -8,6 +8,7 @@ import { getCache, setCache } from './utils/cache';
 import { getAuthHeaders } from './auth';
 import StatusBadge from './components/StatusBadge';
 import TrackingTimeline from './components/TrackingTimeline';
+import { coerceOrderArray } from './utils/orderPageUtils';
 import './assets/styles.css';
 
 const NO_IMAGE = '/images/no-image.png';
@@ -147,7 +148,8 @@ export default function OrderPage() {
     const cachedPage = getCache(cacheKey);
 
     if (cachedPage && !append) {
-      setOrders(Array.isArray(cachedPage) ? cachedPage : cachedPage || []);
+      const normalizedCached = coerceOrderArray(cachedPage);
+      setOrders(normalizedCached);
       setLoading(false);
       setError(null);
     } else if (!cachedPage && !append) {
@@ -164,10 +166,10 @@ export default function OrderPage() {
         credentials: 'include',
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
       }, 30000);
-      const productList = Array.isArray(data?.orders) ? data.orders : (Array.isArray(data?.products) ? data.products : []);
-      const nextOrders = productList.map(normalizeOrderPayload);
+      const productList = coerceOrderArray(data?.orders ?? data?.products ?? data?.data ?? data);
+      const nextOrders = productList.map((entry) => normalizeOrderPayload(entry));
       setOrders((currentOrders) => {
-        const result = append ? [...currentOrders, ...nextOrders] : nextOrders;
+        const result = append ? [...coerceOrderArray(currentOrders), ...nextOrders] : nextOrders;
         try { setCache(cacheKey, result, 30000); } catch {};
         return result;
       });
@@ -226,7 +228,7 @@ export default function OrderPage() {
     }
   }, [location.state, username]);
 
-  // Keep trackingStatus in sync when the selected order changes
+  // Recalculate tracking status when time passes
   useEffect(() => {
     if (!selectedOrder) {
       setTrackingStatus('placed');
@@ -235,48 +237,20 @@ export default function OrderPage() {
 
     const initialStatus = getDerivedOrderStatus(selectedOrder.orderDate, selectedOrder.status);
     setTrackingStatus(initialStatus);
-    return undefined;
-  }, [selectedOrder?.orderId, selectedOrder?.orderDate, selectedOrder?.status]);
 
-  // Global hourly progression: advance every order one step per hour (client-side simulation)
-  useEffect(() => {
-    const activeSequence = ORDER_STATUS_SEQUENCE.filter((s) => s.key !== 'cancelled');
-    const keys = activeSequence.map((s) => s.key);
-
-    const tick = () => {
-      setOrders((currentOrders) => {
-        const now = Date.now();
-        const updated = currentOrders.map((entry) => {
-          const cur = getDerivedOrderStatus(entry.orderDate, entry.status);
-          if (cur === 'delivered' || cur === 'cancelled') return entry;
-          const idx = keys.indexOf(cur);
-          if (idx < 0 || idx >= keys.length - 1) return entry;
-          const nextKey = keys[idx + 1];
-          return { ...entry, status: nextKey };
-        });
-
-        // If selected order is open, update it to reflect new status
-        if (selectedOrder) {
-          const matching = updated.find((o) => String(o.orderId) === String(selectedOrder.orderId));
-          if (matching) {
-            setSelectedOrder(matching);
-            setTrackingStatus(getDerivedOrderStatus(matching.orderDate, matching.status));
-          }
-        }
-
-        try { setCache('orders_page_0', updated, 30000); } catch {}
+    // Refresh status every 30 seconds to keep it in sync with elapsed time
+    const refreshInterval = window.setInterval(() => {
+      setTrackingStatus((current) => {
+        const updated = getDerivedOrderStatus(selectedOrder.orderDate, selectedOrder.status);
         return updated;
       });
-    };
+    }, 30000);
 
-    // Run immediately (so users see progression without waiting an hour) and then every hour
-    tick();
-    const interval = window.setInterval(tick, 60 * 60 * 1000);
-    return () => window.clearInterval(interval);
-  }, [selectedOrder]);
+    return () => window.clearInterval(refreshInterval);
+  }, [selectedOrder?.orderId, selectedOrder?.orderDate, selectedOrder?.status]);
 
   const orderCards = useMemo(() => {
-    return orders.map((order) => ({
+    return coerceOrderArray(orders).map((order) => ({
       ...order,
       customerName: order.customerName || username || 'Customer',
       paymentStatus: order.paymentStatus || 'Paid',

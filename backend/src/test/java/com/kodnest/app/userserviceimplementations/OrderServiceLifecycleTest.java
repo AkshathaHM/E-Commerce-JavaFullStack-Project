@@ -7,6 +7,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -65,13 +68,14 @@ class OrderServiceLifecycleTest {
         product.setName("Wireless Mouse");
         product.setDescription("Ergonomic mouse");
 
-        when(orderItemRepository.findSuccessfulOrderItemsByUserId(7)).thenReturn(List.of(orderItem));
-        when(productRepository.findById(42)).thenReturn(Optional.of(product));
-        when(productImageRepository.findByProduct_ProductId(42)).thenReturn(List.of());
+        Page<OrderItem> orderItemPage = new PageImpl<>(List.of(orderItem), PageRequest.of(0, 5), 1);
+        when(orderItemRepository.findOrderItemsByUserId(7, PageRequest.of(0, 5))).thenReturn(orderItemPage);
+        when(productRepository.findAllById(List.of(42))).thenReturn(List.of(product));
+        when(productImageRepository.findByProduct_ProductIdIn(List.of(42))).thenReturn(List.of());
         when(orderLifecycleStatusResolver.resolve(order)).thenReturn(OrderStatus.ORDER_PLACED);
 
-        Map<String, Object> response = orderService.getOrdersForUser(user);
-        List<Map<String, Object>> products = (List<Map<String, Object>>) response.get("products");
+        Map<String, Object> response = orderService.getOrdersForUser(user, 0, 5);
+        List<Map<String, Object>> products = (List<Map<String, Object>>) response.get("orders");
 
         assertEquals(1, products.size());
         assertEquals("ORDER_PLACED", products.get(0).get("status"));

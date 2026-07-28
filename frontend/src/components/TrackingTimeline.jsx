@@ -24,23 +24,25 @@ const normalizeStatus = (status) => {
 
 function TrackingTimeline({ currentStatus, steps = defaultSteps }) {
   const normalized = normalizeStatus(currentStatus);
-  const currentIndex = steps.findIndex((step) => step.key === normalized);
-  const safeIndex = currentIndex >= 0 ? currentIndex : steps.length - 1;
+  
+  // If cancelled, show only up to cancelled step
+  const displaySteps = normalized === 'cancelled' 
+    ? steps 
+    : steps.filter((s) => s.key !== 'cancelled');
+  
+  const currentIndex = displaySteps.findIndex((step) => step.key === normalized);
+  const safeIndex = currentIndex >= 0 ? currentIndex : 0;
 
   return (
     <div className="tracking-timeline" aria-label="Order tracking timeline">
-      {steps.map((step, index) => {
-        // If order is delivered, treat delivered step as completed as well (show ticks for all steps)
-        const isDelivered = normalized === 'delivered';
-        const isCompleted = index < safeIndex || (isDelivered && index <= safeIndex);
+      {displaySteps.map((step, index) => {
+        const isCompleted = index < safeIndex;
         const isActive = index === safeIndex;
-        // don't show 'active' styling when the step is already completed (e.g., delivered)
-        const showActive = isActive && !isCompleted;
         const isCancelled = normalized === 'cancelled' && step.key === 'cancelled';
 
         return (
           <div key={step.key} className={`timeline-step-wrapper ${isCompleted ? 'timeline-step-wrapper--complete' : ''} ${isCancelled ? 'timeline-step-wrapper--cancelled' : ''}`}>
-            <div className={`timeline-step ${isCompleted ? 'timeline-step--complete' : ''} ${showActive ? 'timeline-step--active' : ''} ${isCancelled ? 'timeline-step--cancelled' : ''}`}>
+            <div className={`timeline-step ${isCompleted ? 'timeline-step--complete' : ''} ${isActive ? 'timeline-step--active' : ''} ${isCancelled ? 'timeline-step--cancelled' : ''}`}>
               <div className="timeline-icon" aria-hidden>
                 {isCompleted ? '✓' : isCancelled ? '✕' : index + 1}
               </div>

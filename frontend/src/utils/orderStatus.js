@@ -8,6 +8,14 @@ export const ORDER_STATUS_SEQUENCE = [
   { key: 'cancelled', label: 'Cancelled', detail: 'The order was cancelled before it was dispatched.' },
 ];
 
+const TIME_THRESHOLDS_MINUTES = {
+  confirmed: 60,      // 1 hour
+  packed: 120,        // 2 hours
+  shipped: 180,       // 3 hours
+  out_for_delivery: 240,  // 4 hours
+  delivered: 300,     // 5 hours
+};
+
 const normalizeStatusText = (status) => {
   const text = typeof status === 'string' ? status.trim().toLowerCase() : '';
   if (!text) return 'placed';
@@ -22,7 +30,43 @@ const normalizeStatusText = (status) => {
 };
 
 export function getDerivedOrderStatus(createdAt, rawStatus = '') {
-  return normalizeStatusText(rawStatus);
+  // If explicitly cancelled, return cancelled regardless of time
+  const normalized = normalizeStatusText(rawStatus);
+  if (normalized === 'cancelled') {
+    return 'cancelled';
+  }
+
+  // Calculate elapsed time since order creation
+  if (!createdAt) {
+    return normalized || 'placed';
+  }
+
+  const createdTime = new Date(createdAt).getTime();
+  if (Number.isNaN(createdTime)) {
+    return normalized || 'placed';
+  }
+
+  const nowTime = Date.now();
+  const elapsedMs = nowTime - createdTime;
+  const elapsedMinutes = Math.floor(elapsedMs / 60000);
+
+  // Determine status based on elapsed time
+  if (elapsedMinutes >= TIME_THRESHOLDS_MINUTES.delivered) {
+    return 'delivered';
+  }
+  if (elapsedMinutes >= TIME_THRESHOLDS_MINUTES.out_for_delivery) {
+    return 'out_for_delivery';
+  }
+  if (elapsedMinutes >= TIME_THRESHOLDS_MINUTES.shipped) {
+    return 'shipped';
+  }
+  if (elapsedMinutes >= TIME_THRESHOLDS_MINUTES.packed) {
+    return 'packed';
+  }
+  if (elapsedMinutes >= TIME_THRESHOLDS_MINUTES.confirmed) {
+    return 'confirmed';
+  }
+  return 'placed';
 }
 
 export function getStatusLabel(status) {
@@ -43,20 +87,20 @@ export function getExpectedDelivery(createdAt, status = '') {
   }
 
   const normalized = normalizeStatusText(status);
-  // Map status to estimated remaining days
-  const remainingDaysMap = {
-    placed: 4,
-    confirmed: 3,
-    packed: 3,
-    shipped: 2,
-    out_for_delivery: 1,
-    delivered: 0,
+  // Map status to estimated remaining hours from creation
+  const totalHoursMap = {
+    placed: 5,
+    confirmed: 5,
+    packed: 5,
+    shipped: 5,
+    out_for_delivery: 5,
+    delivered: 5,
     cancelled: 0,
   };
 
-  const days = remainingDaysMap[normalized] ?? 4;
+  const totalHours = totalHoursMap[normalized] ?? 5;
   const delivery = new Date(createdTime);
-  delivery.setDate(delivery.getDate() + days);
+  delivery.setHours(delivery.getHours() + totalHours);
   return delivery;
 }
 
@@ -64,7 +108,7 @@ export function getCountdownLabel(createdAt, status) {
   const normalized = normalizeStatusText(status);
   if (normalized === 'cancelled') return 'Cancelled';
   if (normalized === 'delivered') return 'Delivered';
-  return 'Estimated delivery in 4 days';
+  return 'Expected within 5 hours';
 }
 
 export function getOrderHistoryEntries(orderId) {
@@ -77,3 +121,4 @@ export function getOrderHistoryEntries(orderId) {
     { key: 'delivered', label: 'Delivered', detail: 'The package was delivered successfully.' },
   ];
 }
+

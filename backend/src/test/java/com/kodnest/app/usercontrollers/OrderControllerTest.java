@@ -63,4 +63,19 @@ class OrderControllerTest {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertEquals("User not authenticated", response.getBody().get("error"));
     }
+
+    @Test
+    void cancelOrderShouldReturnBadRequestForUnexpectedRuntimeExceptions() {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        User user = new User();
+        user.setUserId(7);
+
+        when(request.getAttribute("authenticatedUser")).thenReturn(user);
+        when(orderService.cancelOrder("4", 7)).thenThrow(new NullPointerException("Unexpected state"));
+
+        ResponseEntity<Map<String, Object>> response = orderController.cancelOrder("4", request);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("Unexpected state", response.getBody().get("error"));
+    }
 }

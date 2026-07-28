@@ -125,27 +125,37 @@ public class OrderService implements OrderServiceContract {
     @Override
     @Transactional
     public boolean cancelOrder(String orderId, int userId) {
-        Order order = orderRepository.findById(orderId).orElse(null);
-        if (order == null) {
-            throw new IllegalArgumentException("Order not found");
+        if (orderId == null || orderId.isBlank()) {
+            throw new IllegalArgumentException("Order ID is required");
         }
 
-        if (order.getUserId() != userId) {
-            throw new IllegalStateException("You are not authorized to cancel this order");
-        }
+        try {
+            Order order = orderRepository.findById(orderId.trim()).orElse(null);
+            if (order == null) {
+                throw new IllegalArgumentException("Order not found");
+            }
 
-        OrderStatus resolvedStatus = orderLifecycleStatusResolver.resolve(order);
-        if (order.getStatus() == OrderStatus.CANCELLED || resolvedStatus == OrderStatus.CANCELLED) {
-            throw new IllegalStateException("Order is already cancelled");
-        }
+            if (order.getUserId() != userId) {
+                throw new IllegalStateException("You are not authorized to cancel this order");
+            }
 
-        if (resolvedStatus == OrderStatus.OUT_FOR_DELIVERY || resolvedStatus == OrderStatus.DELIVERED) {
-            throw new IllegalStateException("Order cannot be cancelled after it is out for delivery or delivered");
-        }
+            OrderStatus resolvedStatus = orderLifecycleStatusResolver.resolve(order);
+            if (order.getStatus() == OrderStatus.CANCELLED || resolvedStatus == OrderStatus.CANCELLED) {
+                throw new IllegalStateException("Order is already cancelled");
+            }
 
-        order.setStatus(OrderStatus.CANCELLED);
-        order.setUpdatedAt(LocalDateTime.now());
-        orderRepository.save(order);
-        return true;
+            if (resolvedStatus == OrderStatus.OUT_FOR_DELIVERY || resolvedStatus == OrderStatus.DELIVERED) {
+                throw new IllegalStateException("Order cannot be cancelled after it is out for delivery or delivered");
+            }
+
+            order.setStatus(OrderStatus.CANCELLED);
+            order.setUpdatedAt(LocalDateTime.now());
+            orderRepository.save(order);
+            return true;
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            throw ex;
+        } catch (RuntimeException ex) {
+            throw new IllegalStateException("Unable to cancel order right now", ex);
+        }
     }
 }

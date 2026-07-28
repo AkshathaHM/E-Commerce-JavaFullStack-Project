@@ -12,19 +12,19 @@ import com.kodnest.app.entities.OrderStatus;
 @Component
 public class OrderLifecycleStatusResolver {
 
-    @Value("${order.lifecycle.confirmed.delay-minutes:10}")
+    @Value("${order.lifecycle.confirmed.delay-minutes:60}")
     private int confirmedDelayMinutes;
 
-    @Value("${order.lifecycle.packed.delay-minutes:20}")
+    @Value("${order.lifecycle.packed.delay-minutes:120}")
     private int packedDelayMinutes;
 
-    @Value("${order.lifecycle.shipped.delay-minutes:30}")
+    @Value("${order.lifecycle.shipped.delay-minutes:180}")
     private int shippedDelayMinutes;
 
-    @Value("${order.lifecycle.out-for-delivery.delay-minutes:40}")
+    @Value("${order.lifecycle.out-for-delivery.delay-minutes:240}")
     private int outForDeliveryDelayMinutes;
 
-    @Value("${order.lifecycle.delivered.delay-minutes:50}")
+    @Value("${order.lifecycle.delivered.delay-minutes:300}")
     private int deliveredDelayMinutes;
 
     public OrderStatus resolve(Order order) {
