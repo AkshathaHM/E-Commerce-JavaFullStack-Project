@@ -615,25 +615,24 @@ const AdminDashboard = () => {
       <AdminHeader username={adminUsername || "Admin"} />
 
       <main className="dashboard-content">
-        <section className="dashboard-hero">
-          <div className="relative w-full h-52 md:h-60 rounded-2xl overflow-hidden mb-8 shadow-lg">
+        <section>
+          <div className="relative w-full h-52 md:h-64 rounded-2xl overflow-hidden mb-8 shadow-lg">
             <img
-              src="/landing-images/admin-custom.png"
+              src="/landing-images/phones.avif"
               alt="Banner"
               className="absolute inset-0 w-full h-full object-cover"
             />
 
-            <div className="absolute inset-0 bg-black/60" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-black/55" />
 
-            <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-12">
-              <p className="text-xs font-semibold tracking-[0.2em] uppercase text-white/80 mb-2">
+            <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-12 text-white">
+              <p className="text-xs font-semibold tracking-[0.2em] uppercase mb-2 text-white/80">
                 OPERATIONS CENTER
               </p>
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 drop-shadow-lg">
+              <h1 className="text-3xl md:text-4xl font-bold mb-2 drop-shadow-lg">
                 Welcome back, {adminUsername || 'Admin'}
               </h1>
-              <p className="text-sm md:text-base text-white/90 max-w-xl drop-shadow">
+              <p className="text-sm md:text-base text-white/90 max-w-xl">
                 Manage products, customers, and orders from one polished workspace.
               </p>
             </div>
