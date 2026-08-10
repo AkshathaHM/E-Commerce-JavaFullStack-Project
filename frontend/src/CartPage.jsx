@@ -40,6 +40,16 @@ const CartPage = () => {
   const hasFetchedCartRef = useRef(false);
   const navigate = useNavigate();
 
+  const getAuthHeaders = useCallback(() => {
+    const token = localStorage.getItem("authToken");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }, []);
+
+  const getItemId = useCallback((item) => {
+    const id = item?.product_id ?? item?.productId ?? item?.id ?? null;
+    return id != null ? String(id) : null;
+  }, []);
+
   const handleCloseSuccessModal = useCallback(() => {
     setPaymentSuccessData(null);
   }, []);
@@ -96,11 +106,6 @@ const CartPage = () => {
       setShareLoading(false);
     }
   }, [getAuthHeaders, getItemId, navigate, shareLoading, sharedCartItems, username]);
-
-  const getAuthHeaders = useCallback(() => {
-    const token = localStorage.getItem("authToken");
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }, []);
 
   const totalItems = useMemo(() => sharedCartItems.reduce((sum, item) => sum + (item.quantity || 0), 0), [sharedCartItems]);
   const shipping = "370.00";
