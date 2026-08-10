@@ -78,7 +78,7 @@ export default function SharedCartPage() {
     setToastMessage('');
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/shared-cart/${encodeURIComponent(shareId)}/item`, {
+      const res = await fetch(getApiUrl(`/api/shared-cart/${encodeURIComponent(shareId)}/item`), {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
@@ -122,7 +122,7 @@ export default function SharedCartPage() {
     setToastMessage('');
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/shared-cart/${encodeURIComponent(shareId)}/item`, {
+      const res = await fetch(getApiUrl(`/api/shared-cart/${encodeURIComponent(shareId)}/item`), {
         method: 'DELETE',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
