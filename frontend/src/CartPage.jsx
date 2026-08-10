@@ -45,7 +45,7 @@ const CartPage = () => {
     return token ? { Authorization: `Bearer ${token}` } : {};
   }, []);
 
-  const getItemId = useCallback((item) => {
+  const resolveItemId = useCallback((item) => {
     const id = item?.product_id ?? item?.productId ?? item?.id ?? null;
     return id != null ? String(id) : null;
   }, []);
@@ -73,7 +73,7 @@ const CartPage = () => {
       const payload = {
         title: `${username || 'My'} Shared Cart`,
         items: sharedCartItems.map((item) => ({
-          productId: Number(getItemId(item)),
+          productId: Number(resolveItemId(item)),
           quantity: Number(item.quantity || 1),
         })),
       };
@@ -105,7 +105,7 @@ const CartPage = () => {
     } finally {
       setShareLoading(false);
     }
-  }, [getAuthHeaders, getItemId, navigate, shareLoading, sharedCartItems, username]);
+  }, [getAuthHeaders, resolveItemId, navigate, shareLoading, sharedCartItems, username]);
 
   const totalItems = useMemo(() => sharedCartItems.reduce((sum, item) => sum + (item.quantity || 0), 0), [sharedCartItems]);
   const shipping = "370.00";
@@ -147,10 +147,6 @@ const CartPage = () => {
 
   const authTokenExists = () => !!localStorage.getItem("authToken");
 
-  const getItemId = useCallback((item) => {
-    const id = item?.product_id ?? item?.productId ?? item?.id ?? null;
-    return id != null ? String(id) : null;
-  }, []);
   const getItemStock = useCallback((item) => getCartItemStockLimit(item), []);
   const getDisplayName = useCallback(
     (item) => item?.name || item?.title || item?.productName || item?.product_name || "Product",
@@ -263,8 +259,8 @@ const CartPage = () => {
     if (!id) return false;
 
     const previousItems = sharedCartItems;
-    const nextItems = previousItems.filter((i) => getItemId(i) !== id);
-    const removed = previousItems.find((i) => getItemId(i) === id);
+    const nextItems = previousItems.filter((i) => resolveItemId(i) !== id);
+    const removed = previousItems.find((i) => resolveItemId(i) === id);
     const newSubtotal = nextItems.reduce((sum, item) => sum + Number(item.total_price || 0), 0).toFixed(2);
 
     // Immediate UI update
@@ -311,7 +307,7 @@ const CartPage = () => {
 
   // Update quantity
   const handleQuantityChange = useCallback(async (productId, delta) => {
-    const item = sharedCartItems.find((i) => getItemId(i) === productId);
+    const item = sharedCartItems.find((i) => resolveItemId(i) === productId);
     if (!item) return;
 
     const currentQty = Number(item.quantity || 0);
@@ -335,7 +331,7 @@ const CartPage = () => {
     let updatedQuantity = null;
 
     const nextItems = sharedCartItems.map((i) => {
-      if (getItemId(i) !== productId) return i;
+      if (resolveItemId(i) !== productId) return i;
       const newQty = Math.max(1, currentQty + Number(delta || 0));
       if (updatedQuantity === null) {
         updatedQuantity = newQty;
@@ -369,20 +365,20 @@ const CartPage = () => {
       setShowPaymentToast(true);
       fetchCartItems({ showLoading: false });
     }
-  }, [getAuthHeaders, fetchCartItems, getItemId, sharedCartItems, username, updateCartState]);
+  }, [getAuthHeaders, fetchCartItems, resolveItemId, sharedCartItems, username, updateCartState]);
 
   // stable callbacks for child components
   const handleIncrease = useCallback((id) => handleQuantityChange(id, +1), [handleQuantityChange]);
   const handleDecrease = useCallback((id) => handleQuantityChange(id, -1), [handleQuantityChange]);
   const handleRemove = useCallback((id) => {
-    const item = sharedCartItems.find((i) => getItemId(i) === id);
+    const item = sharedCartItems.find((i) => resolveItemId(i) === id);
     if (!item) {
       setToastMessage('Unable to identify the item to delete.');
       setToastType('error');
       return;
     }
     setConfirmDeleteItem({ id, name: item?.display_name || item?.name || 'this item' });
-  }, [sharedCartItems, getItemId]);
+  }, [sharedCartItems, resolveItemId]);
 
   const confirmDelete = useCallback(async () => {
     if (!confirmDeleteItem?.id) return;
@@ -414,7 +410,7 @@ const CartPage = () => {
       const payload = {
         totalAmount: Number(subtotal),
         cartItems: sharedCartItems.map((item) => ({
-          productId: getItemId(item),
+          productId: resolveItemId(item),
           quantity: item.quantity,
           price: Number(item.price_per_unit || item.price || item.unit_price || 0),
         }))
@@ -463,7 +459,7 @@ const CartPage = () => {
                 razorpay_signature: rzpRes.razorpay_signature,
                 totalAmount: Number(subtotal),
                 cartItems: sharedCartItems.map((item) => ({
-                  productId: getItemId(item),
+                  productId: resolveItemId(item),
                   quantity: item.quantity,
                   price: Number(item.price_per_unit || item.price || item.unit_price || 0),
                 }))
@@ -649,12 +645,12 @@ const CartPage = () => {
         <div className="cart-items">
           {sharedCartItems.map((item, index) => (
             <CartItem
-              key={getItemId(item) || index}
+              key={resolveItemId(item) || index}
               item={item}
               onIncrease={handleIncrease}
               onDecrease={handleDecrease}
               onRemove={handleRemove}
-              getItemId={getItemId}
+              getItemId={resolveItemId}
             />
           ))}
         </div>
