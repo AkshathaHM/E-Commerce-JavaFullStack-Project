@@ -13,6 +13,7 @@ import { mergeCartItemById } from './utils/cartUtils';
 import './assets/styles.css';
 
 export default function CustomerHomePage() {
+  const navigate = useNavigate();
   const { cartItems, cartCount, addedProductIds, addProductToCart, removeProductFromCart, setCartCount, updateCartState } = useCart();
   const initialProducts = getCache('products_all') || [];
   const [allProducts, setAllProducts] = useState(initialProducts);
