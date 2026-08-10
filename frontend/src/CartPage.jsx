@@ -78,10 +78,14 @@ const CartPage = () => {
         })),
       };
 
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/shared-cart/create`, {
+      const url = `${import.meta.env.VITE_API_URL}/api/shared-cart/create`;
+      const headers = { 'Content-Type': 'application/json', ...getAuthHeaders() };
+      console.debug('Create shared cart request', { url, headers, payload });
+
+      const res = await fetch(url, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        headers,
         body: JSON.stringify(payload),
       });
 
