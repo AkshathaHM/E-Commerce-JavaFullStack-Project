@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { CustomerLayout } from './CustomerLayout';
 import { Toast } from './Toast';
 import CartItem from './components/CartItem';
-import { getAuthHeaders } from './auth';
+import { getAuthHeaders, getApiUrl } from './auth';
 import { getCartItemStockLimit } from './utils/cartUtils';
 import './CartPage.css';
 
@@ -29,14 +29,16 @@ export default function SharedCartPage() {
     setError('');
 
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/shared-cart/join`, {
+      const joinUrl = getApiUrl('/api/shared-cart/join');
+      console.debug('Join shared cart request', { joinUrl, headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: { shareId } });
+      await fetch(joinUrl, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ shareId }),
       });
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/shared-cart/${encodeURIComponent(shareId)}`, {
+      const response = await fetch(getApiUrl(`/api/shared-cart/${encodeURIComponent(shareId)}`), {
         credentials: 'include',
         headers: { ...getAuthHeaders() },
       });

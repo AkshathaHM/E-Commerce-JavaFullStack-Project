@@ -71,6 +71,16 @@ export const getDashboardPath = (role) => {
   return '/';
 };
 
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://e-commerce-javafullstack-project-1.onrender.com';
+if (!import.meta.env.VITE_API_URL) {
+  console.warn('VITE_API_URL is not set. Falling back to', API_BASE_URL);
+}
+
+export const getApiUrl = (path) => {
+  const base = API_BASE_URL.replace(/\/$/, '');
+  return path.startsWith('/') ? `${base}${path}` : `${base}/${path}`;
+};
+
 export const getAuthHeaders = () => {
   if (isSessionExpired()) {
     clearAuthSession();

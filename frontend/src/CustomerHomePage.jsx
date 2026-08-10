@@ -10,6 +10,7 @@ import { getCache, setCache } from './utils/cache';
 import { useCart } from './CartContext';
 import { normalizeProductList } from './utils/products';
 import { mergeCartItemById } from './utils/cartUtils';
+import { getApiUrl } from './auth';
 import './assets/styles.css';
 
 export default function CustomerHomePage() {
@@ -53,7 +54,9 @@ export default function CustomerHomePage() {
         throw new Error('Invalid share ID.');
       }
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/shared-cart/join`, {
+      const url = getApiUrl('/api/shared-cart/join');
+      console.debug('Join shared cart request', { url, headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: { shareId } });
+      const response = await fetch(url, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },

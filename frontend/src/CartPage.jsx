@@ -7,6 +7,7 @@ import { CartItemSkeleton } from "./components/Skeleton";
 import CartItem from "./components/CartItem";
 import { getCache, setCache, clearCache } from './utils/cache';
 import { cachedFetch, invalidateCache } from './utils/apiClient';
+import { getApiUrl } from './auth';
 import { getPaymentErrorDetails } from "./utils/paymentFlow";
 import { getDerivedOrderStatus, getStatusLabel } from "./utils/orderStatus";
 import { useCart } from './CartContext';
@@ -78,7 +79,7 @@ const CartPage = () => {
         })),
       };
 
-      const url = `${import.meta.env.VITE_API_URL}/api/shared-cart/create`;
+      const url = getApiUrl('/api/shared-cart/create');
       const headers = { 'Content-Type': 'application/json', ...getAuthHeaders() };
       console.debug('Create shared cart request', { url, headers, payload });
 
