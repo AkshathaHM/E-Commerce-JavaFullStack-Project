@@ -5,6 +5,7 @@ const LoginPage = lazy(() => import("./LoginPage"));
 const RegistrationPage = lazy(() => import("./RegistrationPage"));
 const CustomerHomePage = lazy(() => import('./CustomerHomePage'));
 const CartPage = lazy(() => import('./CartPage'));
+const SharedCartPage = lazy(() => import('./SharedCartPage'));
 const OrderPage = lazy(() => import('./OrderPage'));
 const ProfilePage = lazy(() => import('./ProfilePage'));
 const SettingsPage = lazy(() => import('./SettingsPage'));
@@ -49,6 +50,7 @@ const AppRoutes = () => {
       <Route path="/customerhome" element={<ProtectedRoute element={<Suspense fallback={pageFallback}><CustomerHomePage /></Suspense>} allowedRole="CUSTOMER" />} />
       <Route path="/UserCartPage" element={<ProtectedRoute element={<Suspense fallback={pageFallback}><CartPage /></Suspense>} allowedRole="CUSTOMER" />} />
       <Route path="/orders" element={<ProtectedRoute element={<Suspense fallback={pageFallback}><OrderPage /></Suspense>} allowedRole="CUSTOMER" />} />
+      <Route path="/shared-cart/:shareId" element={<ProtectedRoute element={<Suspense fallback={pageFallback}><SharedCartPage /></Suspense>} allowedRole="CUSTOMER" />} />
       <Route path="/profile" element={<ProtectedRoute element={<Suspense fallback={pageFallback}><ProfilePage /></Suspense>} allowedRole="CUSTOMER" />} />
       <Route path="/settings" element={<ProtectedRoute element={<Suspense fallback={pageFallback}><SettingsPage /></Suspense>} allowedRole="CUSTOMER" />} />
       <Route path="/orders/:orderId/tracking" element={<ProtectedRoute element={<Suspense fallback={pageFallback}><OrderTracking /></Suspense>} allowedRole="CUSTOMER" />} />

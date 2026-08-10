@@ -2981,6 +2981,137 @@ button[type="submit"]:focus-visible {
   gap: 18px;
 }
 
+.shared-cart-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.shared-cart-summary,
+.shared-cart-members {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  border-radius: 24px;
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+.shared-cart-meta {
+  display: grid;
+  gap: 10px;
+}
+
+.shared-cart-meta p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.shared-cart-meta strong {
+  color: var(--text);
+}
+
+.share-link-block label {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.share-link-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.share-link-row input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--input-text);
+}
+
+.share-link-row button {
+  padding: 14px 18px;
+  border-radius: 16px;
+  border: none;
+  background: var(--primary);
+  color: var(--button-text);
+  cursor: pointer;
+}
+
+.share-link-row button:hover {
+  background: var(--brand-dark);
+}
+
+.member-list {
+  display: grid;
+  gap: 12px;
+}
+
+.member-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.member-card strong {
+  color: var(--heading);
+}
+
+.member-card span {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.shared-cart-sidebar {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 28px;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 120px;
+  align-self: start;
+}
+
+.shared-cart-sidebar h2 {
+  margin-top: 0;
+  margin-bottom: 18px;
+}
+
+.shared-cart-access-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 24px;
+  border-radius: 24px;
+}
+
+.shared-cart-access-header p {
+  color: var(--text-secondary);
+}
+
+.shared-cart-access-form input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--input-text);
+}
+
+.shared-cart-access-form button {
+  border-radius: 16px;
+}
+
 .cart-item {
   display: flex;
   gap: 18px;

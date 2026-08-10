@@ -274,6 +274,68 @@ LOCK TABLES `users` WRITE;
 INSERT INTO `users` VALUES (1,'Appa','appa1@gmail.com','$2a$10$yCybuE2L/arn5vOSjrhrCepxj30SNIW90P/h3M9NsB3EKqx/COeQ6','CUSTOMER','2026-02-02 15:26:23','2026-02-02 15:26:23'),(2,'Manasa','manasa@gmail.com','$2a$10$m7MoScCFpneCg4EByqhy4eLeMqsMGJuAJ6EgoMSoSXpjCWfNwVyTG','ADMIN','2026-02-02 15:31:04','2026-02-02 15:31:04'),(3,'Anvi','anvi@gmail.com','$2a$10$o2GEll4cvYyDWLM7N3vJiOiumGj3IDIpZiarnCFPj0ntF2b9ZRpNe','ADMIN','2026-02-03 06:05:32','2026-02-03 06:05:33'),(4,'Akku','akku@gmail.com','$2a$10$3q7vzzxlCPRSpZu354x5HuNifOoX6c5wW7MhixmRDr1f8AjPnouxW','ADMIN','2026-02-03 06:14:51','2026-02-03 06:14:52'),(5,'Akkku','akkku@gmail.com','$2a$10$c3GmXP9N8KyTKVlHjJcSueQA5nni5qgYQasXCioGj9MwhLgvPYPa2','CUSTOMER','2026-02-03 06:15:26','2026-02-03 06:15:26'),(6,'Arpi','arpi@gmail.com','$2a$10$Huw.m3ktmWnUPrjg1Wzar.yYarnvNTY8UmGKgaBISTB691SNDjMky','ADMIN','2026-02-03 06:16:43','2026-02-03 06:16:43'),(7,'Akshu','akshu@gmail.com','$2a$10$J9dsVYqaLWdiYgLmUPTbBu3k75n.nx8l3Q74J0IFtciUy4FEVVdoO','CUSTOMER','2026-02-03 06:18:35','2026-02-03 06:18:35'),(8,'Akshatha H M','akshathahmohan@gmail.com','$2a$10$bHDA7gXp9NTwjupcBxsX5OPuU22rPQeoFs0UA.gF9EotMvNBPqZOa','ADMIN','2026-02-03 09:27:28','2026-02-03 09:27:28'),(9,'Akshatha ','akshatha@gmail.com','$2a$10$0zPj5OPdGuhIFNAlJn23x.WIa8UfJ703o0TlBMHXFKTo4cVQh7oRG','ADMIN','2026-02-03 09:35:48','2026-02-03 09:35:48'),(10,'Akshu1','Akshu1@gmail.com','$2a$10$cbCclLw5mAr5PYooG2NyFOt7QJ5xkwEK7bDbLqHfuH0x4ULZ0oe.y','ADMIN','2026-02-03 09:37:18','2026-02-03 09:37:18'),(11,'Akshu2','akshu2@gmail.com','$2a$10$pRNbVftxfQK/6gahhEaWT.vH14H.HrNkd2NLpd96vltpfyBXhybkW','ADMIN','2026-02-03 11:00:18','2026-02-03 11:00:18'),(12,'Akash','akash@gmail.com','$2a$10$6CaWa5lrAAg0pE32FkwwfOBUBuTZCjWDShyP6GmJTiYWiNP1umqqK','ADMIN','2026-02-03 11:28:21','2026-02-03 11:28:22'),(13,'Akku1','akku1@gmail.com','$2a$10$PAb3KkDm6VZwth1/skRnkuvK9M2FHhyhp.Y7hNK9tJaPSXIHpw9a2','CUSTOMER','2026-02-03 11:30:20','2026-02-03 11:30:20'),(14,'Swathi','swathi@gmail.com','$2a$10$GSa0xzx5b7OHohXRmLY09.zsxp1cCcFCJVQ.LR.m8Ew1nn6qF0XrS','CUSTOMER','2026-02-03 11:49:36','2026-02-03 11:49:37');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `shared_carts`
+--
+
+DROP TABLE IF EXISTS `shared_carts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `shared_carts` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `share_id` varchar(255) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `owner_user_id` int NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_shared_cart_share_id` (`share_id`),
+  KEY `fk_shared_cart_owner` (`owner_user_id`),
+  CONSTRAINT `fk_shared_cart_owner` FOREIGN KEY (`owner_user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `shared_cart_members`
+--
+
+DROP TABLE IF EXISTS `shared_cart_members`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `shared_cart_members` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `shared_cart_id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `is_owner` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `fk_shared_cart_member_cart` (`shared_cart_id`),
+  KEY `fk_shared_cart_member_user` (`user_id`),
+  CONSTRAINT `fk_shared_cart_member_cart` FOREIGN KEY (`shared_cart_id`) REFERENCES `shared_carts` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_shared_cart_member_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `shared_cart_items`
+--
+
+DROP TABLE IF EXISTS `shared_cart_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `shared_cart_items` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `shared_cart_id` int NOT NULL,
+  `product_id` int NOT NULL,
+  `quantity` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_shared_cart_item_cart` (`shared_cart_id`),
+  KEY `fk_shared_cart_item_product` (`product_id`),
+  CONSTRAINT `fk_shared_cart_item_cart` FOREIGN KEY (`shared_cart_id`) REFERENCES `shared_carts` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_shared_cart_item_product` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

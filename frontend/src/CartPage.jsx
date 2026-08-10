@@ -22,6 +22,7 @@ const CartPage = () => {
     return total.toFixed(2);
   }, [sharedCartItems]);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
   const [showPaymentToast, setShowPaymentToast] = useState(false);
   const [paymentSuccessData, setPaymentSuccessData] = useState(null);
   const [paymentError, setPaymentError] = useState(null);
@@ -52,6 +53,49 @@ const CartPage = () => {
     setPaymentSuccessData(null);
     navigate('/customerhome');
   }, [navigate]);
+
+  const handleCreateSharedCart = useCallback(async () => {
+    if (shareLoading || sharedCartItems.length === 0) return;
+    setShareLoading(true);
+    setToastMessage('');
+
+    try {
+      const payload = {
+        title: `${username || 'My'} Shared Cart`,
+        items: sharedCartItems.map((item) => ({
+          productId: Number(getItemId(item)),
+          quantity: Number(item.quantity || 1),
+        })),
+      };
+
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/shared-cart/create`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error((body && body.error) || 'Unable to create shared cart.');
+      }
+
+      const data = await res.json();
+      setToastMessage('Shared cart created successfully.');
+      setToastType('success');
+      setShowPaymentToast(true);
+      if (data?.shareId) {
+        navigate(`/shared-cart/${encodeURIComponent(data.shareId)}`);
+      }
+    } catch (err) {
+      console.error('Create shared cart failed:', err);
+      setToastMessage(err?.message || 'Failed to create shared cart.');
+      setToastType('error');
+      setShowPaymentToast(true);
+    } finally {
+      setShareLoading(false);
+    }
+  }, [getAuthHeaders, getItemId, navigate, shareLoading, sharedCartItems, username]);
 
   const getAuthHeaders = useCallback(() => {
     const token = localStorage.getItem("authToken");
@@ -574,6 +618,14 @@ const CartPage = () => {
       <div className="cart-page">
         <div className="cart-page-actions">
           <button className="back-button" onClick={() => navigate('/customerhome')}>← Continue Shopping</button>
+          <button
+            className="back-button"
+            type="button"
+            onClick={handleCreateSharedCart}
+            disabled={shareLoading || sharedCartItems.length === 0}
+          >
+            {shareLoading ? 'Creating Shared Cart…' : 'Create Shared Cart'}
+          </button>
         </div>
 
         <div className="cart-header">
