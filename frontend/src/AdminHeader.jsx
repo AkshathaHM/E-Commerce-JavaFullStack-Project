@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProfileDropdown } from './ProfileDropdown';
 import ThemeToggleButton from './ThemeToggleButton';
+import SharedCartInviteFloating from './SharedCartInviteFloating';
 
 export const AdminHeader = memo(function AdminHeader({ username = 'Admin' }) {
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ export const AdminHeader = memo(function AdminHeader({ username = 'Admin' }) {
             ]}
           />
           <ThemeToggleButton />
+          <SharedCartInviteFloating />
         </div>
       </div>
     </header>

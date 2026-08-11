@@ -305,23 +305,9 @@ export default function CustomerHomePage() {
     <CustomerLayout username={username}>
       <div className="main-content">
         <section>
-          <div className="relative w-full h-52 md:h-64 rounded-2xl overflow-hidden mb-8 shadow-lg">
-            <img
-              src="/landing-images/phones.avif"
-              alt="Banner"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-
-            <div className="absolute inset-0 bg-black/55" />
-
-            <div className="relative z-10 h-full flex flex-col justify-center px-8 md:px-12 text-white">
-              <h1 className="text-3xl md:text-4xl font-bold mb-2 drop-shadow-lg">
-                Hello, {username}!
-              </h1>
-              <p className="text-sm md:text-base text-white/90 max-w-xl">
-                Discover products, manage your cart, and track every order with ease.
-              </p>
-            </div>
+          <div className="hero-container mb-8">
+            <h1 className="hero-title">Hello, {username}!</h1>
+            <p className="hero-subtitle">Discover products, manage your cart, and track every order with ease — invite people to share your cart.</p>
           </div>
         </section>
 

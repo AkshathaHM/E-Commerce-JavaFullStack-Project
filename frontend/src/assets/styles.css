@@ -799,6 +799,84 @@ button[type="submit"]:focus-visible {
   transform: translateY(-1px);
   background: var(--surface);
 
+/* Hero section used on customer and admin home pages */
+.hero-container {
+  padding: 28px 22px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, var(--surface), var(--surface-alt));
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hero-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 2.6vw, 2.4rem);
+  line-height: 1.05;
+  font-weight: 900;
+  color: var(--heading);
+}
+
+.hero-subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: clamp(1rem, 1.6vw, 1.125rem);
+  max-width: 72ch;
+}
+
+.hero-subtext {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+[data-theme='dark'] .hero-container {
+  background: linear-gradient(180deg, rgba(8,14,22,0.85), rgba(12,18,28,0.85));
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+[data-theme='light'] .hero-container {
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  border: 1px solid rgba(2,6,23,0.06);
+}
+
+@media (min-width: 900px) {
+  .hero-container { padding: 36px 36px; }
+}
+
+/* Floating shared-invite button */
+.shared-invite-button {
+  position: fixed;
+  right: 18px;
+  bottom: 20px;
+  z-index: 1500;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--surface-alt), var(--surface));
+  color: var(--text);
+  box-shadow: 0 8px 20px rgba(2,6,23,0.16);
+}
+
+.shared-invite-button:hover { transform: translateY(-2px); }
+
+[data-theme='dark'] .shared-invite-button {
+  background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  color: var(--text);
+}
+
+[data-theme='light'] .shared-invite-button {
+  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  color: var(--text);
+}
+
 /* Category navigation (remove default list bullets and style pills) */
 .category-navigation {
   padding: 0;
@@ -2599,6 +2677,33 @@ button[type="submit"]:focus-visible {
   color: var(--text);
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
   cursor: pointer;
+}
+
+/* Rating display on product cards */
+.product-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16,185,129,0.08);
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(16,185,129,0.12);
+}
+.product-rating .rating-number {
+  font-weight: 800;
+  color: #059669; /* green */
+  font-size: 0.92rem;
+}
+.product-rating .rating-star path { fill: #059669; }
+
+[data-theme='dark'] .product-rating {
+  background: rgba(16,185,129,0.06);
+  border-color: rgba(16,185,129,0.14);
+}
+
+@media (max-width: 640px) {
+  .product-rating { padding: 3px 6px; gap: 5px; }
+  .product-rating .rating-number { font-size: 0.85rem; }
 }
 
 .product-card:hover {

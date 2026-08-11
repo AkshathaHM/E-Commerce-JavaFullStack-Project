@@ -108,7 +108,25 @@ const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
       </div>
       <div className="product-info">
         <div className="product-card-body">
-          <h3 className="product-name">{product.name}</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
+            <h3 className="product-name" style={{ margin: 0 }}>{product.name}</h3>
+            {/* rating display */}
+            {(() => {
+              const val = product.rating ?? product.avgRating ?? product.averageRating ?? product.ratingAverage ?? product.ratings ?? null;
+              if (val !== null && val !== undefined && val !== '') {
+                const num = Number(val) || 0;
+                return (
+                  <div className="product-rating" aria-label={`Rated ${num} out of 5`}>
+                    <span className="rating-number">{num % 1 === 0 ? num.toFixed(1) : num.toFixed(1)}</span>
+                    <svg className="rating-star" viewBox="0 0 24 24" width="16" height="16" aria-hidden>
+                      <path d="M12 .587l3.668 7.431L23.4 9.75l-5.7 5.557L19.335 24 12 19.897 4.665 24l1.636-8.693L.6 9.75l7.732-1.732L12 .587z"/>
+                    </svg>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+          </div>
           <p className="product-description">{product.description}</p>
           <div className="product-card-footer">
             <p className="product-price">₹{product.price}</p>
