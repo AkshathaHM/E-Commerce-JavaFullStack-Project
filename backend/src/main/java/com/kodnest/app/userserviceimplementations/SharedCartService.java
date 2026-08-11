@@ -82,6 +82,11 @@ public class SharedCartService implements SharedCartServiceContract {
         SharedCart sharedCart = sharedCartRepository.findByShareId(shareId)
                 .orElseThrow(() -> new IllegalArgumentException("Shared cart not found"));
 
+        // If viewer is null (unauthenticated), allow a public preview of the shared cart
+        if (viewer == null) {
+            return buildSharedCartResponse(sharedCart);
+        }
+
         boolean isMember = sharedCartMemberRepository.findBySharedCart_IdAndUser_UserId(sharedCart.getId(), viewer.getUserId()).isPresent();
         if (!isMember) {
             throw new SecurityException("Not authorized to view this shared cart");

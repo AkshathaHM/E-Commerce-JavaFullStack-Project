@@ -42,6 +42,8 @@ public class AuthenticationFilter implements Filter {
             "/api/auth/email-smtp-test"
     };
 
+                // Allow unauthenticated GET requests to /api/shared-cart/{shareId} (single-segment shareId)
+
     public AuthenticationFilter(AuthServiceContract authService, UserRepository userRepository) {
         this.authService = authService;
         this.userRepository = userRepository;
@@ -74,7 +76,7 @@ public class AuthenticationFilter implements Filter {
         String token = getAuthToken(request);
         if (token == null) {
             logger.debug("AuthFilter: no token found for request {}", requestURI);
-            if (isOptionalAuthPath(requestURI)) {
+            if (isOptionalAuthPath(requestURI) || isOptionalSharedCartGet(request)) {
                 chain.doFilter(request, response);
                 return;
             }
@@ -84,7 +86,7 @@ public class AuthenticationFilter implements Filter {
 
         if (!authService.validateToken(token)) {
             logger.debug("AuthFilter: token validation failed for token starting={}...", token.length() > 8 ? token.substring(0, 8) : token);
-            if (isOptionalAuthPath(requestURI)) {
+            if (isOptionalAuthPath(requestURI) || isOptionalSharedCartGet(request)) {
                 chain.doFilter(request, response);
                 return;
             }
@@ -120,6 +122,16 @@ public class AuthenticationFilter implements Filter {
 
     private boolean isOptionalAuthPath(String uri) {
         return uri.startsWith("/api/products");
+    }
+
+    private boolean isOptionalSharedCartGet(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        if (!"GET".equalsIgnoreCase(request.getMethod())) return false;
+        final String prefix = "/api/shared-cart/";
+        if (!uri.startsWith(prefix)) return false;
+        String tail = uri.substring(prefix.length());
+        // allow only single-segment tails (shareId) — disallow paths with additional slashes
+        return tail.length() > 0 && !tail.contains("/");
     }
 
     private boolean isUnauthenticatedPath(String uri) {

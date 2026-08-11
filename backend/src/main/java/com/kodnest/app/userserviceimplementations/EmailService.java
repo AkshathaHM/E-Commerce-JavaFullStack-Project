@@ -31,6 +31,7 @@ public class EmailService {
     private final String sendGridFromAddress;
     private final String fromAddress;
     private final String backendBaseUrl;
+    private final String frontendBaseUrl;
     private final String mailHost;
     private final int mailPort;
     private final String mailUsername;
@@ -64,6 +65,7 @@ public class EmailService {
                         @Value("${spring.mail.properties.mail.smtp.ssl.trust:smtp.gmail.com}") String sslTrust,
                         @Value("${spring.mail.properties.mail.smtp.ssl.protocols:TLSv1.2}") String sslProtocols,
                         @Value("${app.backend.base-url:http://localhost:10000}") String backendBaseUrl,
+                        @Value("${app.frontend.base-url:${APP_FRONTEND_BASE_URL:}}") String frontendBaseUrl,
                         com.kodnest.app.usersrepositaries.SharedCartRepository sharedCartRepository,
                         com.kodnest.app.usersrepositaries.SharedCartInviteRepository sharedCartInviteRepository) {
         this.mailSender = mailSender;
@@ -84,6 +86,7 @@ public class EmailService {
         this.sslTrust = sslTrust;
         this.sslProtocols = sslProtocols;
         this.backendBaseUrl = backendBaseUrl;
+        this.frontendBaseUrl = frontendBaseUrl != null ? frontendBaseUrl : "";
         this.sharedCartRepository = sharedCartRepository;
         this.sharedCartInviteRepository = sharedCartInviteRepository;
 
@@ -189,7 +192,8 @@ public class EmailService {
             sharedCartInviteRepository.save(invite);
         });
 
-        String inviteLink = String.format("%s/shared-cart/%s", backendBaseUrl.replaceAll("/+$", ""), shareId);
+        String base = (frontendBaseUrl != null && !frontendBaseUrl.isBlank()) ? frontendBaseUrl : backendBaseUrl;
+        String inviteLink = String.format("%s/shared-cart/%s", base.replaceAll("/+$", ""), shareId);
         String subject = inviter.getUsername() + " invited you to join a shared cart on Sales Savvy";
         String message = "You have been invited to collaborate on a shared cart.";
         if (note != null && !note.isBlank()) {

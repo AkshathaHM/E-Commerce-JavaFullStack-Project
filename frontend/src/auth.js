@@ -81,6 +81,12 @@ export const getApiUrl = (path) => {
   return path.startsWith('/') ? `${base}${path}` : `${base}/${path}`;
 };
 
+const frontendBaseUrl = import.meta.env.VITE_FRONTEND_BASE_URL || '';
+export const getFrontendUrl = () => {
+  const base = frontendBaseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+  return base.replace(/\/$/, '');
+};
+
 export const getAuthHeaders = () => {
   if (isSessionExpired()) {
     clearAuthSession();

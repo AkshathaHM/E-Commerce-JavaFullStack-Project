@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { CustomerLayout } from './CustomerLayout';
 import { Toast } from './Toast';
 import CartItem from './components/CartItem';
-import { getAuthHeaders, getApiUrl } from './auth';
+import { getAuthHeaders, getApiUrl, getFrontendUrl } from './auth';
 import { getCartItemStockLimit } from './utils/cartUtils';
 import { isAuthenticated } from './auth';
 import './CartPage.css';
@@ -28,8 +28,9 @@ export default function SharedCartPage() {
 
   const shareLink = useMemo(() => {
     if (!shareId) return '';
-    if (typeof window === 'undefined') return `/shared-cart/${shareId}`;
-    return `${window.location.origin}/shared-cart/${shareId}`;
+    // prefer explicit frontend base URL from env, fallback to window.location.origin
+    const base = getFrontendUrl() || (typeof window !== 'undefined' ? window.location.origin : '');
+    return `${base.replace(/\/$/, '')}/shared-cart/${shareId}`;
   }, [shareId]);
 
   const fetchSharedCart = useCallback(async () => {
@@ -38,13 +39,16 @@ export default function SharedCartPage() {
 
     try {
       const joinUrl = getApiUrl('/api/shared-cart/join');
-      console.debug('Join shared cart request', { joinUrl, headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: { shareId } });
-      await fetch(joinUrl, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({ shareId }),
-      });
+      // only attempt to auto-join if user is authenticated
+      if (isAuthenticated()) {
+        console.debug('Join shared cart request', { joinUrl, headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: { shareId } });
+        await fetch(joinUrl, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+          body: JSON.stringify({ shareId }),
+        });
+      }
 
       const response = await fetch(getApiUrl(`/api/shared-cart/${encodeURIComponent(shareId)}`), {
         credentials: 'include',
@@ -73,11 +77,7 @@ export default function SharedCartPage() {
       setLoading(false);
       return;
     }
-    // if the user is not authenticated, redirect to the project home/landing page
-    if (!isAuthenticated()) {
-      navigate('/customerhome');
-      return;
-    }
+    // allow unauthenticated users to view shared carts; only attempt to auto-join when authenticated
     fetchSharedCart();
   }, [fetchSharedCart, shareId]);
 

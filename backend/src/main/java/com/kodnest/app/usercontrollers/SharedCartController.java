@@ -111,10 +111,6 @@ public class SharedCartController {
     @GetMapping("/{shareId}")
     public ResponseEntity<?> getSharedCart(@PathVariable String shareId, HttpServletRequest req) {
         User user = (User) req.getAttribute("authenticatedUser");
-        if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
         try {
             Map<String, Object> response = sharedCartService.getSharedCartDetails(user, shareId);
             return ResponseEntity.ok(response);
