@@ -24,7 +24,7 @@ public class Payment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", referencedColumnName = "order_id", nullable = false,
-            foreignKey = @ForeignKey(name = "fk_payments_order"), columnDefinition = "varchar(255)")
+            foreignKey = @ForeignKey(name = "fk_payments_order"))
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
