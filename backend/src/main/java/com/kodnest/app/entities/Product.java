@@ -34,7 +34,7 @@ public class Product {
     @Column(name = "size", length = 64)
     private String size;
 
-    @Column(name = "rating", precision = 2, scale = 1)
+    @Column(name = "rating")
     private Double rating;
 
     @ManyToOne
