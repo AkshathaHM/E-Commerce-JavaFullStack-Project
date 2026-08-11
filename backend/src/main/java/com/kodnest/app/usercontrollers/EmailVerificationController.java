@@ -47,14 +47,15 @@ public class EmailVerificationController {
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody OtpVerificationRequest request) {
         try {
-            User user = userRepository.findByEmail(request.getEmail().trim())
+            String email = request.getEmail().trim().toLowerCase();
+            User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new IllegalArgumentException("Email not found"));
 
             if (user.isVerified()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Email is already verified"));
             }
 
-            emailOtpService.verifyOtp(request.getEmail(), request.getOtp(), user);
+            emailOtpService.verifyOtp(email, request.getOtp(), user);
             user.setVerified(true);
             user.setEnabled(true);
             userRepository.save(user);
@@ -68,7 +69,8 @@ public class EmailVerificationController {
     @PostMapping("/resend-otp")
     public ResponseEntity<?> resendOtp(@RequestBody ResendOtpRequest request) {
         try {
-            User user = userRepository.findByEmail(request.getEmail().trim())
+            String email = request.getEmail().trim().toLowerCase();
+            User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new IllegalArgumentException("Email not found"));
 
             if (user.isVerified()) {

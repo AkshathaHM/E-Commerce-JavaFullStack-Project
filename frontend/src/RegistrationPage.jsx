@@ -90,12 +90,12 @@ export default function RegistrationPage() {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          username,
-          email,
+          username: username.trim(),
+          email: email.trim().toLowerCase(),
           password,
           role,
-          address,
-          mobileNumber,
+          address: address.trim(),
+          mobileNumber: mobileNumber.trim(),
         }),
       });
       const data = await response.json().catch(() => ({}));

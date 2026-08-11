@@ -47,9 +47,16 @@ public class AuthService implements AuthServiceContract {
 
     @Override
     public User authenticate(String username, String password) {
-        User user = userRepository.findByUsername(username)
-                .or(() -> userRepository.findByEmail(username))
-                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
+            throw new RuntimeException("Invalid username or password");
+        }
+
+        String normalizedUsername = username.trim();
+        var userOpt = userRepository.findByUsername(normalizedUsername);
+        if (userOpt.isEmpty()) {
+            userOpt = userRepository.findByEmail(normalizedUsername.toLowerCase());
+        }
+        User user = userOpt.orElseThrow(() -> new RuntimeException("Invalid username or password"));
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Invalid username or password");

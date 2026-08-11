@@ -44,7 +44,7 @@ export default function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ username: identifier, password }),
+        body: JSON.stringify({ username: identifier.trim(), password }),
       });
 
       const data = await response.json().catch(() => ({}));
