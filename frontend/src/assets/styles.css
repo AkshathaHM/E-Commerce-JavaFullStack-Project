@@ -1001,6 +1001,62 @@ button[type="submit"]:focus-visible {
 
 [data-theme='dark'] .shared-cart-invite-modal { background: linear-gradient(180deg, rgba(10,14,24,0.72), rgba(8,12,20,0.72)); border-color: rgba(255,255,255,0.04); }
 
+/* Strong vertical layout overrides for the invite modal to ensure stacked fields */
+.shared-cart-invite-modal {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  box-sizing: border-box !important;
+}
+
+.shared-cart-invite-modal .form-group {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  gap: 8px !important;
+  margin-bottom: 16px !important;
+  box-sizing: border-box !important;
+}
+
+.shared-cart-invite-modal label {
+  display: block !important;
+  margin: 0 !important;
+  font-weight: 700 !important;
+  color: var(--text-muted) !important;
+}
+
+.shared-cart-invite-modal input[type="email"],
+.shared-cart-invite-modal textarea {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 12px 14px !important;
+  border-radius: 10px !important;
+  border: 1px solid var(--input-border, var(--border)) !important;
+  background: var(--input-bg, var(--surface)) !important;
+  color: var(--input-text, var(--text)) !important;
+  font-size: 0.96rem !important;
+}
+
+.shared-cart-invite-modal input[type="email"] { height: 44px !important; }
+.shared-cart-invite-modal textarea { min-height: 120px !important; resize: vertical !important; }
+
+/* Ensure no absolute/floats affect the form controls inside the invite modal */
+.shared-cart-invite-modal .form-group * {
+  position: static !important;
+  float: none !important;
+  left: auto !important;
+  top: auto !important;
+  margin: 0 !important;
+}
+
+.shared-cart-invite-modal .modal-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+  margin-top: 12px !important;
+}
+
 
 /* Category navigation (remove default list bullets and style pills) */
 .category-navigation {
