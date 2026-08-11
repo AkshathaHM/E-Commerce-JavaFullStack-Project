@@ -23,9 +23,6 @@ export default function CustomerHomePage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [loading, setLoading] = useState(() => initialProducts.length === 0);
   const [error, setError] = useState('');
-  const [sharedCartInvite, setSharedCartInvite] = useState('');
-  const [sharedCartError, setSharedCartError] = useState('');
-  const [sharedCartLoading, setSharedCartLoading] = useState(false);
   const [profileModalType, setProfileModalType] = useState(null);
   const [profileModalData, setProfileModalData] = useState(null);
   const [profileModalLoading, setProfileModalLoading] = useState(false);
@@ -37,44 +34,6 @@ export default function CustomerHomePage() {
     const token = localStorage.getItem('authToken');
     return token ? { Authorization: `Bearer ${token}` } : {};
   }, []);
-
-  const handleJoinSharedCart = useCallback(async () => {
-    if (!sharedCartInvite || sharedCartInvite.trim().length === 0) {
-      setSharedCartError('Enter a valid shared cart invite link or ID.');
-      return;
-    }
-
-    setSharedCartError('');
-    setSharedCartLoading(true);
-
-    try {
-      const invite = sharedCartInvite.trim();
-      const shareId = invite.includes('/shared-cart/') ? invite.split('/shared-cart/').pop() : invite;
-      if (!shareId) {
-        throw new Error('Invalid share ID.');
-      }
-
-      const url = getApiUrl('/api/shared-cart/join');
-      console.debug('Join shared cart request', { url, headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }, body: { shareId } });
-      const response = await fetch(url, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({ shareId }),
-      });
-
-      if (!response.ok) {
-        const body = await response.json().catch(() => null);
-        throw new Error((body && body.error) || 'Unable to join shared cart.');
-      }
-
-      navigate(`/shared-cart/${encodeURIComponent(shareId)}`);
-    } catch (err) {
-      setSharedCartError(err.message || 'Failed to join shared cart.');
-    } finally {
-      setSharedCartLoading(false);
-    }
-  }, [getAuthHeaders, navigate, sharedCartInvite]);
 
   const fetchProducts = useCallback(async (forceReload = false) => {
     const cacheKey = 'products_all';
@@ -329,38 +288,6 @@ export default function CustomerHomePage() {
             placeholder="Search products by name, description or category"
             className="form-input w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
           />
-        </section>
-
-        <section className="shared-cart-access-section mb-8 rounded-2xl shadow-lg p-6 bg-white dark:bg-slate-900">
-          <div className="shared-cart-access-header mb-4">
-            <h2 className="text-xl font-semibold">Join a Shared Cart</h2>
-            <p className="text-sm text-slate-500">Paste an invite link or share ID to collaborate on a cart with friends.</p>
-          </div>
-
-          <div className="shared-cart-access-form grid gap-3 md:grid-cols-[1fr_auto] items-end">
-            <label className="block w-full">
-              <span className="sr-only">Shared cart invite</span>
-              <input
-                type="text"
-                value={sharedCartInvite}
-                onChange={(event) => setSharedCartInvite(event.target.value)}
-                placeholder="Enter invite link or share ID"
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-              />
-            </label>
-            <button
-              type="button"
-              onClick={handleJoinSharedCart}
-              disabled={sharedCartLoading}
-              className="inline-flex items-center justify-center rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {sharedCartLoading ? 'Joining…' : 'Join Shared Cart'}
-            </button>
-          </div>
-
-          {sharedCartError && (
-            <p className="mt-3 text-sm text-rose-600">{sharedCartError}</p>
-          )}
         </section>
 
         {showSkeletons ? (
