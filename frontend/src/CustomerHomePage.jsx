@@ -21,12 +21,6 @@ export default function CustomerHomePage() {
   const [username, setUsername] = useState(localStorage.getItem('username') || 'Guest');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [colorFilter, setColorFilter] = useState('');
-  const [sizeFilter, setSizeFilter] = useState('');
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [ratingFilter, setRatingFilter] = useState('');
-  const [priceSort, setPriceSort] = useState('');
   const [loading, setLoading] = useState(() => initialProducts.length === 0);
   const [error, setError] = useState('');
   const [sharedCartInvite, setSharedCartInvite] = useState('');
@@ -98,12 +92,6 @@ export default function CustomerHomePage() {
       // build query params for filters
       const params = new URLSearchParams();
       if (selectedCategory && selectedCategory !== 'All') params.set('category', selectedCategory);
-      if (colorFilter) params.set('color', colorFilter);
-      if (sizeFilter) params.set('size', sizeFilter);
-      if (minPrice) params.set('minPrice', minPrice);
-      if (maxPrice) params.set('maxPrice', maxPrice);
-      if (ratingFilter) params.set('minRating', ratingFilter);
-      if (priceSort) params.set('sort', priceSort);
 
       const url = `${import.meta.env.VITE_API_URL}/api/products${params.toString() ? `?${params.toString()}` : ''}`;
 
@@ -133,7 +121,7 @@ export default function CustomerHomePage() {
     } finally {
       setLoading(false);
     }
-  }, [getAuthHeaders, selectedCategory, colorFilter, sizeFilter, minPrice, maxPrice, ratingFilter, priceSort]);
+  }, [getAuthHeaders, selectedCategory]);
 
   const fetchCartCount = useCallback(async () => {
     const activeUsername = localStorage.getItem('username') || username || 'Guest';
@@ -329,26 +317,18 @@ export default function CustomerHomePage() {
           </div>
         </section>
 
-        <section className="product-filter-bar mb-6 p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm">
-          <div className="filter-row" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-            <input placeholder="Colors (comma-separated)" value={colorFilter} onChange={(e) => setColorFilter(e.target.value)} className="form-input" style={{ width: 180 }} />
-            <input placeholder="Sizes (comma-separated)" value={sizeFilter} onChange={(e) => setSizeFilter(e.target.value)} className="form-input" style={{ width: 140 }} />
-            <input placeholder="Min price" type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="form-input" style={{ width: 110 }} />
-            <input placeholder="Max price" type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="form-input" style={{ width: 110 }} />
-            <select value={ratingFilter} onChange={(e) => setRatingFilter(e.target.value)} className="form-input" style={{ width: 120 }}>
-              <option value="">Any rating</option>
-              <option value="4.5">4.5+</option>
-              <option value="4">4+</option>
-              <option value="3">3+</option>
-            </select>
-
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <button type="button" className={`button--small ${priceSort === 'priceLow' ? 'button--primary' : ''}`} onClick={() => setPriceSort('priceLow')}>Price ↑</button>
-              <button type="button" className={`button--small ${priceSort === 'priceHigh' ? 'button--primary' : ''}`} onClick={() => setPriceSort('priceHigh')}>Price ↓</button>
-              <button type="button" className="button--small" onClick={() => { setColorFilter(''); setSizeFilter(''); setMinPrice(''); setMaxPrice(''); setRatingFilter(''); setPriceSort(''); fetchProducts(true); }}>Reset</button>
-              <button type="button" className="button--small button--primary" onClick={() => fetchProducts(true)}>Apply</button>
-            </div>
-          </div>
+        <section className="mb-6">
+          <label className="block mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200" htmlFor="product-search">
+            Search products
+          </label>
+          <input
+            id="product-search"
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search products by name, description or category"
+            className="form-input w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+          />
         </section>
 
         <section className="shared-cart-access-section mb-8 rounded-2xl shadow-lg p-6 bg-white dark:bg-slate-900">
