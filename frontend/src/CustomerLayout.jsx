@@ -3,7 +3,6 @@ import { CustomerHeader } from './CustomerHeader';
 import { Footer } from './Footer';
 import { useCart } from './CartContext';
 import './assets/styles.css';
-import SharedCartInviteFloating from './SharedCartInviteFloating';
 
 export function CustomerLayout({ children, cartCount = 0, username = 'Guest' }) {
   const { cartCount: sharedCartCount } = useCart();
@@ -12,7 +11,6 @@ export function CustomerLayout({ children, cartCount = 0, username = 'Guest' }) 
   return (
     <div className="customer-shell">
       <CustomerHeader cartCount={effectiveCartCount} username={username} />
-      <SharedCartInviteFloating />
       <main className="customer-page-content">{children}</main>
       <Footer />
     </div>

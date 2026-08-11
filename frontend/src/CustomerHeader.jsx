@@ -4,6 +4,7 @@ import { CartIcon } from './CartIcon';
 import { ProfileDropdown } from './ProfileDropdown';
 import ThemeToggleButton from './ThemeToggleButton';
 import { useCart } from './CartContext';
+import SharedCartInviteFloating from './SharedCartInviteFloating';
 
 export const CustomerHeader = memo(function CustomerHeader({ cartCount = 0, username = 'Guest' }) {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ export const CustomerHeader = memo(function CustomerHeader({ cartCount = 0, user
         </button>
 
         <div className="app-header__actions header-actions">
+          <SharedCartInviteFloating inline />
           <CartIcon count={effectiveCartCount} />
           <ProfileDropdown
             username={effectiveUsername}

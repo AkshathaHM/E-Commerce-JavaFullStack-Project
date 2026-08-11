@@ -4,9 +4,10 @@ import './assets/modalStyles.css';
 import './assets/styles.css';
 import { getApiUrl, getAuthHeaders } from './auth';
 
-export default function SharedCartInviteFloating() {
+export default function SharedCartInviteFloating({ inline = false }) {
   const [open, setOpen] = useState(false);
   const [invite, setInvite] = useState('');
+  const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -43,13 +44,20 @@ export default function SharedCartInviteFloating() {
 
   return (
     <>
-      <button
-        title="Join shared cart"
-        className="shared-invite-button"
-        onClick={() => setOpen(true)}
-      >
-        🤝
-      </button>
+      {!inline && (
+        <button
+          title="Join shared cart"
+          className="shared-invite-button"
+          onClick={() => setOpen(true)}
+        >
+          🤝
+        </button>
+      )}
+
+      {/* Inline header button (small) */}
+      {inline && (
+        <button className="shared-invite-header-btn" onClick={() => setOpen(true)} type="button">Join Cart</button>
+      )}
 
       {open && (
         <div className="modal-overlay" onClick={() => setOpen(false)}>
@@ -66,6 +74,15 @@ export default function SharedCartInviteFloating() {
                   value={invite}
                   onChange={(e) => setInvite(e.target.value)}
                   placeholder="https://.../shared-cart/abc123 or abc123"
+                />
+              </label>
+
+              <label className="modal-form-item">
+                <span style={{ fontWeight: 700, color: 'var(--text-muted)' }}>Add a note (optional)</span>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Write a short message to the owner or collaborators"
                 />
               </label>
 

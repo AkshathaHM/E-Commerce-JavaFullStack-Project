@@ -16,6 +16,7 @@ public class SharedCartService implements SharedCartServiceContract {
     private final SharedCartRepository sharedCartRepository;
     private final SharedCartItemRepository sharedCartItemRepository;
     private final SharedCartMemberRepository sharedCartMemberRepository;
+    private final com.kodnest.app.usersrepositaries.SharedCartInviteRepository sharedCartInviteRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
 
@@ -23,11 +24,13 @@ public class SharedCartService implements SharedCartServiceContract {
             SharedCartRepository sharedCartRepository,
             SharedCartItemRepository sharedCartItemRepository,
             SharedCartMemberRepository sharedCartMemberRepository,
+            com.kodnest.app.usersrepositaries.SharedCartInviteRepository sharedCartInviteRepository,
             ProductRepository productRepository,
             UserRepository userRepository) {
         this.sharedCartRepository = sharedCartRepository;
         this.sharedCartItemRepository = sharedCartItemRepository;
         this.sharedCartMemberRepository = sharedCartMemberRepository;
+        this.sharedCartInviteRepository = sharedCartInviteRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
     }
@@ -95,6 +98,16 @@ public class SharedCartService implements SharedCartServiceContract {
 
         boolean alreadyMember = sharedCartMemberRepository.findBySharedCart_IdAndUser_UserId(sharedCart.getId(), user.getUserId()).isPresent();
         if (!alreadyMember) {
+            // allow join only if an invite exists for this user's email
+            String email = user.getEmail() != null ? user.getEmail().trim().toLowerCase() : null;
+            boolean hasInvite = false;
+            if (email != null) {
+                hasInvite = sharedCartInviteRepository.findBySharedCart_IdAndEmail(sharedCart.getId(), email).isPresent();
+            }
+            if (!hasInvite) {
+                throw new SecurityException("You are not invited to join this shared cart");
+            }
+
             SharedCartMember member = new SharedCartMember(sharedCart, user, false);
             sharedCart.getMembers().add(member);
             sharedCartRepository.save(sharedCart);

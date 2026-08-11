@@ -44,6 +44,8 @@ public class EmailService {
     private final String sslTrust;
     private final String sslProtocols;
     private volatile String lastEmailError;
+    private final com.kodnest.app.usersrepositaries.SharedCartRepository sharedCartRepository;
+    private final com.kodnest.app.usersrepositaries.SharedCartInviteRepository sharedCartInviteRepository;
 
     public EmailService(JavaMailSender mailSender,
                         Optional<SendGridEmailService> sendGridEmailService,
@@ -61,7 +63,9 @@ public class EmailService {
                         @Value("${spring.mail.properties.mail.smtp.starttls.required:true}") boolean starttlsRequired,
                         @Value("${spring.mail.properties.mail.smtp.ssl.trust:smtp.gmail.com}") String sslTrust,
                         @Value("${spring.mail.properties.mail.smtp.ssl.protocols:TLSv1.2}") String sslProtocols,
-                        @Value("${app.backend.base-url:http://localhost:10000}") String backendBaseUrl) {
+                        @Value("${app.backend.base-url:http://localhost:10000}") String backendBaseUrl,
+                        com.kodnest.app.usersrepositaries.SharedCartRepository sharedCartRepository,
+                        com.kodnest.app.usersrepositaries.SharedCartInviteRepository sharedCartInviteRepository) {
         this.mailSender = mailSender;
         this.sendGridEmailService = sendGridEmailService;
         this.sendGridEnabled = sendGridApiKey != null && !sendGridApiKey.isBlank() && sendGridEmailService.isPresent() && sendGridEmailService.get().isEnabled();
@@ -80,6 +84,8 @@ public class EmailService {
         this.sslTrust = sslTrust;
         this.sslProtocols = sslProtocols;
         this.backendBaseUrl = backendBaseUrl;
+        this.sharedCartRepository = sharedCartRepository;
+        this.sharedCartInviteRepository = sharedCartInviteRepository;
 
         if (fromAddress == null || fromAddress.isBlank()) {
             logger.warn("SMTP sender address is not configured (spring.mail.username is blank)");
@@ -176,6 +182,13 @@ public class EmailService {
             throw new IllegalArgumentException("Missing invite data.");
         }
 
+        // persist invite record so only invited users can join
+        var sharedCartOpt = sharedCartRepository.findByShareId(shareId);
+        sharedCartOpt.ifPresent(sharedCart -> {
+            var invite = new com.kodnest.app.entities.SharedCartInvite(sharedCart, recipientEmail, inviter);
+            sharedCartInviteRepository.save(invite);
+        });
+
         String inviteLink = String.format("%s/shared-cart/%s", backendBaseUrl.replaceAll("/+$", ""), shareId);
         String subject = inviter.getUsername() + " invited you to join a shared cart on Sales Savvy";
         String message = "You have been invited to collaborate on a shared cart.";
@@ -183,12 +196,17 @@ public class EmailService {
             message += "<br/><br/><strong>Message from " + inviter.getUsername() + ":</strong><br/>" + note;
         }
 
+        // Include plain fallback link and the share id so recipients can use it directly
+        message += "<br/><br/>If the button does not work, open this link in your browser:<br/>"
+            + "<a href=\"" + inviteLink + "\">" + inviteLink + "</a>"
+            + "<br/><small>Share ID: " + shareId + "</small>";
+
         String body = buildHtmlTemplate(
-                "Shared cart invite",
-                "Hi there,",
-                message,
-                inviteLink,
-                "Open shared cart"
+            "Shared cart invite",
+            "Hi there,",
+            message,
+            inviteLink,
+            "Open shared cart"
         );
 
         sendEmail(recipientEmail, subject, body);
@@ -215,17 +233,33 @@ public class EmailService {
     }
 
     private String buildHtmlTemplate(String heading, String greeting, String message, String actionUrl, String actionText, boolean isCodeStyle) {
-        String actionBlock = actionUrl == null ? "" : "<p style=\"margin: 24px 0;\"><a href=\"" + actionUrl + "\" style=\"background-color:#2563eb;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:999px;display:inline-block;\">" + actionText + "</a></p>";
+        String actionBlock = actionUrl == null ? "" : "<p style=\"margin: 28px 0 12px; text-align:center;\">"
+            + "<a href=\"" + actionUrl + "\" style=\"background-color:#1f6feb;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;display:inline-block;font-weight:600;\">" + actionText + "</a>"
+            + "</p>";
+
         String codeBlock = isCodeStyle ? "<div style=\"display:inline-block;background:#f3f4f6;padding:12px 16px;border-radius:8px;font-size:24px;letter-spacing:4px;font-weight:700;color:#111827;\">" + actionText + "</div>" : "";
-        return "<div style=\"font-family:Arial,sans-serif;color:#111827;line-height:1.6;\">"
-                + "<div style=\"max-width:640px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:16px;background:#ffffff;\">"
-                + "<h2 style=\"margin:0 0 12px;font-size:24px;color:#111827;\">" + heading + "</h2>"
-                + "<p style=\"margin:0 0 12px;\">" + greeting + "</p>"
-                + "<p style=\"margin:0 0 16px;\">" + message + "</p>"
-                + actionBlock
-                + codeBlock
-                + "<p style=\"margin-top:20px;color:#6b7280;font-size:13px;\">Thanks,<br/>Sales Savvy Team</p>"
-                + "</div></div>";
+
+        // Professional layout with header, content block, and footer with support note
+        return "<div style=\"font-family:Helvetica,Arial,sans-serif;color:#0f172a;background:#f8fafc;padding:24px 12px;\">"
+            + "<div style=\"max-width:680px;margin:0 auto;\">"
+            + "<div style=\"background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid rgba(15,23,42,0.06);box-shadow:0 6px 18px rgba(2,6,23,0.04);\">"
+            + "<div style=\"padding:20px 24px;border-bottom:1px solid rgba(15,23,42,0.04);\">"
+            + "<div style=\"display:flex;align-items:center;gap:12px;\">"
+            + "<div style=\"width:40px;height:40px;border-radius:8px;background:#1f6feb;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;\">SS</div>"
+            + "<div> <strong style=\"font-size:16px;color:#0f172a;\">" + heading + "</strong> <div style=\"font-size:13px;color:#475569;\">Sales Savvy</div></div>"
+            + "</div></div>"
+            + "<div style=\"padding:20px 24px;\">"
+            + "<p style=\"margin:0 0 12px;color:#0f172a;font-size:15px;\">" + greeting + "</p>"
+            + "<div style=\"color:#334155;font-size:14px;line-height:1.6;\">" + message + "</div>"
+            + actionBlock
+            + codeBlock
+            + "</div>"
+            + "<div style=\"padding:16px 24px;border-top:1px solid rgba(15,23,42,0.04);font-size:13px;color:#64748b;\">"
+            + "<p style=\"margin:0 0 6px;\">If you need help, reply to this email or visit our support page.</p>"
+            + "<p style=\"margin:0;color:#94a3b8;\">Regards,<br/>Sales Savvy Team</p>"
+            + "</div>"
+            + "</div>"
+            + "</div></div>";
     }
 
     private void sendEmail(String to, String subject, String body) {

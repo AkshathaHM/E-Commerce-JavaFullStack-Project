@@ -877,6 +877,94 @@ button[type="submit"]:focus-visible {
   color: var(--text);
 }
 
+/* Small inline header button */
+.shared-invite-header-btn {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-right: 8px;
+}
+.shared-invite-header-btn:hover { transform: translateY(-1px); }
+
+/* Shared cart invite card & modal styles */
+.shared-cart-invite-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  width: min(92vw, 560px);
+  box-shadow: var(--shadow);
+}
+
+.shared-cart-invite-modal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.shared-cart-invite-modal .modal-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--heading);
+}
+
+.shared-cart-invite-modal .modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.shared-cart-invite-modal .modal-description {
+  margin: 6px 0 16px;
+  color: var(--text-muted);
+}
+
+.shared-cart-invite-modal label {
+  display: block;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.shared-cart-invite-modal input[type="email"],
+.shared-cart-invite-modal textarea,
+.share-link-row input[readonly] {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--input-border, var(--border));
+  background: var(--input-bg, var(--surface));
+  color: var(--input-text, var(--text));
+  font-size: 0.96rem;
+  box-sizing: border-box;
+}
+
+.shared-cart-invite-modal textarea { min-height: 120px; resize: vertical; }
+
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+
+.share-link-block { margin-bottom: 16px; }
+.share-link-row { display: flex; gap: 8px; align-items: center; }
+.share-link-row input[readonly] { flex: 1; }
+.share-link-row .form-button { margin: 0; white-space: nowrap; }
+
+@media (max-width: 640px) {
+  .shared-cart-invite-modal { width: 96vw; padding: 16px; }
+  .modal-actions { flex-direction: column-reverse; align-items: stretch; }
+}
+
+[data-theme='dark'] .shared-cart-invite-modal { background: linear-gradient(180deg, rgba(10,14,24,0.72), rgba(8,12,20,0.72)); border-color: rgba(255,255,255,0.04); }
+
+
 /* Category navigation (remove default list bullets and style pills) */
 .category-navigation {
   padding: 0;

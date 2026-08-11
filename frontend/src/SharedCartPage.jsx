@@ -5,6 +5,7 @@ import { Toast } from './Toast';
 import CartItem from './components/CartItem';
 import { getAuthHeaders, getApiUrl } from './auth';
 import { getCartItemStockLimit } from './utils/cartUtils';
+import { isAuthenticated } from './auth';
 import './CartPage.css';
 
 export default function SharedCartPage() {
@@ -16,6 +17,7 @@ export default function SharedCartPage() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
   const [showToast, setShowToast] = useState(false);
+  const [copyStatus, setCopyStatus] = useState('idle'); // 'idle' | 'copied' | 'failed'
   const [actionLoading, setActionLoading] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -69,6 +71,11 @@ export default function SharedCartPage() {
     if (!shareId) {
       setError('Invalid shared cart link.');
       setLoading(false);
+      return;
+    }
+    // if the user is not authenticated, redirect to the project home/landing page
+    if (!isAuthenticated()) {
+      navigate('/customerhome');
       return;
     }
     fetchSharedCart();
@@ -172,13 +179,12 @@ export default function SharedCartPage() {
           throw new Error('Copy failed');
         }
       }
-      setToastMessage('Invite link copied to clipboard.');
-      setToastType('success');
-      setShowToast(true);
+      // indicate copy success by changing button text
+      setCopyStatus('copied');
+      window.setTimeout(() => setCopyStatus('idle'), 3000);
     } catch (err) {
-      setToastMessage('Unable to copy link. Please copy it manually.');
-      setToastType('warning');
-      setShowToast(true);
+      setCopyStatus('failed');
+      window.setTimeout(() => setCopyStatus('idle'), 3000);
     }
   }, [shareLink]);
 
@@ -262,7 +268,9 @@ export default function SharedCartPage() {
                   <label>Invite Link</label>
                   <div className="share-link-row">
                     <input readOnly value={shareLink} />
-                    <button type="button" onClick={handleCopyShareLink}>Copy link</button>
+                    <button type="button" onClick={handleCopyShareLink} className={`form-button`} disabled={copyStatus === 'copied'}>
+                      {copyStatus === 'copied' ? 'Copied' : (copyStatus === 'failed' ? 'Failed' : 'Copy link')}
+                    </button>
                   </div>
                   <div className="share-link-actions">
                     <button type="button" className="secondary-button" onClick={() => setShowInviteModal(true)}>
