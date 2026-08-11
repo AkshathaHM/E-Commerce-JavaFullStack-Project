@@ -5,6 +5,8 @@ import com.kodnest.app.entities.Role;
 import com.kodnest.app.entities.User;
 import com.kodnest.app.userservices.UserServiceContract;
 import com.kodnest.app.usersrepositaries.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,8 @@ import java.time.LocalDateTime;
 
 @Service
 public class UserService implements UserServiceContract {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
     private final EmailService emailService;
@@ -108,7 +112,11 @@ public class UserService implements UserServiceContract {
         }
 
         String otp = emailOtpService.generateOtpForEmail(savedUser);
-        emailService.sendOtpEmail(savedUser, otp);
+        try {
+            emailService.sendOtpEmail(savedUser, otp);
+        } catch (RuntimeException ex) {
+            logger.error("OTP email send failed for {}: {}", savedUser.getEmail(), ex.getMessage(), ex);
+        }
 
         return savedUser;
     }
