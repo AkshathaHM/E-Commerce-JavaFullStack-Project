@@ -2,8 +2,8 @@ package com.kodnest.app.usercontrollers;
 
 import com.kodnest.app.entities.SharedCart;
 import com.kodnest.app.entities.User;
+import com.kodnest.app.userserviceimplementations.EmailService;
 import com.kodnest.app.userservices.SharedCartServiceContract;
-import com.kodnest.app.usersrepositaries.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,11 +18,11 @@ import java.util.Map;
 public class SharedCartController {
 
     private final SharedCartServiceContract sharedCartService;
-    private final UserRepository userRepository;
+    private final EmailService emailService;
 
-    public SharedCartController(SharedCartServiceContract sharedCartService, UserRepository userRepository) {
+    public SharedCartController(SharedCartServiceContract sharedCartService, EmailService emailService) {
         this.sharedCartService = sharedCartService;
-        this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     @PostMapping("/create")
@@ -46,6 +46,36 @@ public class SharedCartController {
                         "name", user.getName()
                 )
         ));
+    }
+
+    @PostMapping("/{shareId}/invite")
+    public ResponseEntity<?> inviteToSharedCart(@PathVariable String shareId, @RequestBody Map<String, Object> request, HttpServletRequest req) {
+        User user = (User) req.getAttribute("authenticatedUser");
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        if (shareId == null || shareId.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Share ID is required."));
+        }
+
+        String email = request.containsKey("email") && request.get("email") != null ? String.valueOf(request.get("email")).trim() : null;
+        String note = request.containsKey("note") && request.get("note") != null ? String.valueOf(request.get("note")).trim() : "";
+
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email is required."));
+        }
+
+        if (!email.contains("@") || email.length() < 5) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Enter a valid email address."));
+        }
+
+        try {
+            emailService.sendSharedCartInviteEmail(user, email, shareId, note);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Invite email sent."));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", ex.getMessage()));
+        }
     }
 
     @PostMapping("/join")

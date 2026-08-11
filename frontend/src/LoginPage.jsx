@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import "./assets/styles.css";
 import { Toast } from "./Toast";
 import AuthLayout from "./components/AuthLayout";
@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [showToast, setShowToast] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const isSubmitDisabled = !identifier.trim() || !password.trim() || isSigningIn;
 
   const handleSignIn = async (e) => {
@@ -61,8 +62,9 @@ export default function LoginPage() {
       setAuthSession(data.token || null, { username: data.username || identifier, role: normalizedRole });
       setShowToast(true);
       try { setCache('profile_me', { username: data.username || identifier, role: normalizedRole }, 60000); } catch (e) {}
+      const redirectPath = location.state?.from || getDashboardPath(normalizedRole);
       window.setTimeout(() => {
-        navigate(getDashboardPath(normalizedRole), { replace: true });
+        navigate(redirectPath, { replace: true });
       }, 900);
     } catch (err) {
       setError(err.message || "Unable to sign in. Please try again.");

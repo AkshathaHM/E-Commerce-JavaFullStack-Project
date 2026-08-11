@@ -171,6 +171,29 @@ public class EmailService {
         sendEmail(user.getEmail(), subject, body);
     }
 
+    public void sendSharedCartInviteEmail(User inviter, String recipientEmail, String shareId, String note) {
+        if (inviter == null || recipientEmail == null || recipientEmail.isBlank() || shareId == null || shareId.isBlank()) {
+            throw new IllegalArgumentException("Missing invite data.");
+        }
+
+        String inviteLink = String.format("%s/shared-cart/%s", backendBaseUrl.replaceAll("/+$", ""), shareId);
+        String subject = inviter.getUsername() + " invited you to join a shared cart on Sales Savvy";
+        String message = "You have been invited to collaborate on a shared cart.";
+        if (note != null && !note.isBlank()) {
+            message += "<br/><br/><strong>Message from " + inviter.getUsername() + ":</strong><br/>" + note;
+        }
+
+        String body = buildHtmlTemplate(
+                "Shared cart invite",
+                "Hi there,",
+                message,
+                inviteLink,
+                "Open shared cart"
+        );
+
+        sendEmail(recipientEmail, subject, body);
+    }
+
     public void sendOrderCancelledEmail(User user, String orderId) {
         if (user == null || user.getEmail() == null || user.getEmail().isBlank()) {
             return;

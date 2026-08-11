@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from "react";
-import { Navigate, Routes, Route } from "react-router-dom";
+import { Navigate, Routes, Route, useLocation } from "react-router-dom";
 const LandingPage = lazy(() => import('./LandingPage'));
 const LoginPage = lazy(() => import("./LoginPage"));
 const RegistrationPage = lazy(() => import("./RegistrationPage"));
@@ -16,8 +16,9 @@ const OrderTracking = lazy(() => import('./components/OrderTracking'));
 import { isAuthenticated } from "./auth";
 
 const ProtectedRoute = ({ element, allowedRole }) => {
+  const location = useLocation();
   if (!isAuthenticated()) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
   const role = localStorage.getItem("role");

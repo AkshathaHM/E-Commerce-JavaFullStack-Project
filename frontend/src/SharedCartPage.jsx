@@ -17,6 +17,12 @@ export default function SharedCartPage() {
   const [toastType, setToastType] = useState('success');
   const [showToast, setShowToast] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteNote, setInviteNote] = useState('');
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState('');
+  const [inviteSuccess, setInviteSuccess] = useState('');
 
   const shareLink = useMemo(() => {
     if (!shareId) return '';
@@ -149,7 +155,23 @@ export default function SharedCartPage() {
   const handleCopyShareLink = useCallback(async () => {
     if (!shareLink) return;
     try {
-      await navigator.clipboard.writeText(shareLink);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareLink);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = shareLink;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        textarea.setSelectionRange(0, textarea.value.length);
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        if (!successful) {
+          throw new Error('Copy failed');
+        }
+      }
       setToastMessage('Invite link copied to clipboard.');
       setToastType('success');
       setShowToast(true);
@@ -159,6 +181,42 @@ export default function SharedCartPage() {
       setShowToast(true);
     }
   }, [shareLink]);
+
+  const handleSendInvite = useCallback(async () => {
+    setInviteError('');
+    setInviteSuccess('');
+    if (!inviteEmail.trim()) {
+      setInviteError('Enter a valid email address.');
+      return;
+    }
+
+    setInviteLoading(true);
+    try {
+      const res = await fetch(getApiUrl(`/api/shared-cart/${encodeURIComponent(shareId)}/invite`), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ email: inviteEmail.trim(), note: inviteNote.trim() }),
+      });
+
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(body.error || 'Unable to send invite email.');
+      }
+
+      setInviteSuccess('Invite email sent successfully.');
+      setInviteEmail('');
+      setInviteNote('');
+      setShowInviteModal(false);
+      setToastMessage('Invite email sent.');
+      setToastType('success');
+      setShowToast(true);
+    } catch (err) {
+      setInviteError(err?.message || 'Failed to send invite.');
+    } finally {
+      setInviteLoading(false);
+    }
+  }, [inviteEmail, inviteNote, shareId]);
 
   const totalItems = useMemo(() => {
     return (cartData?.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
@@ -205,6 +263,11 @@ export default function SharedCartPage() {
                   <div className="share-link-row">
                     <input readOnly value={shareLink} />
                     <button type="button" onClick={handleCopyShareLink}>Copy link</button>
+                  </div>
+                  <div className="share-link-actions">
+                    <button type="button" className="secondary-button" onClick={() => setShowInviteModal(true)}>
+                      Invite by email
+                    </button>
                   </div>
                 </div>
               </div>
@@ -259,6 +322,44 @@ export default function SharedCartPage() {
           <button type="button" className="checkout-button" onClick={handleGoToCart} disabled={actionLoading}>Go to My Cart</button>
         </div>
       </div>
+
+      {showInviteModal && (
+        <div className="modal-overlay" role="dialog" aria-modal="true">
+          <div className="modal-card shared-cart-invite-modal">
+            <div className="modal-header">
+              <h3>Invite a friend</h3>
+              <button type="button" className="modal-close" onClick={() => setShowInviteModal(false)} aria-label="Close invite modal">×</button>
+            </div>
+            <p className="modal-description">Send an invite email so your friend can log in and join this shared cart.</p>
+            <label htmlFor="invite-email">Friend’s email</label>
+            <input
+              id="invite-email"
+              type="email"
+              value={inviteEmail}
+              onChange={(event) => setInviteEmail(event.target.value)}
+              placeholder="friend@example.com"
+            />
+            <label htmlFor="invite-note">Add a personal note (optional)</label>
+            <textarea
+              id="invite-note"
+              rows={4}
+              value={inviteNote}
+              onChange={(event) => setInviteNote(event.target.value)}
+              placeholder="Write a quick message to your friend"
+            />
+            {inviteError && <div className="modal-error">{inviteError}</div>}
+            {inviteSuccess && <div className="modal-success">{inviteSuccess}</div>}
+            <div className="modal-actions">
+              <button type="button" className="primary-button" onClick={handleSendInvite} disabled={inviteLoading}>
+                {inviteLoading ? 'Sending…' : 'Send invite'}
+              </button>
+              <button type="button" className="secondary-button" onClick={() => setShowInviteModal(false)} disabled={inviteLoading}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </CustomerLayout>
   );
 }
