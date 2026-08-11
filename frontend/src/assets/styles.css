@@ -950,10 +950,26 @@ button[type="submit"]:focus-visible {
 }
 
 .shared-cart-invite-modal label {
-  display: block;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem;
   font-weight: 700;
   color: var(--text-muted);
-  margin-bottom: 6px;
+  margin: 0 0 8px;
+}
+
+.shared-cart-invite-modal .optional-label {
+  font-weight: 400;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.shared-cart-invite-modal .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 18px;
 }
 
 .shared-cart-invite-modal input[type="email"],

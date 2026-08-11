@@ -339,22 +339,28 @@ export default function SharedCartPage() {
               <button type="button" className="modal-close" onClick={() => setShowInviteModal(false)} aria-label="Close invite modal">×</button>
             </div>
             <p className="modal-description">Send an invite email so your friend can log in and join this shared cart.</p>
-            <label htmlFor="invite-email">Friend’s email</label>
-            <input
-              id="invite-email"
-              type="email"
-              value={inviteEmail}
-              onChange={(event) => setInviteEmail(event.target.value)}
-              placeholder="friend@example.com"
-            />
-            <label htmlFor="invite-note">Add a personal note (optional)</label>
-            <textarea
-              id="invite-note"
-              rows={4}
-              value={inviteNote}
-              onChange={(event) => setInviteNote(event.target.value)}
-              placeholder="Write a quick message to your friend"
-            />
+            <div className="form-group">
+              <label htmlFor="invite-email">Friend’s email</label>
+              <input
+                id="invite-email"
+                type="email"
+                value={inviteEmail}
+                onChange={(event) => setInviteEmail(event.target.value)}
+                placeholder="friend@example.com"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="invite-note">
+                Add a personal note <span className="optional-label">(optional)</span>
+              </label>
+              <textarea
+                id="invite-note"
+                rows={4}
+                value={inviteNote}
+                onChange={(event) => setInviteNote(event.target.value)}
+                placeholder="Write a quick message to your friend"
+              />
+            </div>
             {inviteError && <div className="modal-error">{inviteError}</div>}
             {inviteSuccess && <div className="modal-success">{inviteSuccess}</div>}
             <div className="modal-actions">
