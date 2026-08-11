@@ -112,19 +112,10 @@ public class UserService implements UserServiceContract {
         }
 
         String otp = emailOtpService.generateOtpForEmail(savedUser);
-        boolean emailSent = true;
         try {
             emailService.sendOtpEmail(savedUser, otp);
         } catch (RuntimeException ex) {
-            logger.error("OTP email send failed for {}: {}", savedUser.getEmail(), ex.getMessage(), ex);
-            emailSent = false;
-        }
-
-        if (!emailSent) {
-            savedUser.setVerified(true);
-            savedUser.setEnabled(true);
-            userRepository.save(savedUser);
-            logger.warn("User {} has been created and enabled without OTP email delivery.", savedUser.getEmail());
+            logger.warn("OTP email send failed for {}: {}. Continuing without email delivery.", savedUser.getEmail(), ex.getMessage());
         }
 
         return savedUser;
