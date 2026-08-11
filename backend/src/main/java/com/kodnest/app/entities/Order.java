@@ -12,7 +12,7 @@ import java.util.List;
 public class Order {
 
 	@Id
-    @Column(name = "order_id")
+    @Column(name = "order_id", length = 255)
     private String orderId;
 
     @Column(name = "user_id", nullable = false)

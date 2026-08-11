@@ -34,6 +34,57 @@ public class ProductService {
         }
     }
 
+    public List<Product> getProductsWithFilters(String categoryName, String colorsCsv, String sizesCsv,
+                                                Double minPrice, Double maxPrice, Double minRating, String sort) {
+        List<Product> products = getProductsByCategory(categoryName == null ? "" : categoryName);
+
+        // filter by colors
+        if (colorsCsv != null && !colorsCsv.isBlank()) {
+            String[] colors = colorsCsv.split(",");
+            products = products.stream().filter(p -> {
+                if (p.getColor() == null) return false;
+                String pc = p.getColor().toLowerCase();
+                for (String c : colors) { if (pc.contains(c.trim().toLowerCase())) return true; }
+                return false;
+            }).toList();
+        }
+
+        // filter by sizes
+        if (sizesCsv != null && !sizesCsv.isBlank()) {
+            String[] sizes = sizesCsv.split(",");
+            products = products.stream().filter(p -> {
+                if (p.getSize() == null) return false;
+                String ps = p.getSize().toLowerCase();
+                for (String s : sizes) { if (ps.contains(s.trim().toLowerCase())) return true; }
+                return false;
+            }).toList();
+        }
+
+        // price range
+        if (minPrice != null) {
+            products = products.stream().filter(p -> p.getPrice() != null && p.getPrice().doubleValue() >= minPrice).toList();
+        }
+        if (maxPrice != null) {
+            products = products.stream().filter(p -> p.getPrice() != null && p.getPrice().doubleValue() <= maxPrice).toList();
+        }
+
+        // rating
+        if (minRating != null) {
+            products = products.stream().filter(p -> p.getRating() != null && p.getRating() >= minRating).toList();
+        }
+
+        // sorting
+        if (sort != null) {
+            if (sort.equals("priceLow")) {
+                products = products.stream().sorted((a, b) -> Double.compare(a.getPrice().doubleValue(), b.getPrice().doubleValue())).toList();
+            } else if (sort.equals("priceHigh")) {
+                products = products.stream().sorted((a, b) -> Double.compare(b.getPrice().doubleValue(), a.getPrice().doubleValue())).toList();
+            }
+        }
+
+        return products;
+    }
+
     public List<String> getProductImages(Integer productId) {
         List<ProductImage> productImages = productImageRepository.findByProduct_ProductId(productId);
         List<String> imageUrls = new ArrayList<>();

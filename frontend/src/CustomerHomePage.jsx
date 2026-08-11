@@ -21,6 +21,12 @@ export default function CustomerHomePage() {
   const [username, setUsername] = useState(localStorage.getItem('username') || 'Guest');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [colorFilter, setColorFilter] = useState('');
+  const [sizeFilter, setSizeFilter] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [ratingFilter, setRatingFilter] = useState('');
+  const [priceSort, setPriceSort] = useState('');
   const [loading, setLoading] = useState(() => initialProducts.length === 0);
   const [error, setError] = useState('');
   const [sharedCartInvite, setSharedCartInvite] = useState('');
@@ -89,9 +95,21 @@ export default function CustomerHomePage() {
     setError('');
 
     try {
+      // build query params for filters
+      const params = new URLSearchParams();
+      if (selectedCategory && selectedCategory !== 'All') params.set('category', selectedCategory);
+      if (colorFilter) params.set('color', colorFilter);
+      if (sizeFilter) params.set('size', sizeFilter);
+      if (minPrice) params.set('minPrice', minPrice);
+      if (maxPrice) params.set('maxPrice', maxPrice);
+      if (ratingFilter) params.set('minRating', ratingFilter);
+      if (priceSort) params.set('sort', priceSort);
+
+      const url = `${import.meta.env.VITE_API_URL}/api/products${params.toString() ? `?${params.toString()}` : ''}`;
+
       const data = await cachedFetch(
         cacheKey,
-        `${import.meta.env.VITE_API_URL}/api/products`,
+        url,
         { credentials: 'include', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() } },
         60000,
       );
@@ -115,7 +133,7 @@ export default function CustomerHomePage() {
     } finally {
       setLoading(false);
     }
-  }, [getAuthHeaders]);
+  }, [getAuthHeaders, selectedCategory, colorFilter, sizeFilter, minPrice, maxPrice, ratingFilter, priceSort]);
 
   const fetchCartCount = useCallback(async () => {
     const activeUsername = localStorage.getItem('username') || username || 'Guest';
@@ -308,6 +326,28 @@ export default function CustomerHomePage() {
           <div className="hero-container mb-8">
             <h1 className="hero-title">Hello, {username}!</h1>
             <p className="hero-subtitle">Discover products, manage your cart, and track every order with ease — invite people to share your cart.</p>
+          </div>
+        </section>
+
+        <section className="product-filter-bar mb-6 p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm">
+          <div className="filter-row" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <input placeholder="Colors (comma-separated)" value={colorFilter} onChange={(e) => setColorFilter(e.target.value)} className="form-input" style={{ width: 180 }} />
+            <input placeholder="Sizes (comma-separated)" value={sizeFilter} onChange={(e) => setSizeFilter(e.target.value)} className="form-input" style={{ width: 140 }} />
+            <input placeholder="Min price" type="number" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="form-input" style={{ width: 110 }} />
+            <input placeholder="Max price" type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="form-input" style={{ width: 110 }} />
+            <select value={ratingFilter} onChange={(e) => setRatingFilter(e.target.value)} className="form-input" style={{ width: 120 }}>
+              <option value="">Any rating</option>
+              <option value="4.5">4.5+</option>
+              <option value="4">4+</option>
+              <option value="3">3+</option>
+            </select>
+
+            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+              <button type="button" className={`button--small ${priceSort === 'priceLow' ? 'button--primary' : ''}`} onClick={() => setPriceSort('priceLow')}>Price ↑</button>
+              <button type="button" className={`button--small ${priceSort === 'priceHigh' ? 'button--primary' : ''}`} onClick={() => setPriceSort('priceHigh')}>Price ↓</button>
+              <button type="button" className="button--small" onClick={() => { setColorFilter(''); setSizeFilter(''); setMinPrice(''); setMaxPrice(''); setRatingFilter(''); setPriceSort(''); fetchProducts(true); }}>Reset</button>
+              <button type="button" className="button--small button--primary" onClick={() => fetchProducts(true)}>Apply</button>
+            </div>
           </div>
         </section>
 

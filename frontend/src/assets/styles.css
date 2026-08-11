@@ -799,6 +799,27 @@ button[type="submit"]:focus-visible {
   transform: translateY(-1px);
   background: var(--surface);
 
+/* Product filter bar */
+.product-filter-bar {
+  border: 1px solid var(--border);
+}
+.product-filter-bar .form-input {
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: 10px;
+}
+.product-filter-bar .button--small {
+  padding: 8px 10px;
+  min-height: 38px;
+  font-size: 0.9rem;
+  border-radius: 10px;
+}
+
+@media (max-width: 640px) {
+  .product-filter-bar { padding: 12px; }
+  .product-filter-bar .form-input { width: 100% !important; }
+}
+
 /* Hero section used on customer and admin home pages */
 .hero-container {
   padding: 28px 22px;

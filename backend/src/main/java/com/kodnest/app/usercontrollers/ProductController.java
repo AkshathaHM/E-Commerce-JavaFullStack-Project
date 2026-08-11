@@ -39,10 +39,24 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<Map<String, Object>> getProducts(
             @RequestParam(required = false) String category,
+            @RequestParam(required = false) String color,
+            @RequestParam(required = false) String size,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
+            @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false) String sort,
             HttpServletRequest request) {
         try {
             User authenticatedUser = (User) request.getAttribute("authenticatedUser");
-            List<Product> products = productService.getProductsByCategory(category == null || category.isBlank() ? "" : category);
+            List<Product> products = productService.getProductsWithFilters(
+                category == null || category.isBlank() ? "" : category,
+                color,
+                size,
+                minPrice,
+                maxPrice,
+                minRating,
+                sort
+            );
 
             Map<String, Object> response = new HashMap<>();
             if (authenticatedUser != null) {
@@ -62,6 +76,9 @@ public class ProductController {
                 productDetails.put("description", product.getDescription());
                 productDetails.put("price", product.getPrice());
                 productDetails.put("stock", product.getStock());
+                productDetails.put("color", product.getColor());
+                productDetails.put("size", product.getSize());
+                productDetails.put("rating", product.getRating());
                 List<String> images = product.getProductImages() == null ? List.of() : product.getProductImages().stream()
                         .filter(Objects::nonNull)
                         .map(image -> image.getImageUrl())

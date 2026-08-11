@@ -3,6 +3,7 @@ package com.kodnest.app.entities;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -22,11 +23,13 @@ public class Payment {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
+    @JoinColumn(name = "order_id", referencedColumnName = "order_id", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_payments_order"), columnDefinition = "varchar(255)")
     private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_payments_user"))
     private User user;
 
     @Column(name = "payment_id", nullable = false, unique = true)

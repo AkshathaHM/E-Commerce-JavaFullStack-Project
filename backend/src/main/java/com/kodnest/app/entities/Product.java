@@ -27,6 +27,16 @@ public class Product {
     @Column(nullable = false)
     private Integer stock;
 
+    // Optional product attributes for filtering
+    @Column(name = "color", length = 64)
+    private String color;
+
+    @Column(name = "size", length = 64)
+    private String size;
+
+    @Column(name = "rating", precision = 2, scale = 1)
+    private Double rating;
+
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
@@ -111,6 +121,30 @@ public class Product {
 	public void setStock(Integer stock) {
 		this.stock = stock;
 	}
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    public Double getRating() {
+        return rating;
+    }
+
+    public void setRating(Double rating) {
+        this.rating = rating;
+    }
 
 	public Category getCategory() {
 		return category;
