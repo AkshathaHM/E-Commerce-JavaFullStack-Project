@@ -89,6 +89,28 @@ export default function SharedCartPage() {
   }, [showInviteModal]);
 
   useEffect(() => {
+    // dev helper: if URL includes ?debugInvite=true, open the invite modal on load
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('debugInvite') === 'true') {
+        // eslint-disable-next-line no-console
+        console.debug('SharedCartPage: debugInvite param detected — opening invite modal');
+        setShowInviteModal(true);
+      }
+    } catch (err) {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (showInviteModal) {
+      const el = document.querySelector('.invite-modal-overlay');
+      // eslint-disable-next-line no-console
+      console.debug('SharedCartPage: invite modal DOM present?', !!el, el);
+    }
+  }, [showInviteModal]);
+
+  useEffect(() => {
     // capture all clicks to help identify if the Invite button receives DOM events
     const handler = (e) => {
       // eslint-disable-next-line no-console
