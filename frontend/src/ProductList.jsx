@@ -110,24 +110,21 @@ const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
         <div className="product-card-body">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
             <h3 className="product-name" style={{ margin: 0 }}>{product.name}</h3>
-            {/* rating display with safe fallback */}
+            {/* rating display: always show star icon; show numeric value when available */}
             {(() => {
               const val = product.rating ?? product.avgRating ?? product.averageRating ?? product.ratingAverage ?? product.ratings ?? null;
               const hasRating = val !== null && val !== undefined && val !== '';
-              if (hasRating) {
-                const num = Number(val) || 0;
-                return (
-                  <div className="product-rating" aria-label={`Rated ${num} out of 5`}>
-                    <span className="rating-number">{num % 1 === 0 ? num.toFixed(1) : num.toFixed(1)}</span>
-                    <svg className="rating-star" viewBox="0 0 24 24" width="16" height="16" aria-hidden>
-                      <path d="M12 .587l3.668 7.431L23.4 9.75l-5.7 5.557L19.335 24 12 19.897 4.665 24l1.636-8.693L.6 9.75l7.732-1.732L12 .587z"/>
-                    </svg>
-                  </div>
-                );
-              }
+              const num = hasRating ? (Number(val) || 0) : null;
               return (
-                <div className="product-rating" aria-hidden>
-                  <span className="rating-number">New</span>
+                <div className="product-rating" aria-label={hasRating ? `Rated ${num} out of 5` : 'No rating yet'}>
+                  {hasRating ? (
+                    <span className="rating-number">{num % 1 === 0 ? num.toFixed(1) : num.toFixed(1)}</span>
+                  ) : (
+                    <span className="rating-number">★</span>
+                  )}
+                  <svg className="rating-star" viewBox="0 0 24 24" width="14" height="14" aria-hidden>
+                    <path d="M12 .587l3.668 7.431L23.4 9.75l-5.7 5.557L19.335 24 12 19.897 4.665 24l1.636-8.693L.6 9.75l7.732-1.732L12 .587z"/>
+                  </svg>
                 </div>
               );
             })()}

@@ -1308,13 +1308,19 @@ button[type="submit"]:focus-visible {
   justify-content: center;
   padding: 16px;
   background: rgba(15, 22, 40, 0.55);
-  z-index: 3000; /* ensure overlay sits above most UI chrome */
+  z-index: 10050; /* ensure overlay sits above most UI chrome */
   -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure overlay accepts pointer events (should be default) but be explicit to avoid unexpected layering rules */
+.invite-modal-overlay,
+.invite-modal {
+  pointer-events: auto;
 }
 
 .invite-modal {
   position: relative;
-  z-index: 3001; /* keep modal above the overlay */
+  z-index: 10051; /* keep modal above the overlay */
   width: min(560px, calc(100vw - 32px));
   max-width: 560px;
   box-sizing: border-box;
@@ -1666,6 +1672,117 @@ button[type="submit"]:focus-visible {
   outline-offset: 2px;
   background: transparent;
   box-shadow: none;
+}
+
+/* Ensure auth links do NOT change background, shadow, transform, or opacity on hover/focus/active.
+   These overrides are scoped to authentication card/layout contexts to avoid affecting global links. */
+.auth-card .form-link,
+.auth-card .form-link:link,
+.auth-card .form-link:visited,
+.auth-card .form-link:hover,
+.auth-card .form-link:focus,
+.auth-card .form-link:active,
+.auth-card .button-link,
+.auth-card .button-link:hover,
+.auth-card .button-link:focus,
+.auth-card .button-link:active,
+.auth-card--popup .form-link,
+.auth-card--popup .form-link:hover,
+.auth-card--auth-layout .form-link,
+.auth-page .form-link,
+.auth-page .button-link,
+.auth-footer-copy .form-link,
+.auth-footer-copy .button-link {
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+  border: none !important;
+  color: inherit; /* keep existing color unless explicitly styled */
+  text-decoration: underline; /* match existing form-link hover behavior */
+}
+
+/* Keep focus-visible accessible but visually minimal */
+.auth-card .form-link:focus-visible,
+.auth-card .button-link:focus-visible,
+.auth-page .form-link:focus-visible,
+.auth-page .button-link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+/* Scoped no-hover overrides for auth, cart, and related clickable link-like elements
+   Ensures normal, hover, focus and active states keep the same background/visuals
+   while preserving an accessible focus-visible outline. This targets only
+   authentication and cart-related controls to avoid globally affecting links. */
+.form-link,
+.button-link,
+.back-link,
+.back-button,
+.continue-shopping,
+.shared-invite-button,
+.shared-invite-header-btn,
+.cart-empty-actions button,
+.cart-empty-secondary,
+.back-button--ghost,
+.order-card-action--ghost,
+.order-card-action,
+.product-toolbar button,
+.product-empty-state__button,
+.product-view-btn,
+.dropdown-link,
+.dropdown-logout {
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+  border: none !important;
+  color: inherit !important;
+  text-decoration: underline !important;
+}
+
+.form-link:hover,
+.button-link:hover,
+.back-link:hover,
+.back-button:hover,
+.continue-shopping:hover,
+.shared-invite-button:hover,
+.shared-invite-header-btn:hover,
+.cart-empty-actions button:hover,
+.cart-empty-secondary:hover,
+.back-button--ghost:hover,
+.order-card-action--ghost:hover,
+.order-card-action:hover,
+.product-toolbar button:hover,
+.product-empty-state__button:hover,
+.product-view-btn:hover,
+.dropdown-link:hover,
+.dropdown-logout:hover,
+.product-view-btn:focus,
+.product-view-btn:active {
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+/* Preserve accessible focus ring for keyboard users */
+.form-link:focus-visible,
+.button-link:focus-visible,
+.back-link:focus-visible,
+.back-button:focus-visible,
+.continue-shopping:focus-visible,
+.shared-invite-button:focus-visible,
+.shared-invite-header-btn:focus-visible,
+.cart-empty-actions button:focus-visible,
+.order-card-action--ghost:focus-visible,
+.product-toolbar button:focus-visible,
+.dropdown-link:focus-visible,
+.dropdown-logout:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .auth-page__container {

@@ -81,6 +81,33 @@ export default function SharedCartPage() {
     fetchSharedCart();
   }, [fetchSharedCart, shareId]);
 
+  useEffect(() => {
+    // temporary debug log to trace invite modal state changes during fix
+    // TODO: remove after verification
+    // eslint-disable-next-line no-console
+    console.debug('SharedCartPage: showInviteModal ->', showInviteModal);
+  }, [showInviteModal]);
+
+  useEffect(() => {
+    // capture all clicks to help identify if the Invite button receives DOM events
+    const handler = (e) => {
+      // eslint-disable-next-line no-console
+      console.debug('SharedCartPage document click:', { target: e.target, path: e.composedPath ? e.composedPath().map(n => n && n.nodeName) : null });
+      try {
+        const el = e.target;
+        const btn = el && (el.id === 'invite-by-email-btn' || (el.closest && el.closest('#invite-by-email-btn')));
+        if (btn) {
+          // eslint-disable-next-line no-console
+          console.debug('INVITE-BUTTON CLICKED (captured)');
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
+    document.addEventListener('click', handler, true);
+    return () => document.removeEventListener('click', handler, true);
+  }, []);
+
   const getItemId = useCallback((item) => {
     const id = item?.product_id ?? item?.productId ?? item?.id ?? null;
     return id != null ? String(id) : null;
@@ -273,7 +300,7 @@ export default function SharedCartPage() {
                     </button>
                   </div>
                   <div className="share-link-actions">
-                    <button type="button" className="secondary-button" onClick={() => setShowInviteModal(true)}>
+                    <button id="invite-by-email-btn" type="button" className="secondary-button" onClick={() => { console.debug('Invite by email clicked'); setShowInviteModal(true); }}>
                       Invite by email
                     </button>
                   </div>
