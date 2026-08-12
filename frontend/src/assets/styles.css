@@ -2703,7 +2703,7 @@ button[type="submit"]:focus-visible {
 /* Landing page */
 .landing-page {
   min-height: 100vh;
-  background: var(--surface);
+  background: var(--bg);
   color: var(--text);
 }
 
@@ -2856,6 +2856,10 @@ button[type="submit"]:focus-visible {
   pointer-events: none;
 }
 
+[data-theme='light'] .landing-hero__overlay {
+  background: rgba(255, 255, 255, 0.32);
+}
+
 .landing-hero__loading {
   position: absolute;
   inset: 0;
@@ -2864,19 +2868,24 @@ button[type="submit"]:focus-visible {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  color: #fff;
+  color: var(--text);
   font-size: 0.95rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.84);
   backdrop-filter: none;
+}
+
+[data-theme='dark'] .landing-hero__loading {
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.18);
 }
 
 .landing-hero__bg::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.16);
+  background: var(--overlay);
 }
 
 .landing-hero__content {
@@ -2887,6 +2896,7 @@ button[type="submit"]:focus-visible {
   padding: 64px 24px;
   display: grid;
   gap: 24px;
+  color: var(--text);
 }
 
 .landing-hero__eyebrow {
@@ -2894,7 +2904,7 @@ button[type="submit"]:focus-visible {
   font-size: 0.95rem;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: #a8d3ff;
+  color: var(--text-secondary);
   font-weight: 700;
 }
 
@@ -2902,13 +2912,13 @@ button[type="submit"]:focus-visible {
   margin: 0;
   font-size: clamp(2.8rem, 5vw, 4.8rem);
   line-height: 1.02;
-  color: #ffffff;
+  color: var(--heading);
   font-weight: 600;
 }
 
 .landing-hero__text {
   margin: 0 auto;
-  color: rgba(255,255,255,0.86);
+  color: var(--text-secondary);
   font-size: 1.05rem;
   max-width: 720px;
   line-height: 1.9;
@@ -2925,9 +2935,9 @@ button[type="submit"]:focus-visible {
   min-width: 170px;
   padding: 14px 20px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.18);
-  color: #fff;
-  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: var(--surface-alt);
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
@@ -2936,12 +2946,24 @@ button[type="submit"]:focus-visible {
 
 .landing-hero__cta:hover {
   transform: translateY(-1px);
-  background: rgba(255,255,255,0.14);
+  background: var(--white);
 }
 
 .landing-hero__cta--primary {
   background: var(--brand);
   border-color: transparent;
+  color: var(--button-text);
+}
+
+[data-theme='light'] .landing-hero__cta:hover {
+  background: var(--surface);
+}
+
+[data-theme='dark'] .landing-hero__cta {
+  color: var(--text);
+}
+
+[data-theme='dark'] .landing-hero__cta--primary {
   color: var(--button-text);
 }
 
