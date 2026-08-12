@@ -23,14 +23,13 @@ export default function CustomerHomePage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   // New filter state
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedBrands, setSelectedBrands] = useState([]);
   const [selectedRatings, setSelectedRatings] = useState([]); // numbers: 4,3,2,1 meaning >=
   const [selectedOffers, setSelectedOffers] = useState([]); // 'discount','special'
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(0);
   const [absoluteMinPrice, setAbsoluteMinPrice] = useState(0);
   const [absoluteMaxPrice, setAbsoluteMaxPrice] = useState(0);
-  const [filtersOpen, setFiltersOpen] = useState({ categories: true, brands: true, rating: true, price: true, offers: true });
+  const [filtersOpen, setFiltersOpen] = useState({ categories: true, rating: true, price: true, offers: true });
   const [filtersPanelOpen, setFiltersPanelOpen] = useState(false);
   const [loading, setLoading] = useState(() => initialProducts.length === 0);
   const [error, setError] = useState('');
@@ -178,30 +177,11 @@ export default function CustomerHomePage() {
     return counts;
   }, [allProducts]);
 
-  const availableCategories = useMemo(() => Array.from(categoryCounts.keys()).sort((a, b) => a.localeCompare(b)), [categoryCounts]);
-
-  const brandCounts = useMemo(() => {
-    const counts = new Map();
-    (allProducts || []).forEach((product) => {
-      const brands = [];
-      if (product.brand) brands.push(String(product.brand).trim());
-      if (product.brandName) brands.push(String(product.brandName).trim());
-      if (product.manufacturer) brands.push(String(product.manufacturer).trim());
-      if (product.brand_id) brands.push(String(product.brand_id).trim());
-      if (Array.isArray(product.brands)) {
-        product.brands.forEach((brand) => {
-          if (brand) brands.push(String(brand).trim());
-        });
-      }
-      brands.forEach((brand) => {
-        if (!brand) return;
-        counts.set(brand, (counts.get(brand) || 0) + 1);
-      });
-    });
-    return counts;
-  }, [allProducts]);
-
-  const availableBrands = useMemo(() => Array.from(brandCounts.keys()).sort((a, b) => a.localeCompare(b)), [brandCounts]);
+  const staticCategoryOptions = ['Shirts', 'Mobiles', 'Pants', 'Custom'];
+  const availableCategories = useMemo(() => {
+    const combined = new Set([...staticCategoryOptions, ...Array.from(categoryCounts.keys())]);
+    return Array.from(combined).sort((a, b) => a.localeCompare(b));
+  }, [categoryCounts]);
 
   const filteredProducts = useMemo(() => {
     const normalizedSearch = deferredSearchTerm.trim().toLowerCase();
@@ -237,20 +217,6 @@ export default function CustomerHomePage() {
         if (!matchCat) return false;
       }
 
-      const productBrands = [
-        product.brand,
-        product.brandName,
-        product.manufacturer,
-        product.brand_id,
-        Array.isArray(product.brands) ? product.brands.join(' ') : product.brands,
-      ].filter(Boolean).map((value) => String(value).toLowerCase());
-
-      // brand filter (OR within group)
-      if (selectedBrands.length > 0) {
-        const matchBrand = selectedBrands.some((b) => productBrands.some((pb) => pb === String(b || '').toLowerCase()));
-        if (!matchBrand) return false;
-      }
-
       // rating filter (OR within group but numeric threshold)
       if (selectedRatings.length > 0) {
         const prodRating = Number(product.rating ?? product.avgRating ?? product.averageRating ?? product.ratings ?? 0) || 0;
@@ -276,7 +242,7 @@ export default function CustomerHomePage() {
 
       return true;
     });
-  }, [allProducts, deferredSearchTerm, selectedCategories, selectedBrands, selectedRatings, selectedOffers, minPrice, maxPrice]);
+  }, [allProducts, deferredSearchTerm, selectedCategories, selectedRatings, selectedOffers, minPrice, maxPrice]);
 
   const handleAddToCart = useCallback(async (product) => {
     if (!product) return false;
@@ -376,7 +342,6 @@ export default function CustomerHomePage() {
 
   const clearAllFilters = useCallback(() => {
     setSelectedCategories([]);
-    setSelectedBrands([]);
     setSelectedRatings([]);
     setSelectedOffers([]);
     setMinPrice(absoluteMinPrice);
@@ -387,9 +352,6 @@ export default function CustomerHomePage() {
   const toggleCategory = useCallback((cat) => {
     setSelectedCategories((prev) => prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]);
   }, []);
-  const toggleBrand = useCallback((b) => {
-    setSelectedBrands((prev) => prev.includes(b) ? prev.filter((x) => x !== b) : [...prev, b]);
-  }, []);
   const toggleRating = useCallback((r) => {
     setSelectedRatings((prev) => prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]);
   }, []);
@@ -399,7 +361,6 @@ export default function CustomerHomePage() {
 
   const removeChip = useCallback((type, value) => {
     if (type === 'category') setSelectedCategories((p) => p.filter((x) => x !== value));
-    if (type === 'brand') setSelectedBrands((p) => p.filter((x) => x !== value));
     if (type === 'rating') setSelectedRatings((p) => p.filter((x) => x !== value));
     if (type === 'offer') setSelectedOffers((p) => p.filter((x) => x !== value));
     if (type === 'price') {
@@ -446,25 +407,6 @@ export default function CustomerHomePage() {
                       aria-label={`Filter by ${cat}`}
                     />
                     <span>{cat}{categoryCounts.get(cat) ? ` (${categoryCounts.get(cat)})` : ''}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="customer-home-filter-section">
-            <button type="button" className="filter-section-toggle" onClick={() => setFiltersOpen((s) => ({ ...s, brands: !s.brands }))}>Brands</button>
-            {filtersOpen.brands && (
-              <div className="filter-options">
-                {availableBrands.map((b) => (
-                  <label key={b} className="customer-home-filter-option">
-                    <input
-                      type="checkbox"
-                      checked={selectedBrands.includes(b)}
-                      onChange={() => toggleBrand(b)}
-                      aria-label={`Filter by ${b}`}
-                    />
-                    <span>{b}{brandCounts.get(b) ? ` (${brandCounts.get(b)})` : ''}</span>
                   </label>
                 ))}
               </div>
@@ -557,9 +499,6 @@ export default function CustomerHomePage() {
               <div className="filter-chips">
                 {selectedCategories.map((c) => (
                   <button key={`chip-cat-${c}`} className="customer-home-filter-chip" onClick={() => removeChip('category', c)}>{c} ×</button>
-                ))}
-                {selectedBrands.map((b) => (
-                  <button key={`chip-brand-${b}`} className="customer-home-filter-chip" onClick={() => removeChip('brand', b)}>{b} ×</button>
                 ))}
                 {selectedRatings.map((r) => (
                   <button key={`chip-rating-${r}`} className="customer-home-filter-chip" onClick={() => removeChip('rating', r)}>{r}★ ×</button>
