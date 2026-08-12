@@ -618,7 +618,7 @@ const AdminDashboard = () => {
         <section>
           <div className="hero-container mb-8">
             <h1 className="hero-title">Hello, {adminUsername || 'Admin'}!</h1>
-            <p className="hero-subtitle">Discover products, manage your cart, and track every order with ease — invite people to share your cart.</p>
+            <p className="hero-subtitle">Discover products, manage inventory, and keep orders moving smoothly.</p>
             <p className="hero-subtext">Manage products, customers, and orders from one polished workspace.</p>
           </div>
         </section>

@@ -272,22 +272,23 @@ export default function CustomerHomePage() {
         <section>
           <div className="hero-container mb-8">
             <h1 className="hero-title">Hello, {username}!</h1>
-            <p className="hero-subtitle">Discover products, manage your cart, and track every order with ease — invite people to share your cart.</p>
+            <p className="hero-subtitle">Discover products, manage your cart, and track every order with ease.</p>
           </div>
         </section>
 
         <section className="mb-6">
-          <label className="block mb-3 text-sm font-semibold text-slate-700 dark:text-slate-200" htmlFor="product-search">
-            Search products
-          </label>
-          <input
-            id="product-search"
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search products by name, description or category"
-            className="form-input w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-          />
+          <div className="search-input-wrapper">
+            <span className="search-input-icon" aria-hidden="true">🔍</span>
+            <input
+              id="product-search"
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search products by name, description or category"
+              aria-label="Search products"
+              className="form-input w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+            />
+          </div>
         </section>
 
         {showSkeletons ? (

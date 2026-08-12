@@ -616,7 +616,7 @@ const CartPage = () => {
       <h2>Your Cart is Empty</h2>
       <p>Start adding some awesome products!</p>
       <div className="cart-empty-actions">
-        <button onClick={() => navigate('/customerhome')}>Continue Shopping</button>
+        <button className="continue-shopping" onClick={() => navigate('/customerhome')}>Continue Shopping</button>
       </div>
     </div>
   ) : (

@@ -332,14 +332,21 @@ export default function SharedCartPage() {
       </div>
 
       {showInviteModal && (
-        <div className="modal-overlay" role="dialog" aria-modal="true">
-          <div className="modal-card shared-cart-invite-modal invite-modal">
-            <div className="modal-header">
-              <h3>Invite a friend</h3>
-              <button type="button" className="modal-close" onClick={() => setShowInviteModal(false)} aria-label="Close invite modal">×</button>
+        <div className="invite-modal-overlay" role="dialog" aria-modal="true">
+          <div className="invite-modal">
+            <div className="invite-modal-header">
+              <h2>Invite a friend</h2>
+              <button
+                type="button"
+                className="invite-modal-close"
+                onClick={() => setShowInviteModal(false)}
+                aria-label="Close invite modal"
+              >
+                ×
+              </button>
             </div>
-            <p className="modal-description">Send an invite email so your friend can log in and join this shared cart.</p>
-            <form className="invite-form">
+            <p className="invite-modal-description">Send an invite email so your friend can log in and join this shared cart.</p>
+            <form className="invite-form" onSubmit={(event) => { event.preventDefault(); handleSendInvite(); }}>
               <div className="invite-field">
                 <label htmlFor="invite-email">Friend’s email</label>
                 <input
@@ -365,7 +372,10 @@ export default function SharedCartPage() {
               {inviteError && <div className="modal-error">{inviteError}</div>}
               {inviteSuccess && <div className="modal-success">{inviteSuccess}</div>}
               <div className="invite-actions">
-                <button type="button" className="primary-button" onClick={handleSendInvite} disabled={inviteLoading}>
+                <button type="button" className="secondary-button" onClick={() => setShowInviteModal(false)} disabled={inviteLoading}>
+                  Cancel
+                </button>
+                <button type="submit" className="primary-button" disabled={inviteLoading}>
                   {inviteLoading ? 'Sending…' : 'Send invite'}
                 </button>
                 <button type="button" className="secondary-button" onClick={() => setShowInviteModal(false)} disabled={inviteLoading}>
