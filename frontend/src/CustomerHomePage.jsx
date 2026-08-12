@@ -16,7 +16,7 @@ import './assets/styles.css';
 export default function CustomerHomePage() {
   const navigate = useNavigate();
   const { cartItems, cartCount, addedProductIds, addProductToCart, removeProductFromCart, setCartCount, updateCartState } = useCart();
-  const initialProducts = getCache('products_all') || [];
+  const initialProducts = normalizeProductList(getCache('products_all') || []);
   const [allProducts, setAllProducts] = useState(initialProducts);
   const [username, setUsername] = useState(localStorage.getItem('username') || 'Guest');
   const [searchTerm, setSearchTerm] = useState('');
@@ -156,7 +156,9 @@ export default function CustomerHomePage() {
   // derive dynamic filter options from products
   const categoryCounts = useMemo(() => {
     const counts = new Map();
-    (allProducts || []).forEach((product) => {
+    const products = Array.isArray(allProducts) ? allProducts : [];
+    products.forEach((product) => {
+      if (!product || typeof product !== 'object') return;
       const categories = [];
       if (product.category) categories.push(String(product.category).trim());
       if (product.categoryName) categories.push(String(product.categoryName).trim());
@@ -188,6 +190,7 @@ export default function CustomerHomePage() {
     const products = Array.isArray(allProducts) ? allProducts : [];
 
     return products.filter((product) => {
+      if (!product || typeof product !== 'object') return false;
       const searchableText = [
         product.name,
         product.description,
