@@ -31,7 +31,7 @@ export default function CustomerHomePage() {
   const [absoluteMinPrice, setAbsoluteMinPrice] = useState(0);
   const [absoluteMaxPrice, setAbsoluteMaxPrice] = useState(0);
   const [filtersOpen, setFiltersOpen] = useState({ categories: true, brands: true, rating: true, price: true, offers: true });
-  const [mobileFiltersVisible, setMobileFiltersVisible] = useState(false);
+  const [filtersPanelOpen, setFiltersPanelOpen] = useState(false);
   const [loading, setLoading] = useState(() => initialProducts.length === 0);
   const [error, setError] = useState('');
   const [profileModalType, setProfileModalType] = useState(null);
@@ -320,6 +320,7 @@ export default function CustomerHomePage() {
     setSelectedOffers([]);
     setMinPrice(absoluteMinPrice);
     setMaxPrice(absoluteMaxPrice);
+    setFiltersPanelOpen(false);
   }, [absoluteMinPrice, absoluteMaxPrice]);
 
   const toggleCategory = useCallback((cat) => {
@@ -346,14 +347,29 @@ export default function CustomerHomePage() {
     }
   }, [absoluteMinPrice, absoluteMaxPrice]);
 
+  const toggleFiltersPanel = useCallback(() => {
+    setFiltersPanelOpen((prev) => !prev);
+  }, []);
+
+  const closeFiltersPanel = useCallback(() => {
+    setFiltersPanelOpen(false);
+  }, []);
+
   return (
     <CustomerLayout username={username}>
       <div className="customer-home-content">
         {/* Sidebar */}
-        <aside className={`customer-home-filters ${mobileFiltersVisible ? 'mobile-open' : ''}`} aria-hidden={mobileFiltersVisible ? 'false' : 'true'}>
+        {filtersPanelOpen && <div className="customer-home-filters-backdrop" onClick={closeFiltersPanel} />}
+        <aside className={`customer-home-filters ${filtersPanelOpen ? 'customer-home-filters--open' : ''}`} aria-hidden={!filtersPanelOpen}>
           <div className="filters-header">
-            <h3>Filters</h3>
-            <button type="button" className="clear-filters" onClick={clearAllFilters}>Clear All</button>
+            <div>
+              <h3>Filters</h3>
+              <p className="filters-status">Tap any filter to refine products</p>
+            </div>
+            <div className="filters-actions">
+              <button type="button" className="clear-filters" onClick={clearAllFilters}>Clear All</button>
+              <button type="button" className="filter-panel-close" onClick={closeFiltersPanel} aria-label="Close filters">×</button>
+            </div>
           </div>
 
           <div className="customer-home-filter-section">
@@ -445,7 +461,14 @@ export default function CustomerHomePage() {
             <div className="results-top">
               <div className="search-and-filter">
                 <div className="search-container">
-                  <button className="mobile-filters-btn" type="button" onClick={() => setMobileFiltersVisible(true)}>Filters</button>
+                  <button
+                    className={`mobile-filters-btn filters-toggle-button ${filtersPanelOpen ? 'filters-toggle-button--active' : ''}`}
+                    type="button"
+                    onClick={toggleFiltersPanel}
+                    aria-pressed={filtersPanelOpen}
+                  >
+                    Filters
+                  </button>
                   <span className="search-icon" aria-hidden="true">🔍</span>
                   <input
                     id="product-search"
@@ -493,39 +516,6 @@ export default function CustomerHomePage() {
         </main>
       </div>
 
-      {/* mobile filter drawer */}
-      {mobileFiltersVisible && (
-        <div className="mobile-filter-drawer">
-          <div className="mobile-filter-content">
-            <button className="mobile-filter-close" onClick={() => setMobileFiltersVisible(false)}>Close</button>
-            <div className="mobile-filters-inner">
-              {/* reuse sidebar content by rendering simplified controls */}
-              <div className="filter-section">
-                <h4>Categories</h4>
-                {availableCategories.map((cat) => (
-                  <label key={`m-${cat}`} className="customer-home-filter-option">
-                    <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => toggleCategory(cat)} />
-                    <span>{cat}</span>
-                  </label>
-                ))}
-              </div>
-              <div className="filter-section">
-                <h4>Brands</h4>
-                {availableBrands.map((b) => (
-                  <label key={`m-${b}`} className="customer-home-filter-option">
-                    <input type="checkbox" checked={selectedBrands.includes(b)} onChange={() => toggleBrand(b)} />
-                    <span>{b}</span>
-                  </label>
-                ))}
-              </div>
-              <div className="mobile-filter-actions">
-                <button onClick={() => { clearAllFilters(); setMobileFiltersVisible(false); }}>Clear All</button>
-                <button onClick={() => setMobileFiltersVisible(false)}>Apply Filters</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {profileModalType && (
         <CustomModal

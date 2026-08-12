@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import './assets/styles.css';
 import { LandingHeader } from './LandingHeader';
 import { Footer } from './Footer';
-import SalesSavvyImageMarquee from './components/SalesSavvyImageMarquee';
+import HomeProductMotionRail from './components/HomeProductMotionRail';
 import AuthLayout from './components/AuthLayout';
 import InputField from './components/InputField';
 import PasswordField from './components/PasswordField';
@@ -530,7 +530,7 @@ export default function LandingPage() {
         </div>
       </main>
 
-      <SalesSavvyImageMarquee />
+      <HomeProductMotionRail />
       <Footer />
 
       {activeModal && (
