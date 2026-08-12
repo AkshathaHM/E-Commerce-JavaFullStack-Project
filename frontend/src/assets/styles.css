@@ -51,6 +51,61 @@ dashboard-panel {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+
+/* SalesSavvy image-only marquee (decorative, image-only) */
+.sales-savvy-image-marquee {
+  width: 100%;
+  overflow: hidden;
+  padding: 36px 0 28px;
+  background: radial-gradient(600px 200px at 10% 20%, rgba(2,40,60,0.18), transparent), radial-gradient(400px 140px at 90% 80%, rgba(6,70,110,0.12), transparent), #041226;
+  display: block;
+  position: relative;
+}
+
+.sales-savvy-image-marquee__ambient { position:absolute; inset:0; pointer-events:none; mix-blend-mode:overlay; }
+
+.sales-savvy-image-marquee__track {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  width: max-content;
+  padding-left: 32px;
+  padding-right: 32px;
+  animation-name: salesSavvyMarquee;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: 38s; /* overridden by inline style if provided */
+}
+
+.sales-savvy-image-marquee__item { display:flex; align-items:center; justify-content:center; }
+.sales-savvy-image-marquee__image {
+  width: 180px;
+  height: 140px;
+  flex: 0 0 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 8px 24px rgba(2,8,20,0.6);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+  display: block;
+}
+
+@keyframes salesSavvyMarquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Spacing & mobile adjustments */
+@media (max-width: 900px) {
+  .sales-savvy-image-marquee { padding: 20px 0; }
+  .sales-savvy-image-marquee__image { width: 140px; height: 110px; flex: 0 0 140px; }
+  .sales-savvy-image-marquee__track { gap: 16px; animation-duration: 28s; }
+}
+
+@media (max-width: 480px) {
+  .sales-savvy-image-marquee__image { width: 120px; height: 90px; flex: 0 0 120px; }
+  .sales-savvy-image-marquee__track { gap: 12px; animation-duration: 24s; }
+}
   box-shadow: var(--shadow);
 }
 
