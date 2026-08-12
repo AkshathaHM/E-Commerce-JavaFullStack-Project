@@ -223,15 +223,31 @@ export default function CustomerHomePage() {
       // search
       if (normalizedSearch && !searchableText.includes(normalizedSearch)) return false;
 
+      const productCategories = [
+        product.category,
+        product.categoryName,
+        product.categoryId,
+        product.category_id,
+        Array.isArray(product.categories) ? product.categories.join(' ') : product.categories,
+      ].filter(Boolean).map((value) => String(value).toLowerCase());
+
       // category filter (OR within group)
       if (selectedCategories.length > 0) {
-        const matchCat = selectedCategories.some((c) => String(product.category || '').toLowerCase() === String(c || '').toLowerCase());
+        const matchCat = selectedCategories.some((c) => productCategories.some((pc) => pc === String(c || '').toLowerCase()));
         if (!matchCat) return false;
       }
 
+      const productBrands = [
+        product.brand,
+        product.brandName,
+        product.manufacturer,
+        product.brand_id,
+        Array.isArray(product.brands) ? product.brands.join(' ') : product.brands,
+      ].filter(Boolean).map((value) => String(value).toLowerCase());
+
       // brand filter (OR within group)
       if (selectedBrands.length > 0) {
-        const matchBrand = selectedBrands.some((b) => String(product.brand || '').toLowerCase() === String(b || '').toLowerCase());
+        const matchBrand = selectedBrands.some((b) => productBrands.some((pb) => pb === String(b || '').toLowerCase()));
         if (!matchBrand) return false;
       }
 
@@ -522,6 +538,7 @@ export default function CustomerHomePage() {
                     onClick={toggleFiltersPanel}
                     aria-pressed={filtersPanelOpen}
                   >
+                    <span className="filters-btn-icon" aria-hidden="true">⟁</span>
                     Filters
                   </button>
                   <span className="search-icon" aria-hidden="true">🔍</span>
@@ -535,8 +552,6 @@ export default function CustomerHomePage() {
                     className="search-input"
                   />
                 </div>
-                <div className="results-count">Showing {filteredProducts.length} of {allProducts.length} products</div>
-              </div>
 
               {/* filter chips */}
               <div className="filter-chips">

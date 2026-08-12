@@ -7,7 +7,6 @@ import { getApiUrl, getAuthHeaders } from './auth';
 export default function SharedCartInviteFloating({ inline = false }) {
   const [open, setOpen] = useState(false);
   const [invite, setInvite] = useState('');
-  const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -74,15 +73,6 @@ export default function SharedCartInviteFloating({ inline = false }) {
                   value={invite}
                   onChange={(e) => setInvite(e.target.value)}
                   placeholder="https://.../shared-cart/abc123 or abc123"
-                />
-              </label>
-
-              <label className="modal-form-item">
-                <span style={{ fontWeight: 700, color: 'var(--text-muted)' }}>Add a note (optional)</span>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Write a short message to the owner or collaborators"
                 />
               </label>
 

@@ -286,35 +286,43 @@ button:hover,
   width: 100%;
   max-width: 920px;
   margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .search-icon {
   position: absolute;
-  left: 16px;
+  left: 18px;
   top: 50%;
   transform: translateY(-50%);
   pointer-events: none;
   font-size: 18px;
-  opacity: 0.75;
+  color: var(--text-muted);
+  opacity: 0.9;
 }
 
 .search-input {
   width: 100%;
   box-sizing: border-box;
-  padding-left: 48px;
+  padding: 0 16px 0 48px;
   height: 52px;
-  border-radius: 12px;
+  border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
   outline: none;
   font-size: 1rem;
-  transition: box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease;
+  transition: box-shadow 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
 
 .search-input:focus {
-  box-shadow: 0 8px 30px rgba(2,6,23,0.08);
-  border-color: rgba(99,102,241,0.32);
+  box-shadow: 0 0 0 6px rgba(14, 165, 233, 0.16);
+  border-color: var(--brand);
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
 }
 
 /* Product grid and cards */
@@ -3254,23 +3262,47 @@ button[type="submit"]:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   border-radius: 999px;
   border: 1px solid var(--border);
-  background: var(--surface-alt);
+  background: var(--surface);
   color: var(--text);
   cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
 
-.profile-button:hover {
-  background: var(--surface);
+.profile-button:hover,
+.profile-dropdown.open .profile-button {
+  background: var(--surface-alt);
+  border-color: var(--border);
 }
 
 .user-avatar {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.username {
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 110px;
+}
+
+.profile-button__chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
 }
 
 .dropdown-menu {
@@ -3281,12 +3313,38 @@ button[type="submit"]:focus-visible {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 20px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.14);
   opacity: 0;
   transform: translateY(-10px);
   visibility: hidden;
   transition: opacity var(--transition), transform var(--transition), visibility var(--transition);
   z-index: 1200;
+}
+
+.dropdown-top {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.dropdown-link {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 180ms ease, color 180ms ease;
+}
+
+.dropdown-link:hover {
+  background: var(--surface-alt);
 }
 
 .profile-dropdown.open .dropdown-menu,
@@ -3716,19 +3774,44 @@ button[type="submit"]:focus-visible {
 }
 
 .mobile-filters-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 10px 14px;
+  padding: 10px 16px;
   background: var(--surface);
   color: var(--text);
   font-weight: 700;
   cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.mobile-filters-btn:hover {
+  background: var(--surface-alt);
+}
+
+.filters-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  background: var(--input-bg);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
 }
 
 .filters-toggle-button--active {
   background: var(--primary);
-  color: white;
+  color: var(--button-text);
   border-color: transparent;
+}
+
+.filters-toggle-button--active .filters-btn-icon {
+  color: var(--button-text);
+  background: rgba(255,255,255,0.18);
 }
 
 .product-card {
