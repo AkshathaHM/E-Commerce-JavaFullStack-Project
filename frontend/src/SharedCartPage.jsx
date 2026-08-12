@@ -85,7 +85,7 @@ export default function SharedCartPage() {
     // temporary debug log to trace invite modal state changes during fix
     // TODO: remove after verification
     // eslint-disable-next-line no-console
-    console.debug('SharedCartPage: showInviteModal ->', showInviteModal);
+    console.log('SharedCartPage: showInviteModal ->', showInviteModal);
   }, [showInviteModal]);
 
   useEffect(() => {
@@ -94,7 +94,7 @@ export default function SharedCartPage() {
       const params = new URLSearchParams(window.location.search);
       if (params.get('debugInvite') === 'true') {
         // eslint-disable-next-line no-console
-        console.debug('SharedCartPage: debugInvite param detected — opening invite modal');
+        console.log('SharedCartPage: debugInvite param detected — opening invite modal');
         setShowInviteModal(true);
       }
     } catch (err) {
@@ -106,7 +106,7 @@ export default function SharedCartPage() {
     if (showInviteModal) {
       const el = document.querySelector('.invite-modal-overlay');
       // eslint-disable-next-line no-console
-      console.debug('SharedCartPage: invite modal DOM present?', !!el, el);
+      console.log('SharedCartPage: invite modal DOM present?', !!el, el);
     }
   }, [showInviteModal]);
 
@@ -114,13 +114,13 @@ export default function SharedCartPage() {
     // capture all clicks to help identify if the Invite button receives DOM events
     const handler = (e) => {
       // eslint-disable-next-line no-console
-      console.debug('SharedCartPage document click:', { target: e.target, path: e.composedPath ? e.composedPath().map(n => n && n.nodeName) : null });
+      console.log('SharedCartPage document click:', { target: e.target, path: e.composedPath ? e.composedPath().map(n => n && n.nodeName) : null });
       try {
         const el = e.target;
         const btn = el && (el.id === 'invite-by-email-btn' || (el.closest && el.closest('#invite-by-email-btn')));
         if (btn) {
           // eslint-disable-next-line no-console
-          console.debug('INVITE-BUTTON CLICKED (captured)');
+          console.log('INVITE-BUTTON CLICKED (captured)');
         }
       } catch (err) {
         // ignore
@@ -322,7 +322,7 @@ export default function SharedCartPage() {
                     </button>
                   </div>
                   <div className="share-link-actions">
-                    <button id="invite-by-email-btn" type="button" className="secondary-button" onClick={() => { console.debug('Invite by email clicked'); setShowInviteModal(true); }}>
+                    <button id="invite-by-email-btn" type="button" className="secondary-button" onClick={() => { console.log('Invite by email clicked'); setShowInviteModal(true); }}>
                       Invite by email
                     </button>
                   </div>
