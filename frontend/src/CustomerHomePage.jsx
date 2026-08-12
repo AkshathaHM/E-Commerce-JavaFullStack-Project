@@ -572,6 +572,7 @@ export default function CustomerHomePage() {
                 )}
               </div>
             </div>
+          </div>
           </section>
 
           {showSkeletons ? (
