@@ -333,44 +333,46 @@ export default function SharedCartPage() {
 
       {showInviteModal && (
         <div className="modal-overlay" role="dialog" aria-modal="true">
-          <div className="modal-card shared-cart-invite-modal">
+          <div className="modal-card shared-cart-invite-modal invite-modal">
             <div className="modal-header">
               <h3>Invite a friend</h3>
               <button type="button" className="modal-close" onClick={() => setShowInviteModal(false)} aria-label="Close invite modal">×</button>
             </div>
             <p className="modal-description">Send an invite email so your friend can log in and join this shared cart.</p>
-            <div className="form-group">
-              <label htmlFor="invite-email">Friend’s email</label>
-              <input
-                id="invite-email"
-                type="email"
-                value={inviteEmail}
-                onChange={(event) => setInviteEmail(event.target.value)}
-                placeholder="friend@example.com"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="invite-note">
-                Add a personal note <span className="optional-label">(optional)</span>
-              </label>
-              <textarea
-                id="invite-note"
-                rows={4}
-                value={inviteNote}
-                onChange={(event) => setInviteNote(event.target.value)}
-                placeholder="Write a quick message to your friend"
-              />
-            </div>
-            {inviteError && <div className="modal-error">{inviteError}</div>}
-            {inviteSuccess && <div className="modal-success">{inviteSuccess}</div>}
-            <div className="invite-actions">
-              <button type="button" className="primary-button" onClick={handleSendInvite} disabled={inviteLoading}>
-                {inviteLoading ? 'Sending…' : 'Send invite'}
-              </button>
-              <button type="button" className="secondary-button" onClick={() => setShowInviteModal(false)} disabled={inviteLoading}>
-                Cancel
-              </button>
-            </div>
+            <form className="invite-form">
+              <div className="invite-field">
+                <label htmlFor="invite-email">Friend’s email</label>
+                <input
+                  id="invite-email"
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(event) => setInviteEmail(event.target.value)}
+                  placeholder="friend@example.com"
+                />
+              </div>
+              <div className="invite-field">
+                <label htmlFor="invite-note">
+                  Add a personal note <span>(optional)</span>
+                </label>
+                <textarea
+                  id="invite-note"
+                  rows={4}
+                  value={inviteNote}
+                  onChange={(event) => setInviteNote(event.target.value)}
+                  placeholder="Write a quick message to your friend"
+                />
+              </div>
+              {inviteError && <div className="modal-error">{inviteError}</div>}
+              {inviteSuccess && <div className="modal-success">{inviteSuccess}</div>}
+              <div className="invite-actions">
+                <button type="button" className="primary-button" onClick={handleSendInvite} disabled={inviteLoading}>
+                  {inviteLoading ? 'Sending…' : 'Send invite'}
+                </button>
+                <button type="button" className="secondary-button" onClick={() => setShowInviteModal(false)} disabled={inviteLoading}>
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

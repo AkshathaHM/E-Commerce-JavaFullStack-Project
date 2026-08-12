@@ -912,13 +912,18 @@ button[type="submit"]:focus-visible {
 .shared-invite-header-btn:hover { transform: translateY(-1px); }
 
 /* Shared cart invite card & modal styles */
-.shared-cart-invite-modal {
+.shared-cart-invite-modal,
+.shared-cart-invite-modal.invite-modal {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 20px;
-  width: min(92vw, 560px);
+  padding: 28px;
+  width: min(100%, 600px);
+  box-sizing: border-box;
   box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .shared-cart-invite-modal .modal-header {
@@ -926,7 +931,7 @@ button[type="submit"]:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 
 .shared-cart-invite-modal .modal-header h3 {
@@ -945,117 +950,113 @@ button[type="submit"]:focus-visible {
 }
 
 .shared-cart-invite-modal .modal-description {
-  margin: 6px 0 16px;
+  margin: 0 0 24px;
   color: var(--text-muted);
+  line-height: 1.6;
 }
 
-.shared-cart-invite-modal label {
-  display: block;
-  margin: 0 0 8px;
-  font-weight: 700;
-  color: var(--text-muted);
+.invite-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 20px;
 }
 
-.shared-cart-invite-modal .optional-label {
-  font-weight: 400;
-  color: var(--text-muted);
-  font-size: 0.95rem;
-}
-
-.shared-cart-invite-modal .form-group {
+.invite-field {
   display: flex;
   flex-direction: column;
   width: 100%;
   gap: 8px;
-  margin-bottom: 18px;
-  box-sizing: border-box;
 }
 
-.shared-cart-invite-modal input[type="email"],
-.shared-cart-invite-modal textarea,
-.share-link-row input[readonly] {
+.invite-field label {
+  display: block;
   width: 100%;
+  margin: 0;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.invite-field label span {
+  opacity: 0.75;
+}
+
+.invite-field input,
+.invite-field textarea {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 0;
   padding: 12px 14px;
   border-radius: 10px;
   border: 1px solid var(--input-border, var(--border));
   background: var(--input-bg, var(--surface));
   color: var(--input-text, var(--text));
   font-size: 0.96rem;
-  box-sizing: border-box;
 }
 
-
-.shared-cart-invite-modal textarea { min-height: 120px; resize: vertical; }
-
-.invite-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
-
-.share-link-block { margin-bottom: 16px; }
-.share-link-row { display: flex; gap: 8px; align-items: center; }
-.share-link-row input[readonly] { flex: 1; }
-.share-link-row .form-button { margin: 0; white-space: nowrap; }
-
-@media (max-width: 640px) {
-  .shared-cart-invite-modal { width: 96vw; padding: 16px; }
-  .invite-actions { flex-direction: column-reverse; align-items: stretch; }
-  .invite-actions button { width: 100%; }
+.invite-field input {
+  height: 46px;
 }
 
-[data-theme='dark'] .shared-cart-invite-modal { background: linear-gradient(180deg, rgba(10,14,24,0.72), rgba(8,12,20,0.72)); border-color: rgba(255,255,255,0.04); }
-
-/* Strong vertical layout overrides for the invite modal to ensure stacked fields */
-.shared-cart-invite-modal {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: stretch !important;
-  box-sizing: border-box !important;
-}
-
-.shared-cart-invite-modal .form-group {
-  display: flex !important;
-  flex-direction: column !important;
-  width: 100% !important;
-  gap: 8px !important;
-  margin-bottom: 16px !important;
-  box-sizing: border-box !important;
-}
-
-.shared-cart-invite-modal label {
-  display: block !important;
-  margin: 0 !important;
-  font-weight: 700 !important;
-  color: var(--text-muted) !important;
-}
-
-.shared-cart-invite-modal input[type="email"],
-.shared-cart-invite-modal textarea {
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  padding: 12px 14px !important;
-  border-radius: 10px !important;
-  border: 1px solid var(--input-border, var(--border)) !important;
-  background: var(--input-bg, var(--surface)) !important;
-  color: var(--input-text, var(--text)) !important;
-  font-size: 0.96rem !important;
-}
-
-.shared-cart-invite-modal input[type="email"] { height: 44px !important; }
-.shared-cart-invite-modal textarea { min-height: 120px !important; resize: vertical !important; }
-
-/* Ensure no absolute/floats affect the form controls inside the invite modal */
-.shared-cart-invite-modal .form-group * {
-  position: static !important;
-  float: none !important;
-  left: auto !important;
-  top: auto !important;
-  margin: 0 !important;
+.invite-field textarea {
+  min-height: 120px;
+  resize: vertical;
 }
 
 .invite-actions {
-  display: flex !important;
-  justify-content: flex-end !important;
-  gap: 12px !important;
-  margin-top: 12px !important;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.invite-actions button {
+  min-width: 120px;
+}
+
+.share-link-block {
+  margin-bottom: 16px;
+}
+
+.share-link-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.share-link-row input[readonly] {
+  flex: 1;
+}
+
+.share-link-row .form-button {
+  margin: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .shared-cart-invite-modal,
+  .shared-cart-invite-modal.invite-modal {
+    width: calc(100% - 32px);
+    padding: 20px;
+  }
+
+  .invite-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .invite-actions button {
+    width: 100%;
+  }
+}
+
+[data-theme='dark'] .shared-cart-invite-modal {
+  background: linear-gradient(180deg, rgba(10,14,24,0.72), rgba(8,12,20,0.72));
+  border-color: rgba(255,255,255,0.04);
 }
 
 
@@ -4666,31 +4667,6 @@ button[type="submit"]:focus-visible {
 }
 
 .modal-close-btn:hover {
-  background: var(--surface-alt);
-}
-
-.shared-cart-invite-modal {
-  width: min(95vw, 560px);
-  max-width: 560px;
-  padding: 24px;
-  gap: 18px;
-}
-
-.modal-close {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  width: 38px;
-  height: 38px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  border-radius: 50%;
-  font-size: 1.2rem;
-  cursor: pointer;
-}
-
-.modal-close:hover {
   background: var(--surface-alt);
 }
 
