@@ -1334,17 +1334,36 @@ button[type="submit"]:focus-visible {
 /* Strong override to ensure invite modal is always visible and interactive.
    Uses !important to override third-party or global stacking/pointer rules. */
 .invite-modal-overlay {
-  z-index: 2147483647 !important;
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
   display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  background: rgba(0,0,0,0.65) !important;
+  z-index: 2147483647 !important;
   visibility: visible !important;
   opacity: 1 !important;
   pointer-events: auto !important;
   transform: none !important;
+  overflow: visible !important;
 }
 .invite-modal {
+  position: relative !important;
   z-index: 2147483648 !important;
+  width: min(520px, calc(100vw - 32px)) !important;
+  max-height: calc(100vh - 32px) !important;
+  overflow-y: auto !important;
   pointer-events: auto !important;
   transform: none !important;
+  background: #111827 !important;
+  border: 1px solid rgba(255,255,255,0.10) !important;
+  border-radius: 20px !important;
+  padding: 28px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .invite-modal-header {

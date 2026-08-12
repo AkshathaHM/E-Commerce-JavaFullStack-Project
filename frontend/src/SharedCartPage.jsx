@@ -108,6 +108,27 @@ export default function SharedCartPage() {
       const el = document.querySelector('.invite-modal-overlay');
       // eslint-disable-next-line no-console
       console.log('SharedCartPage: invite modal DOM present?', !!el, el);
+      try {
+        const cs = el && window.getComputedStyle && window.getComputedStyle(el);
+        // eslint-disable-next-line no-console
+        console.log('Invite modal computed style:', cs ? {
+          display: cs.display,
+          visibility: cs.visibility,
+          opacity: cs.opacity,
+          zIndex: cs.zIndex,
+          position: cs.position,
+          top: cs.top,
+          left: cs.left,
+          width: cs.width,
+          height: cs.height,
+          pointerEvents: cs.pointerEvents,
+          transform: cs.transform
+        } : null);
+        // eslint-disable-next-line no-console
+        console.log('Invite modal bounding rect:', el && el.getBoundingClientRect ? el.getBoundingClientRect() : null);
+      } catch (err) {
+        // ignore
+      }
     }
   }, [showInviteModal]);
 
