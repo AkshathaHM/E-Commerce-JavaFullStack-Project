@@ -21,6 +21,17 @@ export default function CustomerHomePage() {
   const [username, setUsername] = useState(localStorage.getItem('username') || 'Guest');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  // New filter state
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedBrands, setSelectedBrands] = useState([]);
+  const [selectedRatings, setSelectedRatings] = useState([]); // numbers: 4,3,2,1 meaning >=
+  const [selectedOffers, setSelectedOffers] = useState([]); // 'discount','special'
+  const [minPrice, setMinPrice] = useState(0);
+  const [maxPrice, setMaxPrice] = useState(0);
+  const [absoluteMinPrice, setAbsoluteMinPrice] = useState(0);
+  const [absoluteMaxPrice, setAbsoluteMaxPrice] = useState(0);
+  const [filtersOpen, setFiltersOpen] = useState({ categories: true, brands: true, rating: true, price: true, offers: true });
+  const [mobileFiltersVisible, setMobileFiltersVisible] = useState(false);
   const [loading, setLoading] = useState(() => initialProducts.length === 0);
   const [error, setError] = useState('');
   const [profileModalType, setProfileModalType] = useState(null);
@@ -64,6 +75,17 @@ export default function CustomerHomePage() {
       const productList = normalizeProductList(data);
       if (productList.length) {
         setAllProducts(productList);
+        // compute price bounds on loaded products
+        try {
+          const prices = productList.map(p => Number(p.price ?? p.amount ?? 0)).filter(n => !Number.isNaN(n));
+          const min = prices.length ? Math.min(...prices) : 0;
+          const max = prices.length ? Math.max(...prices) : 0;
+          setAbsoluteMinPrice(min);
+          setAbsoluteMaxPrice(max);
+          // initialize current range if not set
+          setMinPrice((prev) => (prev === 0 ? min : prev));
+          setMaxPrice((prev) => (prev === 0 ? max : prev));
+        } catch (e) {}
         setCache(cacheKey, productList, 60000);
       } else if (!Array.isArray(data)) {
         setAllProducts([]);
@@ -132,43 +154,68 @@ export default function CustomerHomePage() {
     fetchCartCount();
   }, [fetchCartCount]);
 
+  // derive dynamic filter options from products
+  const availableCategories = useMemo(() => {
+    const setC = new Set();
+    (allProducts || []).forEach((p) => { if (p.category) setC.add(String(p.category)); });
+    return Array.from(setC).sort();
+  }, [allProducts]);
+
+  const availableBrands = useMemo(() => {
+    const setB = new Set();
+    (allProducts || []).forEach((p) => { if (p.brand) setB.add(String(p.brand)); });
+    return Array.from(setB).sort();
+  }, [allProducts]);
+
   const filteredProducts = useMemo(() => {
     const normalizedSearch = deferredSearchTerm.trim().toLowerCase();
-    const normalizedCategory = selectedCategory.trim().toLowerCase();
-
-    const categoryTokens = {
-      shirts: ['shirt', 'shirts', 't-shirt', 'tee'],
-      pants: ['pant', 'pants', 'trouser', 'trousers', 'jeans'],
-      sarees: ['saree', 'sarees', 'saari', 'saaree'],
-      kurtas: ['kurta', 'kurtas', 'kurti', 'kurtis'],
-      'western dresses': ['western dress', 'western dresses', 'dress', 'dresses', 'gown'],
-      accessories: ['accessorie', 'accessories', 'jewelry', 'jewellery', 'bag', 'belt'],
-      mobiles: ['mobile', 'mobile phone', 'smartphone', 'phone'],
-      'mobile accessories': ['mobile accessories', 'phone accessories', 'charger', 'earbuds', 'earphones', 'headphones'],
-    };
-
-    const categoryKeywords = categoryTokens[normalizedCategory] || [normalizedCategory];
-
     const products = Array.isArray(allProducts) ? allProducts : [];
 
     return products.filter((product) => {
-      const searchableText = [
-        product.name,
-        product.description,
-        product.category,
-        product.brand,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
+      const searchableText = [product.name, product.description, product.category, product.brand]
+        .filter(Boolean).join(' ').toLowerCase();
 
-      const matchesSearch = !normalizedSearch || searchableText.includes(normalizedSearch);
-      const matchesCategory = normalizedCategory === 'all'
-        || categoryKeywords.some((token) => searchableText.includes(token));
+      // search
+      if (normalizedSearch && !searchableText.includes(normalizedSearch)) return false;
 
-      return matchesSearch && matchesCategory;
+      // category filter (OR within group)
+      if (selectedCategories.length > 0) {
+        const matchCat = selectedCategories.some((c) => String(product.category || '').toLowerCase() === String(c || '').toLowerCase());
+        if (!matchCat) return false;
+      }
+
+      // brand filter (OR within group)
+      if (selectedBrands.length > 0) {
+        const matchBrand = selectedBrands.some((b) => String(product.brand || '').toLowerCase() === String(b || '').toLowerCase());
+        if (!matchBrand) return false;
+      }
+
+      // rating filter (OR within group but numeric threshold)
+      if (selectedRatings.length > 0) {
+        const prodRating = Number(product.rating ?? product.avgRating ?? product.averageRating ?? product.ratings ?? 0) || 0;
+        const matchRating = selectedRatings.some((min) => prodRating >= Number(min));
+        if (!matchRating) return false;
+      }
+
+      // offers
+      if (selectedOffers.length > 0) {
+        const hasDiscount = (() => {
+          const price = Number(product.price ?? product.amount ?? 0) || 0;
+          const mrp = Number(product.mrp ?? product.original_price ?? product.mrpPrice ?? product.mrp_price ?? 0) || 0;
+          return mrp > 0 && mrp > price;
+        })();
+        const hasSpecial = Boolean(product.offer || product.offerText || product.specialOffer);
+        const matchOffer = selectedOffers.some((o) => (o === 'discount' && hasDiscount) || (o === 'special' && hasSpecial));
+        if (!matchOffer) return false;
+      }
+
+      // price range
+      const price = Number(product.price ?? product.amount ?? 0) || 0;
+      if (price < Number(minPrice) || price > Number(maxPrice)) return false;
+
+      return true;
     });
-  }, [allProducts, deferredSearchTerm, selectedCategory]);
+  }, [allProducts, deferredSearchTerm, selectedCategories, selectedBrands, selectedRatings, selectedOffers, minPrice, maxPrice]);
 
   const handleAddToCart = useCallback(async (product) => {
     if (!product) return false;
@@ -266,36 +313,219 @@ export default function CustomerHomePage() {
 
   const showSkeletons = loading && allProducts.length === 0;
 
+  const clearAllFilters = useCallback(() => {
+    setSelectedCategories([]);
+    setSelectedBrands([]);
+    setSelectedRatings([]);
+    setSelectedOffers([]);
+    setMinPrice(absoluteMinPrice);
+    setMaxPrice(absoluteMaxPrice);
+  }, [absoluteMinPrice, absoluteMaxPrice]);
+
+  const toggleCategory = useCallback((cat) => {
+    setSelectedCategories((prev) => prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]);
+  }, []);
+  const toggleBrand = useCallback((b) => {
+    setSelectedBrands((prev) => prev.includes(b) ? prev.filter((x) => x !== b) : [...prev, b]);
+  }, []);
+  const toggleRating = useCallback((r) => {
+    setSelectedRatings((prev) => prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]);
+  }, []);
+  const toggleOffer = useCallback((o) => {
+    setSelectedOffers((prev) => prev.includes(o) ? prev.filter((x) => x !== o) : [...prev, o]);
+  }, []);
+
+  const removeChip = useCallback((type, value) => {
+    if (type === 'category') setSelectedCategories((p) => p.filter((x) => x !== value));
+    if (type === 'brand') setSelectedBrands((p) => p.filter((x) => x !== value));
+    if (type === 'rating') setSelectedRatings((p) => p.filter((x) => x !== value));
+    if (type === 'offer') setSelectedOffers((p) => p.filter((x) => x !== value));
+    if (type === 'price') {
+      setMinPrice(absoluteMinPrice);
+      setMaxPrice(absoluteMaxPrice);
+    }
+  }, [absoluteMinPrice, absoluteMaxPrice]);
+
   return (
     <CustomerLayout username={username}>
-      <div className="main-content">
-        <section className="mb-6">
-          <div className="home-container">
-            <div className="search-container">
-              <span className="search-icon" aria-hidden="true">🔍</span>
-              <input
-                id="product-search"
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search products by name, description or category"
-                aria-label="Search products"
-                className="search-input"
-              />
+      <div className="customer-home-content">
+        {/* Sidebar */}
+        <aside className={`customer-home-filters ${mobileFiltersVisible ? 'mobile-open' : ''}`} aria-hidden={mobileFiltersVisible ? 'false' : 'true'}>
+          <div className="filters-header">
+            <h3>Filters</h3>
+            <button type="button" className="clear-filters" onClick={clearAllFilters}>Clear All</button>
+          </div>
+
+          <div className="customer-home-filter-section">
+            <button type="button" className="filter-section-toggle" onClick={() => setFiltersOpen((s) => ({ ...s, categories: !s.categories }))}>Categories</button>
+            {filtersOpen.categories && (
+              <div className="filter-options">
+                {availableCategories.map((cat) => (
+                  <label key={cat} className="customer-home-filter-option">
+                    <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => toggleCategory(cat)} />
+                    <span>{cat}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="customer-home-filter-section">
+            <button type="button" className="filter-section-toggle" onClick={() => setFiltersOpen((s) => ({ ...s, brands: !s.brands }))}>Brands</button>
+            {filtersOpen.brands && (
+              <div className="filter-options">
+                {availableBrands.map((b) => (
+                  <label key={b} className="customer-home-filter-option">
+                    <input type="checkbox" checked={selectedBrands.includes(b)} onChange={() => toggleBrand(b)} />
+                    <span>{b}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="customer-home-filter-section">
+            <button type="button" className="filter-section-toggle" onClick={() => setFiltersOpen((s) => ({ ...s, rating: !s.rating }))}>Customer Rating</button>
+            {filtersOpen.rating && (
+              <div className="filter-options">
+                {[4,3,2,1].map((r) => (
+                  <label key={r} className="customer-home-filter-option">
+                    <input type="checkbox" checked={selectedRatings.includes(r)} onChange={() => toggleRating(r)} />
+                    <span>{r}★ & above</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="customer-home-filter-section">
+            <button type="button" className="filter-section-toggle" onClick={() => setFiltersOpen((s) => ({ ...s, offers: !s.offers }))}>Offers</button>
+            {filtersOpen.offers && (
+              <div className="filter-options">
+                <label className="customer-home-filter-option">
+                  <input type="checkbox" checked={selectedOffers.includes('discount')} onChange={() => toggleOffer('discount')} />
+                  <span>Discount available</span>
+                </label>
+                <label className="customer-home-filter-option">
+                  <input type="checkbox" checked={selectedOffers.includes('special')} onChange={() => toggleOffer('special')} />
+                  <span>Special offer</span>
+                </label>
+              </div>
+            )}
+          </div>
+
+          <div className="customer-home-filter-section">
+            <button type="button" className="filter-section-toggle" onClick={() => setFiltersOpen((s) => ({ ...s, price: !s.price }))}>Price</button>
+            {filtersOpen.price && (
+              <div className="filter-options customer-home-price-filter">
+                <div className="price-range-values">
+                  <span>₹{minPrice}</span>
+                  <span>₹{maxPrice}</span>
+                </div>
+                <div className="price-slider">
+                  <input type="range" min={absoluteMinPrice} max={absoluteMaxPrice} value={minPrice} onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (v <= maxPrice) setMinPrice(v);
+                    else setMinPrice(maxPrice);
+                  }} />
+                  <input type="range" min={absoluteMinPrice} max={absoluteMaxPrice} value={maxPrice} onChange={(e) => {
+                    const v = Number(e.target.value);
+                    if (v >= minPrice) setMaxPrice(v);
+                    else setMaxPrice(minPrice);
+                  }} />
+                </div>
+              </div>
+            )}
+          </div>
+        </aside>
+
+        {/* Results area */}
+        <main className="customer-home-results">
+          <section className="mb-6 results-header">
+            <div className="results-top">
+              <div className="search-and-filter">
+                <div className="search-container">
+                  <button className="mobile-filters-btn" type="button" onClick={() => setMobileFiltersVisible(true)}>Filters</button>
+                  <span className="search-icon" aria-hidden="true">🔍</span>
+                  <input
+                    id="product-search"
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search products by name, description or category"
+                    aria-label="Search products"
+                    className="search-input"
+                  />
+                </div>
+                <div className="results-count">Showing {filteredProducts.length} of {allProducts.length} products</div>
+              </div>
+
+              {/* filter chips */}
+              <div className="filter-chips">
+                {selectedCategories.map((c) => (
+                  <button key={`chip-cat-${c}`} className="customer-home-filter-chip" onClick={() => removeChip('category', c)}>{c} ×</button>
+                ))}
+                {selectedBrands.map((b) => (
+                  <button key={`chip-brand-${b}`} className="customer-home-filter-chip" onClick={() => removeChip('brand', b)}>{b} ×</button>
+                ))}
+                {selectedRatings.map((r) => (
+                  <button key={`chip-rating-${r}`} className="customer-home-filter-chip" onClick={() => removeChip('rating', r)}>{r}★ ×</button>
+                ))}
+                {selectedOffers.map((o) => (
+                  <button key={`chip-offer-${o}`} className="customer-home-filter-chip" onClick={() => removeChip('offer', o)}>{o === 'discount' ? 'Discount' : 'Special'} ×</button>
+                ))}
+                {(minPrice !== absoluteMinPrice || maxPrice !== absoluteMaxPrice) && (
+                  <button className="customer-home-filter-chip" onClick={() => removeChip('price')}>₹{minPrice} - ₹{maxPrice} ×</button>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {showSkeletons ? (
+            <div className="product-grid" aria-label="Loading featured products">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <ProductCardSkeleton key={index} />
+              ))}
+            </div>
+          ) : (
+            <ProductList products={filteredProducts} onAddToCart={handleAddToCart} addedProductIds={addedProductIds} error={error} />
+          )}
+        </main>
+      </div>
+
+      {/* mobile filter drawer */}
+      {mobileFiltersVisible && (
+        <div className="mobile-filter-drawer">
+          <div className="mobile-filter-content">
+            <button className="mobile-filter-close" onClick={() => setMobileFiltersVisible(false)}>Close</button>
+            <div className="mobile-filters-inner">
+              {/* reuse sidebar content by rendering simplified controls */}
+              <div className="filter-section">
+                <h4>Categories</h4>
+                {availableCategories.map((cat) => (
+                  <label key={`m-${cat}`} className="customer-home-filter-option">
+                    <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => toggleCategory(cat)} />
+                    <span>{cat}</span>
+                  </label>
+                ))}
+              </div>
+              <div className="filter-section">
+                <h4>Brands</h4>
+                {availableBrands.map((b) => (
+                  <label key={`m-${b}`} className="customer-home-filter-option">
+                    <input type="checkbox" checked={selectedBrands.includes(b)} onChange={() => toggleBrand(b)} />
+                    <span>{b}</span>
+                  </label>
+                ))}
+              </div>
+              <div className="mobile-filter-actions">
+                <button onClick={() => { clearAllFilters(); setMobileFiltersVisible(false); }}>Clear All</button>
+                <button onClick={() => setMobileFiltersVisible(false)}>Apply Filters</button>
+              </div>
             </div>
           </div>
-        </section>
-
-        {showSkeletons ? (
-          <div className="product-grid" aria-label="Loading featured products">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <ProductCardSkeleton key={index} />
-            ))}
-          </div>
-        ) : (
-          <ProductList products={filteredProducts} onAddToCart={handleAddToCart} addedProductIds={addedProductIds} error={error} />
-        )}
-      </div>
+        </div>
+      )}
 
       {profileModalType && (
         <CustomModal

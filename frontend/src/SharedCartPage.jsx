@@ -22,7 +22,7 @@ export default function SharedCartPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteNote, setInviteNote] = useState('');
+  
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState('');
   const [inviteSuccess, setInviteSuccess] = useState('');
@@ -221,7 +221,7 @@ export default function SharedCartPage() {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({ email: inviteEmail.trim(), note: inviteNote.trim() }),
+        body: JSON.stringify({ email: inviteEmail.trim() }),
       });
 
       const body = await res.json().catch(() => ({}));
@@ -231,7 +231,6 @@ export default function SharedCartPage() {
 
       setInviteSuccess('Invite email sent successfully.');
       setInviteEmail('');
-      setInviteNote('');
       setShowInviteModal(false);
       setToastMessage('Invite email sent.');
       setToastType('success');
@@ -241,7 +240,7 @@ export default function SharedCartPage() {
     } finally {
       setInviteLoading(false);
     }
-  }, [inviteEmail, inviteNote, shareId]);
+  }, [inviteEmail, shareId]);
 
   const totalItems = useMemo(() => {
     return (cartData?.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
@@ -252,6 +251,18 @@ export default function SharedCartPage() {
   }, [cartData]);
 
   const handleGoToCart = useCallback(() => navigate('/UserCartPage'), [navigate]);
+
+  const isOwner = useMemo(() => {
+    try {
+      const uname = localStorage.getItem('username');
+      if (!uname || !cartData) return false;
+      const o = cartData.owner || {};
+      // compare common identity fields (username, name, id/userId)
+      return String(uname) === String(o.username) || String(uname) === String(o.name) || String(uname) === String(o.userId) || String(uname) === String(o.id);
+    } catch (err) {
+      return false;
+    }
+  }, [cartData]);
 
   return (
     <CustomerLayout username={localStorage.getItem('username') || 'Guest'}>
@@ -340,14 +351,16 @@ export default function SharedCartPage() {
           )}
         </div>
 
-        <div className="checkout-section shared-cart-sidebar">
-          <h2>Summary</h2>
-          <div className="checkout-summary">
-            <div className="summary-row"><span>Items</span><span>{totalItems}</span></div>
-            <div className="summary-row total"><span>Total</span><span>₹{overallTotal}</span></div>
+        {isOwner && (
+          <div className="checkout-section shared-cart-sidebar">
+            <h2>Summary</h2>
+            <div className="checkout-summary">
+              <div className="summary-row"><span>Items</span><span>{totalItems}</span></div>
+              <div className="summary-row total"><span>Total</span><span>₹{overallTotal}</span></div>
+            </div>
+            <button type="button" className="checkout-button" onClick={handleGoToCart} disabled={actionLoading}>Go to My Cart</button>
           </div>
-          <button type="button" className="checkout-button" onClick={handleGoToCart} disabled={actionLoading}>Go to My Cart</button>
-        </div>
+        )}
       </div>
 
       {showInviteModal && createPortal(
