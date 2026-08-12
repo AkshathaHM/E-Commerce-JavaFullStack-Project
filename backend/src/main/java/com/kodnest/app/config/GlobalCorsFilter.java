@@ -35,8 +35,10 @@ public class GlobalCorsFilter extends OncePerRequestFilter {
             response.setHeader("Vary", "Origin");
             response.setHeader("Access-Control-Allow-Credentials", "true");
             response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-            response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With, Accept, Origin, Cookie");
+            response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With, Accept, Origin, Cookie, x-access-token, x-request-id, request-id, x-rtb-fingerprint-id");
+            response.setHeader("Access-Control-Expose-Headers", "Authorization, Content-Type, x-access-token, x-request-id, request-id, x-rtb-fingerprint-id");
             response.setHeader("Access-Control-Max-Age", "3600");
+            response.setHeader("Permissions-Policy", "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=()");
         }
 
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {

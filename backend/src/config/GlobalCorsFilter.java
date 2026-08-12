@@ -32,8 +32,10 @@ public class GlobalCorsFilter implements Filter {
         }
 
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-        response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With, Accept, Origin, Cookie");
-        response.setHeader("Access-Control-Expose-Headers", "Authorization, Content-Type");
+        response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With, Accept, Origin, Cookie, x-access-token, x-request-id, request-id, x-rtb-fingerprint-id");
+        response.setHeader("Access-Control-Expose-Headers", "Authorization, Content-Type, x-access-token, x-request-id, request-id, x-rtb-fingerprint-id");
+        // Prevent sensor/request policies from blocking features in some browsers
+        response.setHeader("Permissions-Policy", "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=()");
         response.setHeader("Access-Control-Max-Age", "3600");
 
         // Immediately complete preflight OPTIONS requests with HTTP 200 OK
