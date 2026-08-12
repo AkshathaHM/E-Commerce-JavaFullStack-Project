@@ -437,7 +437,29 @@ export default function SharedCartPage() {
       </div>
 
       {showInviteModal && createPortal(
-        <div className="invite-modal-overlay" role="dialog" aria-modal="true">
+        <div
+          className="invite-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowInviteModal(false); }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            width: '100vw',
+            height: '100vh',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            boxSizing: 'border-box',
+            background: 'rgba(3, 10, 20, 0.72)',
+            visibility: 'visible',
+            opacity: 1,
+            pointerEvents: 'auto',
+            zIndex: 999999,
+            margin: 0
+          }}
+        >
           <div className="invite-modal">
             <div className="invite-modal-header">
               <h2>Invite a friend</h2>
