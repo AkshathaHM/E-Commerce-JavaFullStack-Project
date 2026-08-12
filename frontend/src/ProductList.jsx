@@ -3,7 +3,7 @@ import React, { useContext, useState, useCallback } from 'react';
 import { ThemeContext } from './ThemeContext';
 import './assets/styles.css';
 
-export const ProductList = React.memo(({ products, onAddToCart, addedProductIds, error }) => {
+export const ProductList = React.memo(({ products, onAddToCart, addedProductIds, onViewProduct, error }) => {
   if (error) {
     return (
       <div className="product-empty-state product-empty-state--error">
@@ -34,6 +34,7 @@ export const ProductList = React.memo(({ products, onAddToCart, addedProductIds,
             key={product.product_id || product.id || product.productId}
             product={product}
             onAddToCart={onAddToCart}
+            onViewProduct={onViewProduct}
             addedProductIds={addedProductIds}
           />
         ))}
@@ -44,7 +45,7 @@ export const ProductList = React.memo(({ products, onAddToCart, addedProductIds,
 
 ProductList.displayName = 'ProductList';
 
-const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
+const ProductCard = React.memo(({ product, onAddToCart, onViewProduct, addedProductIds }) => {
   const imageUrl = product.images?.[0] && (product.images[0].startsWith("http") || product.images[0].startsWith("data:image/"))
     ? product.images[0]
     : (product.imageUrl || product.image || "/images/no-image.png");
@@ -93,7 +94,19 @@ const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
   }, [productId, onAddToCart, isAdded]);
 
   return (
-    <div className="product-card">
+    <div
+      className="product-card"
+      role={onViewProduct ? 'button' : undefined}
+      tabIndex={onViewProduct ? 0 : undefined}
+      onClick={() => onViewProduct?.(product)}
+      onKeyDown={(e) => {
+        if (!onViewProduct) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onViewProduct(product);
+        }
+      }}
+    >
       <div className="product-image-wrap">
         <img
           src={imageUrl}

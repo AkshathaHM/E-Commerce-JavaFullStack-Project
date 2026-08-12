@@ -23,14 +23,16 @@ export default function CustomerHomePage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   // New filter state
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedBrands, setSelectedBrands] = useState([]);
   const [selectedRatings, setSelectedRatings] = useState([]); // numbers: 4,3,2,1 meaning >=
   const [selectedOffers, setSelectedOffers] = useState([]); // 'discount','special'
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(0);
   const [absoluteMinPrice, setAbsoluteMinPrice] = useState(0);
   const [absoluteMaxPrice, setAbsoluteMaxPrice] = useState(0);
-  const [filtersOpen, setFiltersOpen] = useState({ categories: true, rating: true, price: true, offers: true });
+  const [filtersOpen, setFiltersOpen] = useState({ price: true, categories: true, brands: true, rating: true, offers: true });
   const [filtersPanelOpen, setFiltersPanelOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(() => initialProducts.length === 0);
   const [error, setError] = useState('');
   const [profileModalType, setProfileModalType] = useState(null);
@@ -102,6 +104,14 @@ export default function CustomerHomePage() {
       setLoading(false);
     }
   }, [getAuthHeaders, selectedCategory]);
+
+  const handleViewProduct = useCallback((product) => {
+    setSelectedProduct(product);
+  }, []);
+
+  const closeProductModal = useCallback(() => {
+    setSelectedProduct(null);
+  }, []);
 
   const fetchCartCount = useCallback(async () => {
     const activeUsername = localStorage.getItem('username') || username || 'Guest';
@@ -179,11 +189,37 @@ export default function CustomerHomePage() {
     return counts;
   }, [allProducts]);
 
+  const brandCounts = useMemo(() => {
+    const counts = new Map();
+    const products = Array.isArray(allProducts) ? allProducts : [];
+    products.forEach((product) => {
+      if (!product || typeof product !== 'object') return;
+      const brands = [];
+      if (product.brand) brands.push(String(product.brand).trim());
+      if (product.brandName) brands.push(String(product.brandName).trim());
+      if (Array.isArray(product.brands)) {
+        product.brands.forEach((brand) => {
+          if (brand) brands.push(String(brand).trim());
+        });
+      }
+      brands.forEach((brand) => {
+        if (!brand) return;
+        counts.set(brand, (counts.get(brand) || 0) + 1);
+      });
+    });
+    return counts;
+  }, [allProducts]);
+
   const staticCategoryOptions = ['Shirts', 'Mobiles', 'Pants', 'Custom'];
   const availableCategories = useMemo(() => {
     const combined = new Set([...staticCategoryOptions, ...Array.from(categoryCounts.keys())]);
     return Array.from(combined).sort((a, b) => a.localeCompare(b));
   }, [categoryCounts]);
+
+  const availableBrands = useMemo(() => {
+    const combined = new Set(Array.from(brandCounts.keys()));
+    return Array.from(combined).sort((a, b) => a.localeCompare(b));
+  }, [brandCounts]);
 
   const filteredProducts = useMemo(() => {
     const normalizedSearch = deferredSearchTerm.trim().toLowerCase();
@@ -211,13 +247,40 @@ export default function CustomerHomePage() {
         product.categoryName,
         product.categoryId,
         product.category_id,
-        Array.isArray(product.categories) ? product.categories.join(' ') : product.categories,
-      ].filter(Boolean).map((value) => String(value).toLowerCase());
+      ]
+        .filter(Boolean)
+        .map((value) => String(value).toLowerCase());
+      if (Array.isArray(product.categories)) {
+        product.categories.forEach((cat) => {
+          if (cat) productCategories.push(String(cat).toLowerCase());
+        });
+      } else if (product.categories) {
+        productCategories.push(String(product.categories).toLowerCase());
+      }
 
       // category filter (OR within group)
       if (selectedCategories.length > 0) {
         const matchCat = selectedCategories.some((c) => productCategories.some((pc) => pc === String(c || '').toLowerCase()));
         if (!matchCat) return false;
+      }
+
+      const productBrands = [
+        product.brand,
+        product.brandName,
+      ]
+        .filter(Boolean)
+        .map((value) => String(value).toLowerCase());
+      if (Array.isArray(product.brands)) {
+        product.brands.forEach((brand) => {
+          if (brand) productBrands.push(String(brand).toLowerCase());
+        });
+      } else if (product.brands) {
+        productBrands.push(String(product.brands).toLowerCase());
+      }
+
+      if (selectedBrands.length > 0) {
+        const matchBrand = selectedBrands.some((b) => productBrands.some((pb) => pb === String(b || '').toLowerCase()));
+        if (!matchBrand) return false;
       }
 
       // rating filter (OR within group but numeric threshold)
@@ -245,7 +308,7 @@ export default function CustomerHomePage() {
 
       return true;
     });
-  }, [allProducts, deferredSearchTerm, selectedCategories, selectedRatings, selectedOffers, minPrice, maxPrice]);
+  }, [allProducts, deferredSearchTerm, selectedCategories, selectedBrands, selectedRatings, selectedOffers, minPrice, maxPrice]);
 
   const handleAddToCart = useCallback(async (product) => {
     if (!product) return false;
@@ -345,6 +408,7 @@ export default function CustomerHomePage() {
 
   const clearAllFilters = useCallback(() => {
     setSelectedCategories([]);
+    setSelectedBrands([]);
     setSelectedRatings([]);
     setSelectedOffers([]);
     setMinPrice(absoluteMinPrice);
@@ -355,6 +419,9 @@ export default function CustomerHomePage() {
   const toggleCategory = useCallback((cat) => {
     setSelectedCategories((prev) => prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]);
   }, []);
+  const toggleBrand = useCallback((brand) => {
+    setSelectedBrands((prev) => prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]);
+  }, []);
   const toggleRating = useCallback((r) => {
     setSelectedRatings((prev) => prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]);
   }, []);
@@ -364,6 +431,7 @@ export default function CustomerHomePage() {
 
   const removeChip = useCallback((type, value) => {
     if (type === 'category') setSelectedCategories((p) => p.filter((x) => x !== value));
+    if (type === 'brand') setSelectedBrands((p) => p.filter((x) => x !== value));
     if (type === 'rating') setSelectedRatings((p) => p.filter((x) => x !== value));
     if (type === 'offer') setSelectedOffers((p) => p.filter((x) => x !== value));
     if (type === 'price') {
@@ -398,6 +466,42 @@ export default function CustomerHomePage() {
           </div>
 
           <div className="customer-home-filter-section">
+            <button type="button" className="filter-section-toggle" onClick={() => setFiltersOpen((s) => ({ ...s, price: !s.price }))}>Price</button>
+            {filtersOpen.price && (
+              <div className="filter-options customer-home-price-filter">
+                <div className="price-range-values">
+                  <span>₹{minPrice}</span>
+                  <span>₹{maxPrice}</span>
+                </div>
+                <div className="price-slider">
+                  <input
+                    type="range"
+                    min={absoluteMinPrice}
+                    max={absoluteMaxPrice}
+                    step="0.01"
+                    value={minPrice}
+                    onChange={(e) => {
+                      const v = Number(e.target.value);
+                      setMinPrice(v <= maxPrice ? v : maxPrice);
+                    }}
+                  />
+                  <input
+                    type="range"
+                    min={absoluteMinPrice}
+                    max={absoluteMaxPrice}
+                    step="0.01"
+                    value={maxPrice}
+                    onChange={(e) => {
+                      const v = Number(e.target.value);
+                      setMaxPrice(v >= minPrice ? v : minPrice);
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="customer-home-filter-section">
             <button type="button" className="filter-section-toggle" onClick={() => setFiltersOpen((s) => ({ ...s, categories: !s.categories }))}>Categories</button>
             {filtersOpen.categories && (
               <div className="filter-options">
@@ -410,6 +514,25 @@ export default function CustomerHomePage() {
                       aria-label={`Filter by ${cat}`}
                     />
                     <span>{cat}{categoryCounts.get(cat) ? ` (${categoryCounts.get(cat)})` : ''}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="customer-home-filter-section">
+            <button type="button" className="filter-section-toggle" onClick={() => setFiltersOpen((s) => ({ ...s, brands: !s.brands }))}>Brands</button>
+            {filtersOpen.brands && (
+              <div className="filter-options">
+                {availableBrands.map((brand) => (
+                  <label key={brand} className="customer-home-filter-option">
+                    <input
+                      type="checkbox"
+                      checked={selectedBrands.includes(brand)}
+                      onChange={() => toggleBrand(brand)}
+                      aria-label={`Filter by ${brand}`}
+                    />
+                    <span>{brand}{brandCounts.get(brand) ? ` (${brandCounts.get(brand)})` : ''}</span>
                   </label>
                 ))}
               </div>
@@ -445,30 +568,6 @@ export default function CustomerHomePage() {
               </div>
             )}
           </div>
-
-          <div className="customer-home-filter-section">
-            <button type="button" className="filter-section-toggle" onClick={() => setFiltersOpen((s) => ({ ...s, price: !s.price }))}>Price</button>
-            {filtersOpen.price && (
-              <div className="filter-options customer-home-price-filter">
-                <div className="price-range-values">
-                  <span>₹{minPrice}</span>
-                  <span>₹{maxPrice}</span>
-                </div>
-                <div className="price-slider">
-                  <input type="range" min={absoluteMinPrice} max={absoluteMaxPrice} value={minPrice} onChange={(e) => {
-                    const v = Number(e.target.value);
-                    if (v <= maxPrice) setMinPrice(v);
-                    else setMinPrice(maxPrice);
-                  }} />
-                  <input type="range" min={absoluteMinPrice} max={absoluteMaxPrice} value={maxPrice} onChange={(e) => {
-                    const v = Number(e.target.value);
-                    if (v >= minPrice) setMaxPrice(v);
-                    else setMaxPrice(minPrice);
-                  }} />
-                </div>
-              </div>
-            )}
-          </div>
         </aside>
 
         {/* Results area */}
@@ -497,11 +596,17 @@ export default function CustomerHomePage() {
                     className="search-input"
                   />
                 </div>
+                <div className="results-count">
+                  <span>Showing {filteredProducts.length} of {Array.isArray(allProducts) ? allProducts.length : 0} products</span>
+                </div>
 
               {/* filter chips */}
               <div className="filter-chips">
                 {selectedCategories.map((c) => (
                   <button key={`chip-cat-${c}`} className="customer-home-filter-chip" onClick={() => removeChip('category', c)}>{c} ×</button>
+                ))}
+                {selectedBrands.map((b) => (
+                  <button key={`chip-brand-${b}`} className="customer-home-filter-chip" onClick={() => removeChip('brand', b)}>{b} ×</button>
                 ))}
                 {selectedRatings.map((r) => (
                   <button key={`chip-rating-${r}`} className="customer-home-filter-chip" onClick={() => removeChip('rating', r)}>{r}★ ×</button>
@@ -524,11 +629,71 @@ export default function CustomerHomePage() {
               ))}
             </div>
           ) : (
-            <ProductList products={filteredProducts} onAddToCart={handleAddToCart} addedProductIds={addedProductIds} error={error} />
+            <ProductList products={filteredProducts} onAddToCart={handleAddToCart} onViewProduct={handleViewProduct} addedProductIds={addedProductIds} error={error} />
           )}
         </main>
       </div>
 
+      {selectedProduct && (
+        <div className="product-detail-modal-overlay" onClick={closeProductModal}>
+          <div className="product-detail-modal" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="modal-close-btn" onClick={closeProductModal} aria-label="Close product details">×</button>
+            <div className="product-detail-content">
+              <div className="product-detail-image">
+                <img
+                  src={selectedProduct.images?.[0] || selectedProduct.imageUrl || selectedProduct.image || '/images/no-image.png'}
+                  alt={selectedProduct.name || 'Product image'}
+                  loading="lazy"
+                />
+              </div>
+              <div className="product-detail-info">
+                <div className="product-detail-header">
+                  <h2>{selectedProduct.name || selectedProduct.title || 'Product Details'}</h2>
+                  <div className="product-rating-inline">
+                    <span className="rating-value">
+                      {(() => {
+                        const rating = Number(selectedProduct.rating ?? selectedProduct.avgRating ?? selectedProduct.averageRating ?? selectedProduct.ratings ?? 0) || 0;
+                        return rating > 0 ? rating.toFixed(1) : '–';
+                      })()}
+                    </span>
+                    <span className="rating-stars">★</span>
+                  </div>
+                </div>
+                <p className="product-description product-detail-description">{selectedProduct.description || selectedProduct.summary || 'No description available.'}</p>
+                <div className="product-detail-meta">
+                  <span><strong>Brand:</strong> {selectedProduct.brand || selectedProduct.brandName || 'Unknown'}</span>
+                  <span><strong>Category:</strong> {selectedProduct.category || selectedProduct.categoryName || 'Unknown'}</span>
+                </div>
+                <div className="product-detail-price">
+                  <div className="current-price">₹{selectedProduct.price ?? selectedProduct.amount ?? '0'}</div>
+                  {(() => {
+                    const mrp = selectedProduct.mrp ?? selectedProduct.original_price ?? selectedProduct.mrpPrice ?? selectedProduct.mrp_price;
+                    if (mrp) {
+                      return <div className="original-price">₹{mrp}</div>;
+                    }
+                    return null;
+                  })()}
+                </div>
+                {selectedProduct.stock !== undefined && selectedProduct.stock !== null ? (
+                  <div className="product-detail-availability">
+                    {Number(selectedProduct.stock) > 0 ? `In stock: ${selectedProduct.stock}` : 'Out of stock'}
+                  </div>
+                ) : null}
+                <button
+                  type="button"
+                  className="add-to-cart-btn product-detail-add-to-cart"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToCart(selectedProduct);
+                  }}
+                >
+                  Add to Cart
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {profileModalType && (
         <CustomModal

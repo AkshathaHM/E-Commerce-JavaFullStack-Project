@@ -3874,11 +3874,22 @@ button[type="submit"]:focus-visible {
   border-color: rgba(59, 130, 246, 0.18);
 }
 
+.product-card:focus-visible {
+  outline: 3px solid rgba(56, 189, 246, 0.35);
+  outline-offset: 5px;
+}
+
+.product-card:hover .product-image-wrap {
+  transform: translateY(-2px);
+  box-shadow: 0 26px 70px rgba(56, 189, 246, 0.12);
+}
+
 .product-image-wrap {
   overflow: hidden;
   border-radius: 22px;
   min-height: 200px;
   background: var(--surface-alt);
+  transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .product-empty-state {
@@ -5642,6 +5653,192 @@ button[type="submit"]:focus-visible {
   place-items: center;
   z-index: 1400;
   padding: 20px;
+}
+
+.product-detail-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 12, 28, 0.86);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 1450;
+  animation: fadeInOverlay 220ms ease;
+}
+
+.product-detail-modal {
+  width: min(100%, 920px);
+  max-height: 92vh;
+  background: linear-gradient(180deg, rgba(8, 18, 40, 0.98), rgba(9, 24, 52, 0.99));
+  border: 1px solid rgba(78, 164, 255, 0.18);
+  box-shadow: 0 32px 80px rgba(4, 20, 40, 0.55);
+  border-radius: 28px;
+  overflow: hidden;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 28px;
+  padding: 30px;
+  animation: slideUpModal 240ms ease;
+}
+
+.product-detail-modal button.modal-close-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(10, 26, 52, 0.88);
+  color: #d8f7ff;
+  font-size: 24px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.product-detail-content {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 28px;
+  width: 100%;
+}
+
+.product-detail-image {
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 18px;
+  min-height: 360px;
+}
+
+.product-detail-image img {
+  width: 100%;
+  height: auto;
+  max-height: 74vh;
+  object-fit: contain;
+  border-radius: 20px;
+}
+
+.product-detail-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.product-detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.product-detail-header h2 {
+  margin: 0;
+  font-size: clamp(1.75rem, 2vw, 2.3rem);
+  letter-spacing: -0.03em;
+}
+
+.product-rating-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #72e4ff;
+  font-size: 0.96rem;
+  font-weight: 600;
+}
+
+.product-detail-description {
+  margin: 0;
+  color: rgba(241, 248, 255, 0.86);
+  line-height: 1.8;
+}
+
+.product-detail-meta {
+  display: grid;
+  gap: 10px;
+  color: rgba(241, 248, 255, 0.78);
+  font-size: 0.96rem;
+}
+
+.product-detail-meta span {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.product-detail-price {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.product-detail-price .current-price {
+  font-size: clamp(1.8rem, 2.5vw, 2.5rem);
+  font-weight: 800;
+  color: #e9fcff;
+}
+
+.product-detail-price .original-price {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.62);
+  text-decoration: line-through;
+}
+
+.product-detail-availability {
+  font-weight: 600;
+  color: #c8f1ff;
+}
+
+.product-detail-add-to-cart {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 10px;
+}
+
+@media (max-width: 900px) {
+  .product-detail-modal {
+    grid-template-columns: 1fr;
+    padding: 24px;
+  }
+
+  .product-detail-content {
+    gap: 18px;
+  }
+
+  .product-detail-image {
+    min-height: 260px;
+  }
+}
+
+@media (max-width: 620px) {
+  .product-detail-modal {
+    border-radius: 22px;
+    padding: 18px;
+  }
+
+  .product-detail-header h2 {
+    font-size: 1.55rem;
+  }
+
+  .product-detail-meta {
+    font-size: 0.95rem;
+  }
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(18px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Global link styling: remove underline and apply project theme color */
