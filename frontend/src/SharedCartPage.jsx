@@ -82,20 +82,13 @@ export default function SharedCartPage() {
     fetchSharedCart();
   }, [fetchSharedCart, shareId]);
 
-  useEffect(() => {
-    // temporary debug log to trace invite modal state changes during fix
-    // TODO: remove after verification
-    // eslint-disable-next-line no-console
-    console.log('SharedCartPage: showInviteModal ->', showInviteModal);
-  }, [showInviteModal]);
+  
 
   useEffect(() => {
     // dev helper: if URL includes ?debugInvite=true, open the invite modal on load
     try {
       const params = new URLSearchParams(window.location.search);
       if (params.get('debugInvite') === 'true') {
-        // eslint-disable-next-line no-console
-        console.log('SharedCartPage: debugInvite param detected — opening invite modal');
         setShowInviteModal(true);
       }
     } catch (err) {
@@ -103,88 +96,9 @@ export default function SharedCartPage() {
     }
   }, []);
 
-  useEffect(() => {
-    if (showInviteModal) {
-      const modal = document.querySelector('.invite-modal-overlay');
-      if (modal) {
-        try {
-          const style = window.getComputedStyle(modal);
-          const rect = modal.getBoundingClientRect();
+  
 
-          // eslint-disable-next-line no-console
-          console.log('===== INVITE MODAL DEBUG =====');
-          // eslint-disable-next-line no-console
-          console.log('display:', style.display);
-          // eslint-disable-next-line no-console
-          console.log('visibility:', style.visibility);
-          // eslint-disable-next-line no-console
-          console.log('opacity:', style.opacity);
-          // eslint-disable-next-line no-console
-          console.log('position:', style.position);
-          // eslint-disable-next-line no-console
-          console.log('zIndex:', style.zIndex);
-          // eslint-disable-next-line no-console
-          console.log('pointerEvents:', style.pointerEvents);
-          // eslint-disable-next-line no-console
-          console.log('top:', style.top);
-          // eslint-disable-next-line no-console
-          console.log('left:', style.left);
-          // eslint-disable-next-line no-console
-          console.log('right:', style.right);
-          // eslint-disable-next-line no-console
-          console.log('bottom:', style.bottom);
-          // eslint-disable-next-line no-console
-          console.log('width:', style.width);
-          // eslint-disable-next-line no-console
-          console.log('height:', style.height);
-          // eslint-disable-next-line no-console
-          console.log('transform:', style.transform);
-          // eslint-disable-next-line no-console
-          console.log('overflow:', style.overflow);
-
-          // eslint-disable-next-line no-console
-          console.log('RECT:', {
-            x: rect.x,
-            y: rect.y,
-            top: rect.top,
-            left: rect.left,
-            right: rect.right,
-            bottom: rect.bottom,
-            width: rect.width,
-            height: rect.height,
-          });
-
-          // eslint-disable-next-line no-console
-          console.log('ELEMENT:', modal);
-
-          // eslint-disable-next-line no-console
-          console.log('ELEMENT AT CENTER:', document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2));
-        } catch (err) {
-          // ignore
-        }
-      }
-    }
-  }, [showInviteModal]);
-
-  useEffect(() => {
-    // capture all clicks to help identify if the Invite button receives DOM events
-    const handler = (e) => {
-      // eslint-disable-next-line no-console
-      console.log('SharedCartPage document click:', { target: e.target, path: e.composedPath ? e.composedPath().map(n => n && n.nodeName) : null });
-      try {
-        const el = e.target;
-        const btn = el && (el.id === 'invite-by-email-btn' || (el.closest && el.closest('#invite-by-email-btn')));
-        if (btn) {
-          // eslint-disable-next-line no-console
-          console.log('INVITE-BUTTON CLICKED (captured)');
-        }
-      } catch (err) {
-        // ignore
-      }
-    };
-    document.addEventListener('click', handler, true);
-    return () => document.removeEventListener('click', handler, true);
-  }, []);
+  
 
   const getItemId = useCallback((item) => {
     const id = item?.product_id ?? item?.productId ?? item?.id ?? null;
@@ -378,7 +292,7 @@ export default function SharedCartPage() {
                     </button>
                   </div>
                   <div className="share-link-actions">
-                    <button id="invite-by-email-btn" type="button" className="secondary-button" onClick={() => { console.log('Invite by email clicked'); setShowInviteModal(true); }}>
+                    <button id="invite-by-email-btn" type="button" className="secondary-button" onClick={() => setShowInviteModal(true)}>
                       Invite by email
                     </button>
                   </div>
@@ -474,8 +388,8 @@ export default function SharedCartPage() {
             </div>
             <p className="invite-modal-description">Send an invite email so your friend can log in and join this shared cart.</p>
             <form className="invite-form" onSubmit={(event) => { event.preventDefault(); handleSendInvite(); }}>
-              <div className="invite-field">
-                <label htmlFor="invite-email">Friend’s email</label>
+              <div className="invite-form-group">
+                <label htmlFor="invite-email" className="invite-form-label">Friend’s email</label>
                 <input
                   id="invite-email"
                   type="email"
@@ -484,8 +398,9 @@ export default function SharedCartPage() {
                   placeholder="friend@example.com"
                 />
               </div>
-              <div className="invite-field">
-                <label htmlFor="invite-note">
+
+              <div className="invite-form-group">
+                <label htmlFor="invite-note" className="invite-form-label">
                   Add a personal note <span>(optional)</span>
                 </label>
                 <textarea
@@ -496,13 +411,15 @@ export default function SharedCartPage() {
                   placeholder="Write a quick message to your friend"
                 />
               </div>
+
               {inviteError && <div className="modal-error">{inviteError}</div>}
               {inviteSuccess && <div className="modal-success">{inviteSuccess}</div>}
-              <div className="invite-actions">
-                <button type="button" className="secondary-button" onClick={() => setShowInviteModal(false)} disabled={inviteLoading}>
+
+              <div className="invite-modal-actions">
+                <button type="button" className="secondary-button cancel-button" onClick={() => setShowInviteModal(false)} disabled={inviteLoading}>
                   Cancel
                 </button>
-                <button type="submit" className="primary-button" disabled={inviteLoading}>
+                <button type="submit" className="primary-button send-invite-button" disabled={inviteLoading}>
                   {inviteLoading ? 'Sending…' : 'Send invite'}
                 </button>
               </div>
