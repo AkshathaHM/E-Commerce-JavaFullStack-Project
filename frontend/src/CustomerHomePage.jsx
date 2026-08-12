@@ -155,25 +155,70 @@ export default function CustomerHomePage() {
   }, [fetchCartCount]);
 
   // derive dynamic filter options from products
-  const availableCategories = useMemo(() => {
-    const setC = new Set();
-    (allProducts || []).forEach((p) => { if (p.category) setC.add(String(p.category)); });
-    return Array.from(setC).sort();
+  const categoryCounts = useMemo(() => {
+    const counts = new Map();
+    (allProducts || []).forEach((product) => {
+      const categories = [];
+      if (product.category) categories.push(String(product.category).trim());
+      if (product.categoryName) categories.push(String(product.categoryName).trim());
+      if (product.categoryId) categories.push(String(product.categoryId).trim());
+      if (product.category_id) categories.push(String(product.category_id).trim());
+      if (Array.isArray(product.categories)) {
+        product.categories.forEach((cat) => {
+          if (cat) categories.push(String(cat).trim());
+        });
+      } else if (typeof product.categories === 'string') {
+        categories.push(String(product.categories).trim());
+      }
+      categories.forEach((category) => {
+        if (!category) return;
+        counts.set(category, (counts.get(category) || 0) + 1);
+      });
+    });
+    return counts;
   }, [allProducts]);
 
-  const availableBrands = useMemo(() => {
-    const setB = new Set();
-    (allProducts || []).forEach((p) => { if (p.brand) setB.add(String(p.brand)); });
-    return Array.from(setB).sort();
+  const availableCategories = useMemo(() => Array.from(categoryCounts.keys()).sort((a, b) => a.localeCompare(b)), [categoryCounts]);
+
+  const brandCounts = useMemo(() => {
+    const counts = new Map();
+    (allProducts || []).forEach((product) => {
+      const brands = [];
+      if (product.brand) brands.push(String(product.brand).trim());
+      if (product.brandName) brands.push(String(product.brandName).trim());
+      if (product.manufacturer) brands.push(String(product.manufacturer).trim());
+      if (product.brand_id) brands.push(String(product.brand_id).trim());
+      if (Array.isArray(product.brands)) {
+        product.brands.forEach((brand) => {
+          if (brand) brands.push(String(brand).trim());
+        });
+      }
+      brands.forEach((brand) => {
+        if (!brand) return;
+        counts.set(brand, (counts.get(brand) || 0) + 1);
+      });
+    });
+    return counts;
   }, [allProducts]);
+
+  const availableBrands = useMemo(() => Array.from(brandCounts.keys()).sort((a, b) => a.localeCompare(b)), [brandCounts]);
 
   const filteredProducts = useMemo(() => {
     const normalizedSearch = deferredSearchTerm.trim().toLowerCase();
     const products = Array.isArray(allProducts) ? allProducts : [];
 
     return products.filter((product) => {
-      const searchableText = [product.name, product.description, product.category, product.brand]
-        .filter(Boolean).join(' ').toLowerCase();
+      const searchableText = [
+        product.name,
+        product.description,
+        product.category,
+        product.brand,
+        product.categoryName,
+        product.brandName,
+        product.manufacturer,
+        Array.isArray(product.categories) ? product.categories.join(' ') : product.categories,
+        Array.isArray(product.brands) ? product.brands.join(' ') : product.brands,
+      ].filter(Boolean).join(' ').toLowerCase();
 
       // search
       if (normalizedSearch && !searchableText.includes(normalizedSearch)) return false;
@@ -378,8 +423,13 @@ export default function CustomerHomePage() {
               <div className="filter-options">
                 {availableCategories.map((cat) => (
                   <label key={cat} className="customer-home-filter-option">
-                    <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => toggleCategory(cat)} />
-                    <span>{cat}</span>
+                    <input
+                      type="checkbox"
+                      checked={selectedCategories.includes(cat)}
+                      onChange={() => toggleCategory(cat)}
+                      aria-label={`Filter by ${cat}`}
+                    />
+                    <span>{cat}{categoryCounts.get(cat) ? ` (${categoryCounts.get(cat)})` : ''}</span>
                   </label>
                 ))}
               </div>
@@ -392,8 +442,13 @@ export default function CustomerHomePage() {
               <div className="filter-options">
                 {availableBrands.map((b) => (
                   <label key={b} className="customer-home-filter-option">
-                    <input type="checkbox" checked={selectedBrands.includes(b)} onChange={() => toggleBrand(b)} />
-                    <span>{b}</span>
+                    <input
+                      type="checkbox"
+                      checked={selectedBrands.includes(b)}
+                      onChange={() => toggleBrand(b)}
+                      aria-label={`Filter by ${b}`}
+                    />
+                    <span>{b}{brandCounts.get(b) ? ` (${brandCounts.get(b)})` : ''}</span>
                   </label>
                 ))}
               </div>

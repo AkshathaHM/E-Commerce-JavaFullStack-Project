@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { AdminHeader } from "./AdminHeader";
+import { AdminLayout } from "./AdminLayout";
 import "./assets/styles.css";
 import CustomModal from "./CustomModal";
 import { clearAuthSession, getAuthHeaders } from "./auth";
@@ -611,9 +611,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="admin-dashboard">
-      <AdminHeader username={adminUsername || "Admin"} />
-
+    <AdminLayout username={adminUsername || "Admin"}>
       <main className="dashboard-content">
         <div className="cards-grid">
           {cardData.map((card, index) => {
@@ -695,7 +693,7 @@ const AdminDashboard = () => {
           busyAction={busyAction}
         />
       )}
-    </div>
+    </AdminLayout>
   );
 };
 

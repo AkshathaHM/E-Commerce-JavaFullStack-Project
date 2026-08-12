@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import AdminProductCard from './components/AdminProductCard';
 import { useNavigate, useLocation } from "react-router-dom";
-import { AdminHeader } from "./AdminHeader";
+import { AdminLayout } from "./AdminLayout";
 import "./assets/styles.css";
 import { cachedFetch } from "./utils/apiClient";
 import { getCache, setCache } from "./utils/cache";
@@ -331,9 +331,7 @@ const AdminProductsPage = () => {
     });
 
   return (
-    <div className="admin-products-page">
-      <AdminHeader username={localStorage.getItem('username') || 'Admin'} />
-
+    <AdminLayout username={localStorage.getItem('username') || 'Admin'}>
       <main className="dashboard-content">
         <div className="manage-products-shell">
           <Toast show={toast.show} message={toast.message} type={toast.type} duration={2800} onClose={() => setToast({ show: false, message: '', type: 'success' })} />
@@ -516,7 +514,7 @@ const AdminProductsPage = () => {
           )}
         </div>
       </main>
-    </div>
+    </AdminLayout>
   );
 };
 
