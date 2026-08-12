@@ -3,7 +3,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import AppRoutes from './Routes';
 import './assets/styles.css';
 import { ThemeProvider } from './ThemeContext';
-import { clearAuthSession, isAuthenticated, isSessionExpired } from './auth';
+import { clearAuthSession, getAuthHeaders, isAuthenticated, isSessionExpired } from './auth';
 import ErrorBoundary from './ErrorBoundary';
 import { cachedFetch } from './utils/apiClient';
 import { getCache, setCache } from './utils/cache';
@@ -27,7 +27,7 @@ function AppWrapper() {
       const data = await cachedFetch(
         'profile_me',
         `${import.meta.env.VITE_API_URL}/api/auth/me`,
-        { credentials: 'include', headers: { 'Content-Type': 'application/json' } },
+        { credentials: 'include', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() } },
         60000,
       );
       if (data) {
@@ -61,7 +61,7 @@ function AppWrapper() {
       const data = await cachedFetch(
         'profile_me',
         `${import.meta.env.VITE_API_URL}/api/auth/me`,
-        { credentials: 'include', headers: { 'Content-Type': 'application/json' } },
+        { credentials: 'include', headers: { 'Content-Type': 'application/json', ...getAuthHeaders() } },
         30000,
       );
       if (data) {

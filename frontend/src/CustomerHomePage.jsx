@@ -596,9 +596,6 @@ export default function CustomerHomePage() {
                     className="search-input"
                   />
                 </div>
-                <div className="results-count">
-                  <span>Showing {filteredProducts.length} of {Array.isArray(allProducts) ? allProducts.length : 0} products</span>
-                </div>
 
               {/* filter chips */}
               <div className="filter-chips">
