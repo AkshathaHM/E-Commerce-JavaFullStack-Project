@@ -378,9 +378,6 @@ export default function SharedCartPage() {
                 <button type="submit" className="primary-button" disabled={inviteLoading}>
                   {inviteLoading ? 'Sending…' : 'Send invite'}
                 </button>
-                <button type="button" className="secondary-button" onClick={() => setShowInviteModal(false)} disabled={inviteLoading}>
-                  Cancel
-                </button>
               </div>
             </form>
           </div>

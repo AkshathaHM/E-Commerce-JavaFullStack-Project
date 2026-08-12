@@ -110,10 +110,11 @@ const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
         <div className="product-card-body">
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between' }}>
             <h3 className="product-name" style={{ margin: 0 }}>{product.name}</h3>
-            {/* rating display */}
+            {/* rating display with safe fallback */}
             {(() => {
               const val = product.rating ?? product.avgRating ?? product.averageRating ?? product.ratingAverage ?? product.ratings ?? null;
-              if (val !== null && val !== undefined && val !== '') {
+              const hasRating = val !== null && val !== undefined && val !== '';
+              if (hasRating) {
                 const num = Number(val) || 0;
                 return (
                   <div className="product-rating" aria-label={`Rated ${num} out of 5`}>
@@ -124,12 +125,39 @@ const ProductCard = React.memo(({ product, onAddToCart, addedProductIds }) => {
                   </div>
                 );
               }
-              return null;
+              return (
+                <div className="product-rating" aria-hidden>
+                  <span className="rating-number">New</span>
+                </div>
+              );
             })()}
           </div>
           <p className="product-description">{product.description}</p>
           <div className="product-card-footer">
-            <p className="product-price">₹{product.price}</p>
+            <div>
+              <div className="product-price">
+                <span className="current-price">₹{product.price ?? product.amount ?? '0'}</span>
+                {(() => {
+                  const mrp = product.mrp ?? product.original_price ?? product.mrpPrice ?? product.mrp_price;
+                  if (mrp) {
+                    const priceNum = Number(product.price ?? product.amount ?? 0) || 0;
+                    const mrpNum = Number(mrp) || 0;
+                    const discount = mrpNum > 0 ? Math.round(((mrpNum - priceNum) / mrpNum) * 100) : 0;
+                    return (
+                      <>
+                        <span className="mrp">₹{mrp}</span>
+                        {discount > 0 && <span className="discount">{discount}% off</span>}
+                      </>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+              {product.offer || product.offerText || product.specialOffer ? (
+                <div className="product-offer">{product.offer || product.offerText || product.specialOffer}</div>
+              ) : null}
+            </div>
+
             <button
               type="button"
               className={`add-to-cart-btn ${(isAdded || active || optimistic) ? 'add-to-cart-btn--active' : ''}`}
