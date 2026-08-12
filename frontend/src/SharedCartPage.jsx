@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CustomerLayout } from './CustomerLayout';
 import { Toast } from './Toast';
@@ -380,7 +381,7 @@ export default function SharedCartPage() {
         </div>
       </div>
 
-      {showInviteModal && (
+      {showInviteModal && createPortal(
         <div className="invite-modal-overlay" role="dialog" aria-modal="true">
           <div className="invite-modal">
             <div className="invite-modal-header">
@@ -430,7 +431,8 @@ export default function SharedCartPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </CustomerLayout>
   );
