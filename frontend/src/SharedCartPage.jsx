@@ -105,29 +105,63 @@ export default function SharedCartPage() {
 
   useEffect(() => {
     if (showInviteModal) {
-      const el = document.querySelector('.invite-modal-overlay');
-      // eslint-disable-next-line no-console
-      console.log('SharedCartPage: invite modal DOM present?', !!el, el);
-      try {
-        const cs = el && window.getComputedStyle && window.getComputedStyle(el);
-        // eslint-disable-next-line no-console
-        console.log('Invite modal computed style:', cs ? {
-          display: cs.display,
-          visibility: cs.visibility,
-          opacity: cs.opacity,
-          zIndex: cs.zIndex,
-          position: cs.position,
-          top: cs.top,
-          left: cs.left,
-          width: cs.width,
-          height: cs.height,
-          pointerEvents: cs.pointerEvents,
-          transform: cs.transform
-        } : null);
-        // eslint-disable-next-line no-console
-        console.log('Invite modal bounding rect:', el && el.getBoundingClientRect ? el.getBoundingClientRect() : null);
-      } catch (err) {
-        // ignore
+      const modal = document.querySelector('.invite-modal-overlay');
+      if (modal) {
+        try {
+          const style = window.getComputedStyle(modal);
+          const rect = modal.getBoundingClientRect();
+
+          // eslint-disable-next-line no-console
+          console.log('===== INVITE MODAL DEBUG =====');
+          // eslint-disable-next-line no-console
+          console.log('display:', style.display);
+          // eslint-disable-next-line no-console
+          console.log('visibility:', style.visibility);
+          // eslint-disable-next-line no-console
+          console.log('opacity:', style.opacity);
+          // eslint-disable-next-line no-console
+          console.log('position:', style.position);
+          // eslint-disable-next-line no-console
+          console.log('zIndex:', style.zIndex);
+          // eslint-disable-next-line no-console
+          console.log('pointerEvents:', style.pointerEvents);
+          // eslint-disable-next-line no-console
+          console.log('top:', style.top);
+          // eslint-disable-next-line no-console
+          console.log('left:', style.left);
+          // eslint-disable-next-line no-console
+          console.log('right:', style.right);
+          // eslint-disable-next-line no-console
+          console.log('bottom:', style.bottom);
+          // eslint-disable-next-line no-console
+          console.log('width:', style.width);
+          // eslint-disable-next-line no-console
+          console.log('height:', style.height);
+          // eslint-disable-next-line no-console
+          console.log('transform:', style.transform);
+          // eslint-disable-next-line no-console
+          console.log('overflow:', style.overflow);
+
+          // eslint-disable-next-line no-console
+          console.log('RECT:', {
+            x: rect.x,
+            y: rect.y,
+            top: rect.top,
+            left: rect.left,
+            right: rect.right,
+            bottom: rect.bottom,
+            width: rect.width,
+            height: rect.height,
+          });
+
+          // eslint-disable-next-line no-console
+          console.log('ELEMENT:', modal);
+
+          // eslint-disable-next-line no-console
+          console.log('ELEMENT AT CENTER:', document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2));
+        } catch (err) {
+          // ignore
+        }
       }
     }
   }, [showInviteModal]);
