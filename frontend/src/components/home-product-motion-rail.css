@@ -12,7 +12,7 @@
   gap: 32px;
   padding-left: 32px;
   padding-right: 32px;
-  animation: homeProductMarquee 50s linear infinite;
+  animation: homeProductMarquee 55s linear infinite;
   will-change: transform;
 }
 
@@ -26,12 +26,20 @@
   flex: 0 0 280px;
   border-radius: 24px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.16);
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.14);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 8px;
+  box-sizing: border-box;
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.home-product-motion-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
 }
 
 .home-product-motion-image {
@@ -39,6 +47,7 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: 18px;
 }
 
 @keyframes homeProductMarquee {
