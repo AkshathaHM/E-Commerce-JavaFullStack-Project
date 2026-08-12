@@ -363,7 +363,7 @@ export default function SharedCartPage() {
             </div>
             {inviteError && <div className="modal-error">{inviteError}</div>}
             {inviteSuccess && <div className="modal-success">{inviteSuccess}</div>}
-            <div className="modal-actions">
+            <div className="invite-actions">
               <button type="button" className="primary-button" onClick={handleSendInvite} disabled={inviteLoading}>
                 {inviteLoading ? 'Sending…' : 'Send invite'}
               </button>

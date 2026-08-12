@@ -950,13 +950,10 @@ button[type="submit"]:focus-visible {
 }
 
 .shared-cart-invite-modal label {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.35rem;
+  display: block;
+  margin: 0 0 8px;
   font-weight: 700;
   color: var(--text-muted);
-  margin: 0 0 8px;
 }
 
 .shared-cart-invite-modal .optional-label {
@@ -968,8 +965,10 @@ button[type="submit"]:focus-visible {
 .shared-cart-invite-modal .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  width: 100%;
+  gap: 8px;
   margin-bottom: 18px;
+  box-sizing: border-box;
 }
 
 .shared-cart-invite-modal input[type="email"],
@@ -985,9 +984,10 @@ button[type="submit"]:focus-visible {
   box-sizing: border-box;
 }
 
+
 .shared-cart-invite-modal textarea { min-height: 120px; resize: vertical; }
 
-.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+.invite-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
 
 .share-link-block { margin-bottom: 16px; }
 .share-link-row { display: flex; gap: 8px; align-items: center; }
@@ -996,7 +996,8 @@ button[type="submit"]:focus-visible {
 
 @media (max-width: 640px) {
   .shared-cart-invite-modal { width: 96vw; padding: 16px; }
-  .modal-actions { flex-direction: column-reverse; align-items: stretch; }
+  .invite-actions { flex-direction: column-reverse; align-items: stretch; }
+  .invite-actions button { width: 100%; }
 }
 
 [data-theme='dark'] .shared-cart-invite-modal { background: linear-gradient(180deg, rgba(10,14,24,0.72), rgba(8,12,20,0.72)); border-color: rgba(255,255,255,0.04); }
@@ -1050,7 +1051,7 @@ button[type="submit"]:focus-visible {
   margin: 0 !important;
 }
 
-.shared-cart-invite-modal .modal-actions {
+.invite-actions {
   display: flex !important;
   justify-content: flex-end !important;
   gap: 12px !important;
