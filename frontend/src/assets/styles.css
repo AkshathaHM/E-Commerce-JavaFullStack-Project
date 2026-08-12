@@ -1824,8 +1824,8 @@ button[type="submit"]:focus-visible {
   transform: none !important;
   opacity: 1 !important;
   border: none !important;
-  color: inherit !important;
-  text-decoration: underline !important;
+  color: var(--brand) !important;
+  text-decoration: none !important;
 }
 
 .form-link:hover,
@@ -1851,6 +1851,8 @@ button[type="submit"]:focus-visible {
   box-shadow: none !important;
   transform: none !important;
   opacity: 1 !important;
+  color: color-mix(in srgb, var(--brand) 85%, #000 15%) !important;
+  text-decoration: none !important;
 }
 
 /* Preserve accessible focus ring for keyboard users */
@@ -1870,6 +1872,7 @@ button[type="submit"]:focus-visible {
   outline-offset: 3px;
   background: transparent !important;
   box-shadow: none !important;
+  text-decoration: none !important;
 }
 
 .auth-page__container {
@@ -5307,6 +5310,22 @@ button[type="submit"]:focus-visible {
   padding: 20px;
 }
 
+/* Global link styling: remove underline and apply project theme color */
+a, a:link, a:visited {
+  color: var(--brand) !important;
+  text-decoration: none !important;
+}
+
+a:hover, a:active {
+  color: color-mix(in srgb, var(--brand) 85%, #000 15%) !important;
+  text-decoration: none !important;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
 .modal-content {
   position: relative;
   width: min(95vw, 860px);
@@ -5316,6 +5335,172 @@ button[type="submit"]:focus-visible {
   border-radius: 28px;
   background: var(--surface);
   border: 1px solid var(--border);
+}
+
+/* Dedicated Shared Cart invite modal to avoid conflicts with generic modal styles */
+.shared-cart-invite-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  padding: 24px !important;
+  box-sizing: border-box !important;
+
+  background: rgba(10, 14, 28, 0.78) !important;
+
+  z-index: 99999 !important;
+
+  overflow-y: auto !important;
+  isolation: isolate !important;
+  animation: sharedCartInviteFade .18s ease-out;
+}
+
+.shared-cart-invite-modal {
+  position: relative;
+  width: min(560px, calc(100vw - 48px));
+  max-width: 560px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 32px;
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  margin: auto;
+  flex: 0 0 auto;
+  animation: sharedCartInvitePop .18s ease-out;
+}
+
+.shared-cart-invite-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.shared-cart-invite-description {
+  margin: 0 0 20px;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.shared-cart-invite-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.shared-cart-invite-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.shared-cart-invite-field label {
+  display: block;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.shared-cart-invite-field input,
+.shared-cart-invite-field textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--input-border, var(--border));
+  background: var(--input-bg, var(--surface));
+  color: var(--input-text, var(--text));
+  font: inherit;
+}
+
+.shared-cart-invite-field textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.shared-cart-invite-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.shared-cart-invite-cancel {
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shared-cart-invite-submit {
+  min-height: 44px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 10px;
+  background: #38bdf8;
+  color: #07111f;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@keyframes sharedCartInviteFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sharedCartInvitePop {
+  from { opacity: 0; transform: translateY(-8px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 600px) {
+  .shared-cart-invite-modal {
+    width: calc(100vw - 32px);
+    max-height: calc(100vh - 32px);
+    padding: 24px;
+  }
+
+  .shared-cart-invite-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .shared-cart-invite-actions button {
+    width: 100%;
+  }
 }
 
 .modal-close-btn {

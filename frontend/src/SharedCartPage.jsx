@@ -352,44 +352,28 @@ export default function SharedCartPage() {
 
       {showInviteModal && createPortal(
         <div
-          className="invite-modal-overlay"
+          className="shared-cart-invite-overlay"
           role="dialog"
           aria-modal="true"
-          onClick={(e) => { if (e.target === e.currentTarget) setShowInviteModal(false); }}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            width: '100vw',
-            height: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '24px',
-            boxSizing: 'border-box',
-            background: 'rgba(3, 10, 20, 0.72)',
-            visibility: 'visible',
-            opacity: 1,
-            pointerEvents: 'auto',
-            zIndex: 999999,
-            margin: 0
-          }}
+          aria-labelledby="shared-cart-invite-title"
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setShowInviteModal(false); }}
         >
-          <div className="invite-modal">
+          <div className="shared-cart-invite-modal" onMouseDown={(e) => e.stopPropagation()}>
             <div className="invite-modal-header">
-              <h2>Invite a friend</h2>
+              <h2 id="shared-cart-invite-title">Invite a friend</h2>
               <button
                 type="button"
-                className="invite-modal-close"
+                className="shared-cart-invite-close"
                 onClick={() => setShowInviteModal(false)}
-                aria-label="Close invite modal"
+                aria-label="Close invite dialog"
               >
                 ×
               </button>
             </div>
-            <p className="invite-modal-description">Send an invite email so your friend can log in and join this shared cart.</p>
-            <form className="invite-form" onSubmit={(event) => { event.preventDefault(); handleSendInvite(); }}>
-              <div className="invite-form-group">
-                <label htmlFor="invite-email" className="invite-form-label">Friend’s email</label>
+            <p className="shared-cart-invite-description">Send an invite email so your friend can log in and join this shared cart.</p>
+            <form className="shared-cart-invite-form" onSubmit={(event) => { event.preventDefault(); handleSendInvite(); }}>
+              <div className="shared-cart-invite-field">
+                <label htmlFor="invite-email">Friend’s email</label>
                 <input
                   id="invite-email"
                   type="email"
@@ -399,10 +383,8 @@ export default function SharedCartPage() {
                 />
               </div>
 
-              <div className="invite-form-group">
-                <label htmlFor="invite-note" className="invite-form-label">
-                  Add a personal note <span>(optional)</span>
-                </label>
+              <div className="shared-cart-invite-field">
+                <label htmlFor="invite-note">Add a personal note <span>(optional)</span></label>
                 <textarea
                   id="invite-note"
                   rows={4}
@@ -412,14 +394,14 @@ export default function SharedCartPage() {
                 />
               </div>
 
-              {inviteError && <div className="modal-error">{inviteError}</div>}
-              {inviteSuccess && <div className="modal-success">{inviteSuccess}</div>}
+              {inviteError && <div className="shared-cart-invite-error">{inviteError}</div>}
+              {inviteSuccess && <div className="shared-cart-invite-success">{inviteSuccess}</div>}
 
-              <div className="invite-modal-actions">
-                <button type="button" className="secondary-button cancel-button" onClick={() => setShowInviteModal(false)} disabled={inviteLoading}>
+              <div className="shared-cart-invite-actions">
+                <button type="button" className="shared-cart-invite-cancel secondary-button" onClick={() => setShowInviteModal(false)} disabled={inviteLoading}>
                   Cancel
                 </button>
-                <button type="submit" className="primary-button send-invite-button" disabled={inviteLoading}>
+                <button type="submit" className="shared-cart-invite-submit primary-button" disabled={inviteLoading}>
                   {inviteLoading ? 'Sending…' : 'Send invite'}
                 </button>
               </div>
